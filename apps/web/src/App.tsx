@@ -26,11 +26,17 @@ export default function App() {
   const [smartechAppId, setSmartechAppId] = useState<string>("");
   const [deeplinkScheme, setDeeplinkScheme] = useState<string>("");
   const [baseSdkVersion, setBaseSdkVersion] = useState<string>("3.7.6");
+  const [pushSdkVersion, setPushSdkVersion] = useState<string>("3.5.13");
+  const [rnPushVersion, setRnPushVersion] = useState<string>("^3.7.2");
+  const [firebaseVersion, setFirebaseVersion] = useState<string>("^18.6.0");
+  const [autoAskPermission, setAutoAskPermission] = useState(true);
+  const [autoFetchLocation, setAutoFetchLocation] = useState(true);
   const [parts, setParts] = useState<IntegrationPart[]>(initialParts);
   const [plan, setPlan] = useState<IntegrationPlan | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [applyResult, setApplyResult] = useState<string | null>(null);
+  const [selectedChanges, setSelectedChanges] = useState<Record<string, boolean>>({});
 
   const canRun =
     rootPath.trim().length > 0 && smartechAppId.trim().length > 0 && deeplinkScheme.trim().length > 0;
@@ -73,7 +79,12 @@ export default function App() {
           inputs: {
             smartechAppId,
             deeplinkScheme,
-            baseSdkVersion
+            baseSdkVersion,
+            pushSdkVersion,
+            rnPushVersion,
+            firebaseVersion,
+            autoAskNotificationPermission: autoAskPermission,
+            autoFetchLocation
           }
         })
       });
@@ -84,6 +95,11 @@ export default function App() {
 
       const nextPlan = (await response.json()) as IntegrationPlan;
       setPlan(nextPlan);
+      const initialSelection: Record<string, boolean> = {};
+      nextPlan.changes.forEach((change) => {
+        initialSelection[change.id] = true;
+      });
+      setSelectedChanges(initialSelection);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to generate plan.");
     } finally {
@@ -93,6 +109,12 @@ export default function App() {
 
   const applyChanges = async () => {
     if (!plan) return;
+
+    const selectedList = plan.changes.filter((change) => selectedChanges[change.id]);
+    if (selectedList.length === 0) {
+      setError("Select at least one change to apply.");
+      return;
+    }
 
     setLoading(true);
     setError(null);
@@ -104,7 +126,7 @@ export default function App() {
         headers: {
           "Content-Type": "application/json"
         },
-        body: JSON.stringify({ changes: plan.changes })
+        body: JSON.stringify({ changes: selectedList })
       });
 
       if (!response.ok) {
@@ -125,6 +147,25 @@ export default function App() {
     }
   };
 
+  const clearPlan = () => {
+    setPlan(null);
+    setApplyResult(null);
+    setSelectedChanges({});
+  };
+
+  const toggleChange = (id: string) => {
+    setSelectedChanges((prev) => ({ ...prev, [id]: !prev[id] }));
+  };
+
+  const setAllChanges = (value: boolean) => {
+    if (!plan) return;
+    const next: Record<string, boolean> = {};
+    plan.changes.forEach((change) => {
+      next[change.id] = value;
+    });
+    setSelectedChanges(next);
+  };
+
   return (
     <div className="app">
       <header className="hero">
@@ -135,6 +176,20 @@ export default function App() {
             Point the tool at a client project, choose modules, and generate a precise integration
             plan with safe edits and previews.
           </p>
+          <div className="platforms">
+            <div className="platform active">
+              <div className="platform-title">React Native</div>
+              <div className="platform-status">Active</div>
+            </div>
+            <div className="platform disabled">
+              <div className="platform-title">Android Native</div>
+              <div className="platform-status">Coming soon</div>
+            </div>
+            <div className="platform disabled">
+              <div className="platform-title">Flutter</div>
+              <div className="platform-status">Coming soon</div>
+            </div>
+          </div>
         </div>
         <div className="hero-card">
           <div className="field">
@@ -174,6 +229,23 @@ export default function App() {
             />
           </div>
           <div className="field">
+            <span className="label">Auto Fetch Location</span>
+            <div className="toggle-row">
+              <button
+                className={autoFetchLocation ? "toggle active" : "toggle"}
+                onClick={() => setAutoFetchLocation(true)}
+              >
+                Yes
+              </button>
+              <button
+                className={!autoFetchLocation ? "toggle active" : "toggle"}
+                onClick={() => setAutoFetchLocation(false)}
+              >
+                No
+              </button>
+            </div>
+          </div>
+          <div className="field">
             <span className="label">Modules</span>
             <div className="module-grid">
               {PARTS.map((part) => (
@@ -191,6 +263,54 @@ export default function App() {
               ))}
             </div>
           </div>
+          {parts.includes("push") ? (
+            <div className="push-block">
+              <div className="field">
+                <span className="label">Push SDK Version</span>
+                <input
+                  className="path-input"
+                  placeholder="3.5.13"
+                  value={pushSdkVersion}
+                  onChange={(event) => setPushSdkVersion(event.target.value)}
+                />
+              </div>
+              <div className="field">
+                <span className="label">RN Push Library Version</span>
+                <input
+                  className="path-input"
+                  placeholder="^3.7.2"
+                  value={rnPushVersion}
+                  onChange={(event) => setRnPushVersion(event.target.value)}
+                />
+              </div>
+              <div className="field">
+                <span className="label">Firebase Version</span>
+                <input
+                  className="path-input"
+                  placeholder="^18.6.0"
+                  value={firebaseVersion}
+                  onChange={(event) => setFirebaseVersion(event.target.value)}
+                />
+              </div>
+              <div className="field">
+                <span className="label">Auto Ask Notification Permission</span>
+                <div className="toggle-row">
+                  <button
+                    className={autoAskPermission ? "toggle active" : "toggle"}
+                    onClick={() => setAutoAskPermission(true)}
+                  >
+                    Yes
+                  </button>
+                  <button
+                    className={!autoAskPermission ? "toggle active" : "toggle"}
+                    onClick={() => setAutoAskPermission(false)}
+                  >
+                    No
+                  </button>
+                </div>
+              </div>
+            </div>
+          ) : null}
           <button className="primary" onClick={generatePlan} disabled={!canRun || loading}>
             {loading ? "Scanning..." : "Generate Integration Plan"}
           </button>
@@ -242,14 +362,29 @@ export default function App() {
                 <p className="muted">No changes proposed yet.</p>
               ) : (
                 <div className="changes">
+                  <div className="change-actions">
+                    <button className="secondary" onClick={() => setAllChanges(true)}>
+                      Select All
+                    </button>
+                    <button className="secondary" onClick={() => setAllChanges(false)}>
+                      Deselect All
+                    </button>
+                  </div>
                   {plan.changes.map((change) => (
                     <div key={change.id} className="change">
+                      <label className="change-select">
+                        <input
+                          type="checkbox"
+                          checked={Boolean(selectedChanges[change.id])}
+                          onChange={() => toggleChange(change.id)}
+                        />
+                        <span>Apply this change</span>
+                      </label>
                       <div className="change-title">{change.title}</div>
                       <div className="change-path">{change.filePath}</div>
                       <div className="change-summary">{change.summary}</div>
                       <div className="change-meta">
                         <span>{change.kind.toUpperCase()}</span>
-                        <span>Confidence {Math.round(change.confidence * 100)}%</span>
                       </div>
                       {change.patch ? (
                         <pre className="diff">
@@ -281,6 +416,9 @@ export default function App() {
             <div className="actions">
               <button className="primary" onClick={applyChanges} disabled={loading}>
                 {loading ? "Applying..." : "Apply Changes"}
+              </button>
+              <button className="secondary" onClick={clearPlan} disabled={loading}>
+                Close Suggested Changes
               </button>
               {applyResult ? <pre className="apply-result">{applyResult}</pre> : null}
             </div>

@@ -73,6 +73,42 @@ button {
   max-width: 520px;
 }
 
+.platforms {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.platform {
+  border-radius: 14px;
+  padding: 12px 14px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.platform.active {
+  border-color: rgba(252, 94, 2, 0.7);
+  box-shadow: 0 0 0 1px rgba(252, 94, 2, 0.2);
+}
+
+.platform.disabled {
+  opacity: 0.5;
+  filter: grayscale(0.6);
+}
+
+.platform-title {
+  font-weight: 600;
+}
+
+.platform-status {
+  font-size: 0.75rem;
+  color: var(--muted);
+  margin-top: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+}
+
 .hero-card {
   background: linear-gradient(160deg, rgba(99, 245, 165, 0.08), rgba(87, 199, 255, 0.08)),
     var(--card);
@@ -151,6 +187,11 @@ button:hover:not(:disabled) {
   transform: translateY(-1px);
 }
 
+.secondary {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
 button:disabled {
   opacity: 0.6;
   cursor: not-allowed;
@@ -166,6 +207,32 @@ button:disabled {
 .module-grid {
   display: grid;
   gap: 12px;
+}
+
+.push-block {
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 14px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.toggle-row {
+  display: flex;
+  gap: 8px;
+}
+
+.toggle {
+  background: #2f153c;
+  padding: 8px 12px;
+  border-radius: 10px;
+  font-size: 0.8rem;
+}
+
+.toggle.active {
+  background: var(--accent);
+  color: #ffffff;
 }
 
 .module {
@@ -279,6 +346,20 @@ button:disabled {
   display: flex;
   flex-direction: column;
   gap: 16px;
+}
+
+.change-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.change-select {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.8rem;
+  color: var(--muted);
+  margin-bottom: 8px;
 }
 
 .change {

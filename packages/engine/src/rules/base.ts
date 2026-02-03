@@ -146,6 +146,19 @@ export async function runBaseRules(context: BaseRuleContext): Promise<Change[]> 
   const appIdChange = await ensureManifestMetaData(manifestPath, appId);
   if (appIdChange) changes.push(appIdChange);
 
+  const backupChanges = await ensureBackupConfig(context.rootPath, manifestPath);
+  changes.push(...backupChanges);
+
+  const autoFetchLocation = context.inputs?.autoFetchLocation;
+  if (typeof autoFetchLocation === "boolean") {
+    const locationChange = await ensureManifestFlagMeta(
+      manifestPath,
+      "SMT_IS_AUTO_FETCHED_LOCATION",
+      autoFetchLocation ? "1" : "0"
+    );
+    if (locationChange) changes.push(locationChange);
+  }
+
   const deeplinkScheme = context.inputs?.deeplinkScheme ?? "";
   const launcherActivity = await findLauncherActivity(manifestPath, manifestPackage, javaRoot);
   if (launcherActivity) {
@@ -467,6 +480,204 @@ async function ensureManifestMetaData(manifestPath: string, appId: string): Prom
     originalContent,
     newContent,
     summary: "Add SMT_APP_ID meta-data entry to AndroidManifest.xml.",
+    confidence: 0.4
+  });
+}
+
+async function ensureManifestFlagMeta(
+  manifestPath: string,
+  name: string,
+  value: string
+): Promise<Change | null> {
+  if (!(await pathExists(manifestPath))) {
+    return null;
+  }
+
+  const originalContent = await fs.readFile(manifestPath, "utf-8");
+  const metaData = `    <meta-data\n        android:name=\"${name}\"\n        android:value=\"${value}\" />`;
+
+  let newContent = originalContent;
+
+  if (originalContent.includes(`android:name=\"${name}\"`)) {
+    newContent = originalContent.replace(
+      new RegExp(`<meta-data[^>]*android:name=\\\\\"${name}\\\\\"[^>]*android:value=\\\\\"[^\\\\\"]*\\\\\"[^>]*\\\\/>`),
+      metaData
+    );
+  } else if (/<application[^>]*>/.test(originalContent)) {
+    newContent = originalContent.replace(/<application[^>]*>/, (match) => `${match}\n${metaData}`);
+  }
+
+  if (newContent === originalContent) {
+    return null;
+  }
+
+  return buildChange({
+    id: `android-manifest-metadata-${name.toLowerCase()}`,
+    title: `Set ${name} meta-data`,
+    filePath: manifestPath,
+    kind: "insert",
+    originalContent,
+    newContent,
+    summary: `Set ${name} meta-data entry to ${value}.`,
+    confidence: 0.4
+  });
+}
+
+async function ensureBackupConfig(rootPath: string, manifestPath: string): Promise<Change[]> {
+  const changes: Change[] = [];
+  const xmlDir = path.join(rootPath, "android", "app", "src", "main", "res", "xml");
+
+  const backupFile = path.join(xmlDir, "my_backup_file.xml");
+  const backupContent = `<?xml version="1.0" encoding="utf-8"?>\n<full-backup-content>\n    <include domain="sharedpref" path="smt_guid_preferences.xml"/>\n    <include domain="sharedpref" path="smt_preferences_guid.xml"/>\n</full-backup-content>\n`;
+
+  const backup31File = path.join(xmlDir, "my_backup_file_31.xml");
+  const backup31Content = `<?xml version="1.0" encoding="utf-8"?>\n<data-extraction-rules>\n   <cloud-backup disableIfNoEncryptionCapabilities="false">\n       <include  domain="sharedpref" path="smt_guid_preferences.xml" />\n       <include domain="sharedpref" path="smt_preferences_guid.xml" />\n   </cloud-backup>\n</data-extraction-rules>\n`;
+
+  const manifestWarnings = await detectBackupWarnings(manifestPath);
+  changes.push(...manifestWarnings);
+
+  if (!(await pathExists(backupFile))) {
+    changes.push(
+      buildChange({
+        id: "android-backup-xml",
+        title: "Add Smartech backup configuration",
+        filePath: backupFile,
+        kind: "create",
+        originalContent: "",
+        newContent: backupContent,
+        summary: "Create my_backup_file.xml for Smartech reinstall tracking.",
+        confidence: 0.4
+      })
+    );
+  }
+
+  if (!(await pathExists(backup31File))) {
+    changes.push(
+      buildChange({
+        id: "android-backup-xml-31",
+        title: "Add Smartech backup configuration for Android 12+",
+        filePath: backup31File,
+        kind: "create",
+        originalContent: "",
+        newContent: backup31Content,
+        summary: "Create my_backup_file_31.xml for data extraction rules.",
+        confidence: 0.4
+      })
+    );
+  }
+
+  const manifestUpdate = await ensureManifestBackupAttributes(manifestPath);
+  if (manifestUpdate) changes.push(manifestUpdate);
+
+  return changes;
+}
+
+async function detectBackupWarnings(manifestPath: string): Promise<Change[]> {
+  if (!(await pathExists(manifestPath))) return [];
+  const warnings: Change[] = [];
+  const originalContent = await fs.readFile(manifestPath, "utf-8");
+
+  if (/android:allowBackup=\"false\"/.test(originalContent)) {
+    warnings.push({
+      id: "android-manifest-allowbackup-warning",
+      title: "allowBackup is false in manifest",
+      filePath: manifestPath,
+      kind: "insert",
+      patch: "",
+      summary:
+        "Manifest sets android:allowBackup=\"false\". Base integration will flip it to true for Smartech reinstall tracking.",
+      confidence: 0.3
+    });
+  }
+
+  const fullBackupMatch = originalContent.match(/android:fullBackupContent=\"([^\"]+)\"/);
+  if (fullBackupMatch && fullBackupMatch[1] !== "@xml/my_backup_file") {
+    warnings.push({
+      id: "android-manifest-backupcontent-warning",
+      title: "fullBackupContent already set",
+      filePath: manifestPath,
+      kind: "insert",
+      patch: "",
+      summary:
+        `Manifest already sets android:fullBackupContent to ${fullBackupMatch[1]}. Base integration will update it to @xml/my_backup_file.`,
+      confidence: 0.3
+    });
+  }
+
+  const dataRulesMatch = originalContent.match(/android:dataExtractionRules=\"([^\"]+)\"/);
+  if (dataRulesMatch && dataRulesMatch[1] !== "@xml/my_backup_file_31") {
+    warnings.push({
+      id: "android-manifest-datarules-warning",
+      title: "dataExtractionRules already set",
+      filePath: manifestPath,
+      kind: "insert",
+      patch: "",
+      summary:
+        `Manifest already sets android:dataExtractionRules to ${dataRulesMatch[1]}. Base integration will update it to @xml/my_backup_file_31.`,
+      confidence: 0.3
+    });
+  }
+
+  return warnings;
+}
+
+async function ensureManifestBackupAttributes(manifestPath: string): Promise<Change | null> {
+  if (!(await pathExists(manifestPath))) {
+    return null;
+  }
+
+  const originalContent = await fs.readFile(manifestPath, "utf-8");
+  let newContent = originalContent;
+
+  if (!/<application/.test(newContent)) {
+    return null;
+  }
+
+  if (!/android:allowBackup=/.test(newContent)) {
+    newContent = newContent.replace(
+      /<application/,
+      `<application\n        android:allowBackup="true"`
+    );
+  } else {
+    newContent = newContent.replace(/android:allowBackup="[^"]*"/, `android:allowBackup="true"`);
+  }
+
+  if (!/android:fullBackupContent=/.test(newContent)) {
+    newContent = newContent.replace(
+      /<application/,
+      `<application\n        android:fullBackupContent="@xml/my_backup_file"`
+    );
+  } else {
+    newContent = newContent.replace(
+      /android:fullBackupContent="[^"]*"/,
+      `android:fullBackupContent="@xml/my_backup_file"`
+    );
+  }
+
+  if (!/android:dataExtractionRules=/.test(newContent)) {
+    newContent = newContent.replace(
+      /<application/,
+      `<application\n        android:dataExtractionRules="@xml/my_backup_file_31"`
+    );
+  } else {
+    newContent = newContent.replace(
+      /android:dataExtractionRules="[^"]*"/,
+      `android:dataExtractionRules="@xml/my_backup_file_31"`
+    );
+  }
+
+  if (newContent === originalContent) {
+    return null;
+  }
+
+  return buildChange({
+    id: "android-manifest-backup-attrs",
+    title: "Configure Smartech backup attributes",
+    filePath: manifestPath,
+    kind: "update",
+    originalContent,
+    newContent,
+    summary: "Ensure allowBackup true and register backup XML files in manifest.",
     confidence: 0.4
   });
 }

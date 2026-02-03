@@ -31,5 +31,10 @@ export type IntegrationOptions = {
         smartechAppId?: string;
         deeplinkScheme?: string;
         baseSdkVersion?: string;
+        pushSdkVersion?: string;
+        rnPushVersion?: string;
+        firebaseVersion?: string;
+        autoAskNotificationPermission?: boolean;
+        autoFetchLocation?: boolean;
     };
 };

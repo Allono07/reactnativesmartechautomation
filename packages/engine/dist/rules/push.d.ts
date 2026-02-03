@@ -1,6 +1,8 @@
-import type { Change, ProjectScan } from "@smartech/shared";
-export type PushRuleContext = {
+import type { Change, ProjectScan, IntegrationOptions } from "@smartech/shared";
+type PushRuleContext = {
     scan: ProjectScan;
     rootPath: string;
+    inputs?: IntegrationOptions["inputs"];
 };
-export declare function runPushRules(_context: PushRuleContext): Promise<Change[]>;
+export declare function runPushRules(context: PushRuleContext): Promise<Change[]>;
+export {};
