@@ -1,0 +1,22 @@
+{
+  "name": "smartech-server",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build:deps": "npm --prefix ../.. --workspace @smartech/shared run build && npm --prefix ../.. --workspace @smartech/engine run build",
+    "dev": "npm run build:deps && tsx src/index.ts",
+    "build": "npm run build:deps && tsc -p tsconfig.json",
+    "start": "node dist/index.js"
+  },
+  "dependencies": {
+    "@smartech/engine": "0.1.0",
+    "@smartech/shared": "0.1.0",
+    "cors": "^2.8.5",
+    "express": "^4.19.2"
+  },
+  "devDependencies": {
+    "tsx": "^4.15.7",
+    "typescript": "^5.4.0"
+  }
+}

@@ -1,0 +1,35 @@
+export type IntegrationPart = "base" | "push" | "px";
+export type Platform = "android" | "ios";
+export type ChangeKind = "create" | "update" | "insert";
+export type Change = {
+    id: string;
+    title: string;
+    filePath: string;
+    kind: ChangeKind;
+    patch: string;
+    summary: string;
+    confidence: number;
+    originalContent?: string;
+    newContent?: string;
+};
+export type ProjectScan = {
+    rootPath: string;
+    reactNativeVersion?: string;
+    platforms: Platform[];
+    notes: string[];
+};
+export type IntegrationPlan = {
+    scan: ProjectScan;
+    parts: IntegrationPart[];
+    changes: Change[];
+};
+export type IntegrationOptions = {
+    rootPath: string;
+    parts: IntegrationPart[];
+    dryRun?: boolean;
+    inputs?: {
+        smartechAppId?: string;
+        deeplinkScheme?: string;
+        baseSdkVersion?: string;
+    };
+};

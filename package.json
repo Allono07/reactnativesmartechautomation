@@ -1,0 +1,16 @@
+{
+  "name": "smartech-rn-integrator",
+  "private": true,
+  "version": "0.1.0",
+  "workspaces": [
+    "apps/web",
+    "apps/server",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev:web": "npm --workspace apps/web run dev",
+    "dev:server": "npm --workspace apps/server run dev",
+    "build": "npm --workspace apps/web run build && npm --workspace apps/server run build",
+    "typecheck": "npm --workspace apps/web run typecheck && npm --workspace packages/engine run typecheck"
+  }
+}
