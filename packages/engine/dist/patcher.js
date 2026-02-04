@@ -22,12 +22,13 @@ export async function applyChanges(changes, dryRun = true) {
             });
             continue;
         }
-        const currentContent = fileCache.get(change.filePath) ??
-            (await loadFileOrEmpty(change.filePath));
-        const patched = applyPatch(currentContent, change.patch);
+        const cached = fileCache.get(change.filePath);
+        const original = cached?.original ?? (await loadFileOrEmpty(change.filePath));
+        const current = cached?.current ?? original;
+        const patched = applyPatch(current, change.patch, { fuzzFactor: 5 });
         if (patched === false) {
-            if (change.newContent) {
-                fileCache.set(change.filePath, change.newContent);
+            if (change.newContent && current === original) {
+                fileCache.set(change.filePath, { original, current: change.newContent });
                 results.push({
                     changeId: change.id,
                     applied: true,
@@ -43,19 +44,19 @@ export async function applyChanges(changes, dryRun = true) {
             }
             continue;
         }
-        fileCache.set(change.filePath, patched);
+        fileCache.set(change.filePath, { original, current: patched });
         results.push({
             changeId: change.id,
             applied: true,
             message: "Applied change."
         });
     }
-    for (const [filePath, content] of fileCache.entries()) {
+    for (const [filePath, payload] of fileCache.entries()) {
         const dir = path.dirname(filePath);
         if (!(await pathExists(dir))) {
             await fs.mkdir(dir, { recursive: true });
         }
-        await fs.writeFile(filePath, content, "utf-8");
+        await fs.writeFile(filePath, payload.current, "utf-8");
     }
     return results;
 }

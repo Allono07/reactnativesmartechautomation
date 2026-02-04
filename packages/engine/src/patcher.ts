@@ -12,7 +12,7 @@ export type ApplyResult = {
 
 export async function applyChanges(changes: Change[], dryRun = true): Promise<ApplyResult[]> {
   const results: ApplyResult[] = [];
-  const fileCache = new Map<string, string>();
+  const fileCache = new Map<string, { original: string; current: string }>();
 
   for (const change of changes) {
     if (dryRun) {
@@ -33,14 +33,14 @@ export async function applyChanges(changes: Change[], dryRun = true): Promise<Ap
       continue;
     }
 
-    const currentContent =
-      fileCache.get(change.filePath) ??
-      (await loadFileOrEmpty(change.filePath));
+    const cached = fileCache.get(change.filePath);
+    const original = cached?.original ?? (await loadFileOrEmpty(change.filePath));
+    const current = cached?.current ?? original;
 
-    const patched = applyPatch(currentContent, change.patch);
+    const patched = applyPatch(current, change.patch, { fuzzFactor: 5 });
     if (patched === false) {
-      if (change.newContent) {
-        fileCache.set(change.filePath, change.newContent);
+      if (change.newContent && current === original) {
+        fileCache.set(change.filePath, { original, current: change.newContent });
         results.push({
           changeId: change.id,
           applied: true,
@@ -56,7 +56,7 @@ export async function applyChanges(changes: Change[], dryRun = true): Promise<Ap
       continue;
     }
 
-    fileCache.set(change.filePath, patched);
+    fileCache.set(change.filePath, { original, current: patched });
     results.push({
       changeId: change.id,
       applied: true,
@@ -64,12 +64,12 @@ export async function applyChanges(changes: Change[], dryRun = true): Promise<Ap
     });
   }
 
-  for (const [filePath, content] of fileCache.entries()) {
+  for (const [filePath, payload] of fileCache.entries()) {
     const dir = path.dirname(filePath);
     if (!(await pathExists(dir))) {
       await fs.mkdir(dir, { recursive: true });
     }
-    await fs.writeFile(filePath, content, "utf-8");
+    await fs.writeFile(filePath, payload.current, "utf-8");
   }
 
   return results;
