@@ -7,7 +7,8 @@ export async function runPxRules(_context) {
             kind: "insert",
             patch: "",
             summary: "PX integration scaffolding is ready. Add concrete rules for PX module setup.",
-            confidence: 0.1
+            confidence: 0.1,
+            module: "px"
         }
     ];
 }

@@ -63,7 +63,7 @@ export async function runPushRules(context) {
 }
 function buildChange(input) {
     const patch = createUnifiedDiff(input.filePath, input.originalContent ?? "", input.newContent ?? "");
-    return { ...input, patch };
+    return { module: "push", ...input, patch };
 }
 async function ensureGradleProperty(rootPath, version) {
     const filePath = path.join(rootPath, GRADLE_PROPERTIES_RELATIVE);

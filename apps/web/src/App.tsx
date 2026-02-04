@@ -37,11 +37,15 @@ export default function App() {
   const [error, setError] = useState<string | null>(null);
   const [applyResult, setApplyResult] = useState<string | null>(null);
   const [selectedChanges, setSelectedChanges] = useState<Record<string, boolean>>({});
+  const [summary, setSummary] = useState<{
+    appliedCount: number;
+    byModule: Record<string, number>;
+  } | null>(null);
 
   const canRun =
     rootPath.trim().length > 0 && smartechAppId.trim().length > 0 && deeplinkScheme.trim().length > 0;
 
-  const summary = useMemo(() => {
+  const scanSummary = useMemo(() => {
     if (!plan) return null;
 
     return {
@@ -136,6 +140,16 @@ export default function App() {
       const payload = (await response.json()) as {
         results: { changeId: string; applied: boolean; message: string }[];
       };
+      const appliedIds = payload.results
+        .filter((result) => result.applied)
+        .map((result) => result.changeId);
+      const appliedChanges = selectedList.filter((change) => appliedIds.includes(change.id));
+      const byModule: Record<string, number> = {};
+      appliedChanges.forEach((change) => {
+        const key = change.module ?? "other";
+        byModule[key] = (byModule[key] ?? 0) + 1;
+      });
+      setSummary({ appliedCount: appliedChanges.length, byModule });
       const summaryText = payload.results
         .map((result) => `${result.changeId}: ${result.applied ? "applied" : "skipped"} (${result.message})`)
         .join("\n");
@@ -151,6 +165,7 @@ export default function App() {
     setPlan(null);
     setApplyResult(null);
     setSelectedChanges({});
+    setSummary(null);
   };
 
   const toggleChange = (id: string) => {
@@ -334,20 +349,20 @@ export default function App() {
               <div className="metrics">
                 <div>
                   <span className="metric-label">Platforms</span>
-                  <span className="metric-value">{summary?.platforms}</span>
+                  <span className="metric-value">{scanSummary?.platforms}</span>
                 </div>
                 <div>
                   <span className="metric-label">Planned Changes</span>
-                  <span className="metric-value">{summary?.changeCount}</span>
+                  <span className="metric-value">{scanSummary?.changeCount}</span>
                 </div>
               </div>
             </div>
 
             <div className="panel scan-notes">
               <h3>Scan Notes</h3>
-              {summary?.notes.length ? (
+              {scanSummary?.notes.length ? (
                 <ul className="notes">
-                  {summary.notes.map((note) => (
+                  {scanSummary.notes.map((note) => (
                     <li key={note}>{note}</li>
                   ))}
                 </ul>
@@ -422,6 +437,71 @@ export default function App() {
               </button>
               {applyResult ? <pre className="apply-result">{applyResult}</pre> : null}
             </div>
+            {summary ? (
+              <div className="panel summary-panel">
+                <h3>Integration Summary</h3>
+                <p className="muted">Applied changes: {summary.appliedCount}</p>
+                <ul className="notes">
+                  {Object.entries(summary.byModule).map(([module, count]) => (
+                    <li key={module}>
+                      {module.toUpperCase()}: {count} changes applied
+                    </li>
+                  ))}
+                </ul>
+                <div className="summary-docs">
+                  {parts.includes("base") ? (
+                    <div>
+                      <h4>Base SDK Docs</h4>
+                      <a
+                        className="doc-link"
+                        href="https://developer.netcorecloud.com/docs/react-native-modular-sdk-integration-user-guide"
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        SDK integration guide
+                      </a>
+                      <a
+                        className="doc-link"
+                        href="https://developer.netcorecloud.com/docs/react-native-user-event-tracking"
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        Custom event & user tracking
+                      </a>
+                    </div>
+                  ) : null}
+                  {parts.includes("push") ? (
+                    <div>
+                      <h4>Push Docs</h4>
+                      <a
+                        className="doc-link"
+                        href="https://developer.netcorecloud.com/docs/android-new-customer-engagement#customizing-notification-appearance"
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        Customize notification appearance
+                      </a>
+                      <a
+                        className="doc-link"
+                        href="https://developer.netcorecloud.com/docs/react-native-app-inbox-integration"
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        App Inbox integration
+                      </a>
+                      <a
+                        className="doc-link"
+                        href="https://developer.netcorecloud.com/docs/app-content-personalization-react"
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        App content personalization
+                      </a>
+                    </div>
+                  ) : null}
+                </div>
+              </div>
+            ) : null}
           </section>
         )}
       </main>

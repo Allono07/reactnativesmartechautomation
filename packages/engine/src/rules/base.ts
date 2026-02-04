@@ -80,7 +80,8 @@ export async function runBaseRules(context: BaseRuleContext): Promise<Change[]> 
       kind: "insert",
       patch: "",
       summary: "Expected android/app/src/main/java to exist. Integration requires Android sources.",
-      confidence: 0.2
+      confidence: 0.2,
+      module: "base"
     });
     return changes;
   }
@@ -180,7 +181,8 @@ export async function runBaseRules(context: BaseRuleContext): Promise<Change[]> 
       patch: "",
       summary:
         "Could not locate the launcher activity from AndroidManifest.xml. MainActivity deeplink integration was skipped.",
-      confidence: 0.2
+      confidence: 0.2,
+      module: "base"
     });
   }
 
@@ -189,7 +191,7 @@ export async function runBaseRules(context: BaseRuleContext): Promise<Change[]> 
 
 function buildChange(input: Omit<Change, "patch">): Change {
   const patch = createUnifiedDiff(input.filePath, input.originalContent ?? "", input.newContent ?? "");
-  return { ...input, patch };
+  return { module: "base", ...input, patch };
 }
 
 async function findAndroidApplicationClass(javaRoot: string): Promise<
@@ -586,7 +588,8 @@ async function detectBackupWarnings(manifestPath: string): Promise<Change[]> {
       patch: "",
       summary:
         "Manifest sets android:allowBackup=\"false\". Base integration will flip it to true for Smartech reinstall tracking.",
-      confidence: 0.3
+      confidence: 0.3,
+      module: "base"
     });
   }
 
@@ -600,7 +603,8 @@ async function detectBackupWarnings(manifestPath: string): Promise<Change[]> {
       patch: "",
       summary:
         `Manifest already sets android:fullBackupContent to ${fullBackupMatch[1]}. Base integration will update it to @xml/my_backup_file.`,
-      confidence: 0.3
+      confidence: 0.3,
+      module: "base"
     });
   }
 
@@ -614,7 +618,8 @@ async function detectBackupWarnings(manifestPath: string): Promise<Change[]> {
       patch: "",
       summary:
         `Manifest already sets android:dataExtractionRules to ${dataRulesMatch[1]}. Base integration will update it to @xml/my_backup_file_31.`,
-      confidence: 0.3
+      confidence: 0.3,
+      module: "base"
     });
   }
 

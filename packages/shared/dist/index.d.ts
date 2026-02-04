@@ -11,6 +11,7 @@ export type Change = {
     confidence: number;
     originalContent?: string;
     newContent?: string;
+    module?: IntegrationPart;
 };
 export type ProjectScan = {
     rootPath: string;

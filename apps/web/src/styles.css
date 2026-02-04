@@ -443,6 +443,46 @@ button:disabled {
   border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
+.summary-panel {
+  margin-top: 20px;
+  max-width: 620px;
+  align-self: flex-start;
+}
+
+.summary-docs {
+  margin-top: 12px;
+  display: grid;
+  gap: 12px;
+}
+
+.summary-docs h4 {
+  margin: 0 0 6px;
+}
+
+.summary-docs a {
+  display: block;
+  color: #ffffff;
+  text-decoration: none;
+  font-size: 0.85rem;
+}
+
+.summary-docs a:hover {
+  text-decoration: underline;
+}
+
+.doc-link {
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.06);
+  font-weight: 600;
+}
+
+.doc-link::after {
+  content: " ↗";
+  font-weight: 400;
+}
+
 @media (max-width: 900px) {
   .hero {
     grid-template-columns: 1fr;

@@ -14,14 +14,9 @@ Desktop tool (Electron + React) that generates an integration plan for Smartech 
 npm install
 ```
 
-2. Run the local API server
+2. Run both server + web UI
 ```
-npm run dev:server
-```
-
-3. Run the web UI
-```
-npm run dev:web
+npm run dev
 ```
 
 ## Status

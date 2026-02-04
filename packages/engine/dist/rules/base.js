@@ -62,7 +62,8 @@ export async function runBaseRules(context) {
             kind: "insert",
             patch: "",
             summary: "Expected android/app/src/main/java to exist. Integration requires Android sources.",
-            confidence: 0.2
+            confidence: 0.2,
+            module: "base"
         });
         return changes;
     }
@@ -136,14 +137,15 @@ export async function runBaseRules(context) {
             kind: "insert",
             patch: "",
             summary: "Could not locate the launcher activity from AndroidManifest.xml. MainActivity deeplink integration was skipped.",
-            confidence: 0.2
+            confidence: 0.2,
+            module: "base"
         });
     }
     return changes;
 }
 function buildChange(input) {
     const patch = createUnifiedDiff(input.filePath, input.originalContent ?? "", input.newContent ?? "");
-    return { ...input, patch };
+    return { module: "base", ...input, patch };
 }
 async function findAndroidApplicationClass(javaRoot) {
     const candidates = await walkFiles(javaRoot, [".java", ".kt"]);
@@ -441,7 +443,8 @@ async function detectBackupWarnings(manifestPath) {
             kind: "insert",
             patch: "",
             summary: "Manifest sets android:allowBackup=\"false\". Base integration will flip it to true for Smartech reinstall tracking.",
-            confidence: 0.3
+            confidence: 0.3,
+            module: "base"
         });
     }
     const fullBackupMatch = originalContent.match(/android:fullBackupContent=\"([^\"]+)\"/);
@@ -453,7 +456,8 @@ async function detectBackupWarnings(manifestPath) {
             kind: "insert",
             patch: "",
             summary: `Manifest already sets android:fullBackupContent to ${fullBackupMatch[1]}. Base integration will update it to @xml/my_backup_file.`,
-            confidence: 0.3
+            confidence: 0.3,
+            module: "base"
         });
     }
     const dataRulesMatch = originalContent.match(/android:dataExtractionRules=\"([^\"]+)\"/);
@@ -465,7 +469,8 @@ async function detectBackupWarnings(manifestPath) {
             kind: "insert",
             patch: "",
             summary: `Manifest already sets android:dataExtractionRules to ${dataRulesMatch[1]}. Base integration will update it to @xml/my_backup_file_31.`,
-            confidence: 0.3
+            confidence: 0.3,
+            module: "base"
         });
     }
     return warnings;

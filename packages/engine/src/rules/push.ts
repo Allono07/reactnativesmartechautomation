@@ -98,7 +98,7 @@ export async function runPushRules(context: PushRuleContext): Promise<Change[]> 
 
 function buildChange(input: Omit<Change, "patch">): Change {
   const patch = createUnifiedDiff(input.filePath, input.originalContent ?? "", input.newContent ?? "");
-  return { ...input, patch };
+  return { module: "push", ...input, patch };
 }
 
 async function ensureGradleProperty(rootPath: string, version: string): Promise<Change | null> {
