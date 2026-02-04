@@ -1,6 +1,8 @@
-import type { Change, ProjectScan } from "@smartech/shared";
-export type PxRuleContext = {
+import type { Change, ProjectScan, IntegrationOptions } from "@smartech/shared";
+type PxRuleContext = {
     scan: ProjectScan;
     rootPath: string;
+    inputs?: IntegrationOptions["inputs"];
 };
-export declare function runPxRules(_context: PxRuleContext): Promise<Change[]>;
+export declare function runPxRules(context: PxRuleContext): Promise<Change[]>;
+export {};

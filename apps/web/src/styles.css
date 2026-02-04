@@ -449,6 +449,16 @@ button:disabled {
   align-self: flex-start;
 }
 
+.post-apply {
+  margin-top: 12px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.08);
+  color: #ffffff;
+  font-size: 0.85rem;
+}
+
 .summary-docs {
   margin-top: 12px;
   display: grid;

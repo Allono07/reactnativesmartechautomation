@@ -33,6 +33,27 @@ app.post("/api/plan", async (req, res) => {
       return res.status(400).json({ error: "deeplinkScheme is required" });
     }
 
+    if (options.parts.includes("px")) {
+      if (!options.inputs?.hanselAppId) {
+        return res.status(400).json({ error: "hanselAppId is required for PX" });
+      }
+      if (!options.inputs?.hanselAppKey) {
+        return res.status(400).json({ error: "hanselAppKey is required for PX" });
+      }
+      if (!options.inputs?.pxScheme) {
+        return res.status(400).json({ error: "pxScheme is required for PX" });
+      }
+    }
+
+    const pxInputPresent =
+      Boolean(options.inputs?.hanselAppId) ||
+      Boolean(options.inputs?.hanselAppKey) ||
+      Boolean(options.inputs?.pxScheme);
+
+    if (pxInputPresent && !options.parts.includes("px")) {
+      options.parts = [...options.parts, "px"];
+    }
+
     const plan = await planIntegration(options);
     res.json(plan);
   } catch (error) {

@@ -31,6 +31,11 @@ export default function App() {
   const [firebaseVersion, setFirebaseVersion] = useState<string>("^18.6.0");
   const [autoAskPermission, setAutoAskPermission] = useState(true);
   const [autoFetchLocation, setAutoFetchLocation] = useState(true);
+  const [pxSdkVersion, setPxSdkVersion] = useState<string>("10.2.12");
+  const [rnPxVersion, setRnPxVersion] = useState<string>("^3.7.0");
+  const [hanselAppId, setHanselAppId] = useState<string>("");
+  const [hanselAppKey, setHanselAppKey] = useState<string>("");
+  const [pxScheme, setPxScheme] = useState<string>("");
   const [parts, setParts] = useState<IntegrationPart[]>(initialParts);
   const [plan, setPlan] = useState<IntegrationPlan | null>(null);
   const [loading, setLoading] = useState(false);
@@ -41,6 +46,7 @@ export default function App() {
     appliedCount: number;
     byModule: Record<string, number>;
   } | null>(null);
+  const [showPostApplyNote, setShowPostApplyNote] = useState(false);
 
   const canRun =
     rootPath.trim().length > 0 && smartechAppId.trim().length > 0 && deeplinkScheme.trim().length > 0;
@@ -70,8 +76,30 @@ export default function App() {
 
     setLoading(true);
     setError(null);
+    setApplyResult(null);
+    setSummary(null);
+    setShowPostApplyNote(false);
 
     try {
+      const inputs: Record<string, any> = {
+        smartechAppId,
+        deeplinkScheme,
+        baseSdkVersion,
+        pushSdkVersion,
+        rnPushVersion,
+        firebaseVersion,
+        autoAskNotificationPermission: autoAskPermission,
+        autoFetchLocation
+      };
+
+      if (parts.includes("px")) {
+        inputs.pxSdkVersion = pxSdkVersion;
+        inputs.rnPxVersion = rnPxVersion;
+        inputs.hanselAppId = hanselAppId;
+        inputs.hanselAppKey = hanselAppKey;
+        inputs.pxScheme = pxScheme;
+      }
+
       const response = await fetch("http://localhost:8787/api/plan", {
         method: "POST",
         headers: {
@@ -80,16 +108,7 @@ export default function App() {
         body: JSON.stringify({
           rootPath,
           parts: ["base", ...parts.filter((part) => part !== "base")],
-          inputs: {
-            smartechAppId,
-            deeplinkScheme,
-            baseSdkVersion,
-            pushSdkVersion,
-            rnPushVersion,
-            firebaseVersion,
-            autoAskNotificationPermission: autoAskPermission,
-            autoFetchLocation
-          }
+          inputs
         })
       });
 
@@ -154,6 +173,7 @@ export default function App() {
         .map((result) => `${result.changeId}: ${result.applied ? "applied" : "skipped"} (${result.message})`)
         .join("\n");
       setApplyResult(summaryText);
+      setShowPostApplyNote(true);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to apply changes.");
     } finally {
@@ -166,6 +186,7 @@ export default function App() {
     setApplyResult(null);
     setSelectedChanges({});
     setSummary(null);
+    setShowPostApplyNote(false);
   };
 
   const toggleChange = (id: string) => {
@@ -326,6 +347,55 @@ export default function App() {
               </div>
             </div>
           ) : null}
+          {parts.includes("px") ? (
+            <div className="push-block">
+              <div className="field">
+                <span className="label">PX SDK Version</span>
+                <input
+                  className="path-input"
+                  placeholder="10.2.12"
+                  value={pxSdkVersion}
+                  onChange={(event) => setPxSdkVersion(event.target.value)}
+                />
+              </div>
+              <div className="field">
+                <span className="label">RN PX Library Version</span>
+                <input
+                  className="path-input"
+                  placeholder="^3.7.0"
+                  value={rnPxVersion}
+                  onChange={(event) => setRnPxVersion(event.target.value)}
+                />
+              </div>
+              <div className="field">
+                <span className="label">Hansel App ID</span>
+                <input
+                  className="path-input"
+                  placeholder="Your Hansel App ID"
+                  value={hanselAppId}
+                  onChange={(event) => setHanselAppId(event.target.value)}
+                />
+              </div>
+              <div className="field">
+                <span className="label">Hansel App Key</span>
+                <input
+                  className="path-input"
+                  placeholder="Your Hansel App Key"
+                  value={hanselAppKey}
+                  onChange={(event) => setHanselAppKey(event.target.value)}
+                />
+              </div>
+              <div className="field">
+                <span className="label">PX Scheme</span>
+                <input
+                  className="path-input"
+                  placeholder="your-custom-scheme"
+                  value={pxScheme}
+                  onChange={(event) => setPxScheme(event.target.value)}
+                />
+              </div>
+            </div>
+          ) : null}
           <button className="primary" onClick={generatePlan} disabled={!canRun || loading}>
             {loading ? "Scanning..." : "Generate Integration Plan"}
           </button>
@@ -436,6 +506,12 @@ export default function App() {
                 Close Suggested Changes
               </button>
               {applyResult ? <pre className="apply-result">{applyResult}</pre> : null}
+              {showPostApplyNote ? (
+                <div className="post-apply">
+                  Please review the integration code snippets added by the tool and complete any
+                  required Gradle and React Native library sync steps.
+                </div>
+              ) : null}
             </div>
             {summary ? (
               <div className="panel summary-panel">
@@ -496,6 +572,27 @@ export default function App() {
                         rel="noreferrer"
                       >
                         App content personalization
+                      </a>
+                    </div>
+                  ) : null}
+                  {parts.includes("px") ? (
+                    <div>
+                      <h4>PX Docs</h4>
+                      <a
+                        className="doc-link"
+                        href="https://developer.netcorecloud.com/docs/nudges-handling-invisible-containers-1"
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        Handling invisible container
+                      </a>
+                      <a
+                        className="doc-link"
+                        href="https://developer.netcorecloud.com/docs/setting-up-hansel-index-for-dynamic-views"
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        Handling dynamic views
                       </a>
                     </div>
                   ) : null}

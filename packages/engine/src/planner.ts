@@ -19,12 +19,20 @@ export async function planIntegration(options: IntegrationOptions): Promise<Inte
   }
 
   if (options.parts.includes("push")) {
-    const pushChanges = await runPushRules({ scan, rootPath: options.rootPath });
+    const pushChanges = await runPushRules({
+      scan,
+      rootPath: options.rootPath,
+      inputs: options.inputs
+    });
     changes.push(...pushChanges);
   }
 
   if (options.parts.includes("px")) {
-    const pxChanges = await runPxRules({ scan, rootPath: options.rootPath });
+    const pxChanges = await runPxRules({
+      scan,
+      rootPath: options.rootPath,
+      inputs: options.inputs
+    });
     changes.push(...pxChanges);
   }
 

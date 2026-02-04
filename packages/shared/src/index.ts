@@ -43,5 +43,10 @@ export type IntegrationOptions = {
     firebaseVersion?: string;
     autoAskNotificationPermission?: boolean;
     autoFetchLocation?: boolean;
+    pxSdkVersion?: string;
+    rnPxVersion?: string;
+    hanselAppId?: string;
+    hanselAppKey?: string;
+    pxScheme?: string;
   };
 };
