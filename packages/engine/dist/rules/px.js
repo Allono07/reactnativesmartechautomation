@@ -11,6 +11,7 @@ const DEFAULT_RN_PX_VERSION = "^3.7.0";
 const PX_DEP_GROOVY = "implementation 'com.netcore.android:smartech-nudges:${SMARTECH_PX_SDK_VERSION}'";
 const PX_DEP_KTS = "implementation(\"com.netcore.android:smartech-nudges:${SMARTECH_PX_SDK_VERSION}\")";
 const PX_IMPORT = "import { HanselTrackerRn } from 'smartech-reactnative-nudges';";
+const BASE_REACT_IMPORT = "import SmartechBaseReact from 'smartech-base-react-native';";
 const PX_USE_EFFECT = `useEffect(() => {\n  HanselTrackerRn.addListener('HanselInternalEvent', (e) => {\n    console.log('Event Detail:', e);\n  });\n\n  HanselTrackerRn.addListener('HanselDeepLinkListener', (e) => {\n    console.log('DeepLink Listener URL:', e.deeplink);\n  });\n\n  HanselTrackerRn.registerHanselTrackerListener();\n\n  HanselTrackerRn.registerHanselDeeplinkListener();\n}, []);`;
 export async function runPxRules(context) {
     const changes = [];
@@ -222,6 +223,9 @@ async function ensurePxUseEffect(filePath) {
     if (!newContent.includes(PX_IMPORT)) {
         newContent = `${PX_IMPORT}\n${newContent}`;
     }
+    if (!newContent.includes(BASE_REACT_IMPORT)) {
+        newContent = `${BASE_REACT_IMPORT}\n${newContent}`;
+    }
     if (!newContent.includes("useEffect")) {
         newContent = ensureReactUseEffectImport(newContent);
     }
@@ -399,6 +403,7 @@ function buildPxUseEffectBlock(needsInternalListener, needsDeepLinkListener, nee
     if (needsInternalListener) {
         lines.push("  HanselTrackerRn.addListener('HanselInternalEvent', (e) => {");
         lines.push("    console.log('Event Detail:', e);");
+        lines.push("    SmartechBaseReact.trackEvent(e.eventName, e.properties);");
         lines.push("  });");
         lines.push("");
     }
