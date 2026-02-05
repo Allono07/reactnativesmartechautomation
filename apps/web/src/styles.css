@@ -74,6 +74,22 @@ button {
   max-width: 520px;
 }
 
+.preflight-warning {
+  margin-top: 12px;
+  padding: 10px 14px;
+  background: #2f153b;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 138, 61, 0.4);
+  border-left: 4px solid var(--accent);
+  font-size: 0.9rem;
+  color: #ffffff;
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.18);
+}
+
+.preflight-warning strong {
+  font-weight: 600;
+}
+
 .platforms {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));

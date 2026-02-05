@@ -312,6 +312,10 @@ export default function App() {
             Point the tool at a client project, choose modules, and generate a precise integration
             plan with safe edits and previews.
           </p>
+          <div className="preflight-warning">
+            <strong>Recommended:</strong> create a new git branch before applying changes so you can
+            revert safely if needed.
+          </div>
           <div className="docs-top">
             {parts.includes("base") ? (
               <div>
@@ -428,22 +432,45 @@ export default function App() {
             {parts.includes("px") ? (
               <div>
                 <h4>PX Docs</h4>
-                <a
-                  className="doc-link"
-                  href="https://developer.netcorecloud.com/docs/nudges-handling-invisible-containers-1"
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  Handling invisible container
-                </a>
-                <a
-                  className="doc-link"
-                  href="https://developer.netcorecloud.com/docs/setting-up-hansel-index-for-dynamic-views"
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  Handling dynamic views
-                </a>
+                {appPlatform === "flutter" ? (
+                  <>
+                    <a
+                      className="doc-link"
+                      href="https://developer.netcorecloud.com/docs/nudges-handling-invisible-containers"
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      Handling invisible widget
+                    </a>
+                    <a
+                      className="doc-link"
+                      href="https://developer.netcorecloud.com/docs/nudges-on-scrollable-widgets"
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      Handling scrollable widget
+                    </a>
+                  </>
+                ) : (
+                  <>
+                    <a
+                      className="doc-link"
+                      href="https://developer.netcorecloud.com/docs/nudges-handling-invisible-containers-1"
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      Handling invisible container
+                    </a>
+                    <a
+                      className="doc-link"
+                      href="https://developer.netcorecloud.com/docs/setting-up-hansel-index-for-dynamic-views"
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      Handling dynamic views
+                    </a>
+                  </>
+                )}
               </div>
             ) : null}
           </div>

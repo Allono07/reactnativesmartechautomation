@@ -21,6 +21,16 @@ npm install
 npm run dev
 ```
 
+## Build a standalone executable (Option A)
+This builds a single executable that runs the local server and opens the browser automatically.
+
+```
+npm run build:exe
+```
+
+The output binary will be in `dist/` and can be shared with non-technical users.
+Double-click the executable to launch the app.
+
 ## Status
 - Base scan + rule stubs are in place
 - Patch application is a placeholder (planned next)

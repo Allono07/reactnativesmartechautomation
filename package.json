@@ -12,9 +12,12 @@
     "dev:web": "npm --workspace apps/web run dev",
     "dev:server": "npm --workspace apps/server run dev",
     "build": "npm --workspace apps/web run build && npm --workspace apps/server run build",
-    "typecheck": "npm --workspace apps/web run typecheck && npm --workspace packages/engine run typecheck"
+    "typecheck": "npm --workspace apps/web run typecheck && npm --workspace packages/engine run typecheck",
+    "build:exe": "node scripts/build-exe.mjs"
   },
   "devDependencies": {
-    "concurrently": "^8.2.2"
+    "concurrently": "^8.2.2",
+    "esbuild": "^0.25.0",
+    "pkg": "^5.8.1"
   }
 }

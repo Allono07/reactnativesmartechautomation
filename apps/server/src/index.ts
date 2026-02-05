@@ -1,17 +1,47 @@
-import express from "express";
+import express, { type Request, type Response } from "express";
 import cors from "cors";
 import path from "node:path";
-import { promises as fs } from "node:fs";
+import { promises as fs, existsSync } from "node:fs";
+import { exec } from "node:child_process";
 import { planIntegration, applyChanges } from "@smartech/engine";
-import type { IntegrationOptions } from "@smartech/shared";
+import type { IntegrationOptions, IntegrationPart } from "@smartech/shared";
 
 const app = express();
 const port = 8787;
+const pkgEntry = (process as { pkg?: { entrypoint?: string } }).pkg?.entrypoint;
+const runtimeRoot = pkgEntry ? path.dirname(pkgEntry) : process.cwd();
+const isPackaged = Boolean(pkgEntry);
+const execRoot = path.dirname(process.execPath);
 
 app.use(cors());
 app.use(express.json({ limit: "1mb" }));
 
-app.get("/api/health", (_req, res) => {
+const publicCandidates = [
+  process.env.SMARTECH_WEB_DIST,
+  path.join(runtimeRoot, "public"),
+  isPackaged ? path.join(execRoot, "public") : null,
+  !isPackaged ? path.join(process.cwd(), "public") : null,
+  path.join(process.cwd(), "apps", "server", "dist", "public"),
+  path.join(process.cwd(), "apps", "web", "dist")
+].filter(Boolean) as string[];
+
+const publicDir = publicCandidates.find((dir) => {
+  if (!existsSync(dir)) return false;
+  return existsSync(path.join(dir, "index.html"));
+});
+if (publicDir) {
+  app.use(express.static(publicDir));
+}
+
+app.get("/", (_req: Request, res: Response) => {
+  if (publicDir) {
+    res.sendFile(path.join(publicDir, "index.html"));
+    return;
+  }
+  res.status(500).send("UI assets not found. Ensure the executable is built with bundled web assets.");
+});
+
+app.get("/api/health", (_req: Request, res: Response) => {
   res.json({ ok: true });
 });
 
@@ -25,7 +55,7 @@ async function detectFlutterProject(rootPath: string): Promise<boolean> {
   }
 }
 
-app.post("/api/plan", async (req, res) => {
+app.post("/api/plan", async (req: Request, res: Response) => {
   try {
     const options = req.body as IntegrationOptions;
 
@@ -42,11 +72,10 @@ app.post("/api/plan", async (req, res) => {
     }
 
     if (options.appPlatform === "flutter") {
-      options.parts = [
-        "base",
-        ...(options.parts.includes("push") ? ["push"] : []),
-        ...(options.parts.includes("px") ? ["px"] : [])
-      ];
+      const flutterParts: IntegrationPart[] = ["base"];
+      if (options.parts.includes("push")) flutterParts.push("push");
+      if (options.parts.includes("px")) flutterParts.push("px");
+      options.parts = flutterParts;
     }
 
     if (!options.inputs?.smartechAppId) {
@@ -125,7 +154,7 @@ app.post("/api/plan", async (req, res) => {
   }
 });
 
-app.post("/api/apply", async (req, res) => {
+app.post("/api/apply", async (req: Request, res: Response) => {
   try {
     const changes = req.body?.changes;
     const selectedIds = Array.isArray(req.body?.selectedChangeIds)
@@ -146,11 +175,10 @@ app.post("/api/apply", async (req, res) => {
         options.appPlatform = (await detectFlutterProject(options.rootPath)) ? "flutter" : "react-native";
       }
       if (options.appPlatform === "flutter") {
-        options.parts = [
-          "base",
-          ...(options.parts.includes("push") ? ["push"] : []),
-          ...(options.parts.includes("px") ? ["px"] : [])
-        ];
+        const flutterParts: IntegrationPart[] = ["base"];
+        if (options.parts.includes("push")) flutterParts.push("push");
+        if (options.parts.includes("px")) flutterParts.push("px");
+        options.parts = flutterParts;
       }
 
       const maxAttempts = 2;
@@ -195,4 +223,14 @@ app.post("/api/apply", async (req, res) => {
 
 app.listen(port, () => {
   console.log(`Smartech server running on http://localhost:${port}`);
+  if (!process.env.SMARTECH_NO_BROWSER && publicDir) {
+    const url = `http://localhost:${port}`;
+    const command =
+      process.platform === "darwin"
+        ? `open "${url}"`
+        : process.platform === "win32"
+          ? `start "" "${url}"`
+          : `xdg-open "${url}"`;
+    exec(command, () => undefined);
+  }
 });
