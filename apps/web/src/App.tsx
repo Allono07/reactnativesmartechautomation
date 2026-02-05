@@ -47,6 +47,7 @@ export default function App() {
     byModule: Record<string, number>;
   } | null>(null);
   const [showPostApplyNote, setShowPostApplyNote] = useState(false);
+  const [verificationMessage, setVerificationMessage] = useState<string | null>(null);
 
   const canRun =
     rootPath.trim().length > 0 && smartechAppId.trim().length > 0 && deeplinkScheme.trim().length > 0;
@@ -77,6 +78,7 @@ export default function App() {
     setLoading(true);
     setError(null);
     setApplyResult(null);
+    setVerificationMessage(null);
     setSummary(null);
     setShowPostApplyNote(false);
 
@@ -149,7 +151,33 @@ export default function App() {
         headers: {
           "Content-Type": "application/json"
         },
-        body: JSON.stringify({ changes: selectedList })
+        body: JSON.stringify({
+          changes: selectedList,
+          selectedChangeIds: selectedList.map((change) => change.id),
+          options: {
+            rootPath,
+            parts: ["base", ...parts.filter((part) => part !== "base")],
+            inputs: {
+              smartechAppId,
+              deeplinkScheme,
+              baseSdkVersion,
+              pushSdkVersion,
+              rnPushVersion,
+              firebaseVersion,
+              autoAskNotificationPermission: autoAskPermission,
+              autoFetchLocation,
+              ...(parts.includes("px")
+                ? {
+                    pxSdkVersion,
+                    rnPxVersion,
+                    hanselAppId,
+                    hanselAppKey,
+                    pxScheme
+                  }
+                : {})
+            }
+          }
+        })
       });
 
       if (!response.ok) {
@@ -158,6 +186,8 @@ export default function App() {
 
       const payload = (await response.json()) as {
         results: { changeId: string; applied: boolean; message: string }[];
+        retryResults: { changeId: string; applied: boolean; message: string }[];
+        remaining: string[];
       };
       const appliedIds = payload.results
         .filter((result) => result.applied)
@@ -172,7 +202,21 @@ export default function App() {
       const summaryText = payload.results
         .map((result) => `${result.changeId}: ${result.applied ? "applied" : "skipped"} (${result.message})`)
         .join("\n");
-      setApplyResult(summaryText);
+      const retryText = payload.retryResults?.length
+        ? `\nRetry pass:\n${payload.retryResults
+            .map((result) => `${result.changeId}: ${result.applied ? "applied" : "skipped"} (${result.message})`)
+            .join("\n")}`
+        : "";
+      if (payload.remaining.length > 0) {
+        const remainingText = payload.remaining.map((id) => `remaining: ${id}`).join("\n");
+        setApplyResult(`${summaryText}${retryText}\n${remainingText}`);
+        setVerificationMessage(
+          `Verification incomplete: ${payload.remaining.length} change(s) still pending.`
+        );
+      } else {
+        setApplyResult(`${summaryText}${retryText}\nAll suggested changes were verified.`);
+        setVerificationMessage("Verification successful: all selected changes are applied.");
+      }
       setShowPostApplyNote(true);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to apply changes.");
@@ -187,6 +231,7 @@ export default function App() {
     setSelectedChanges({});
     setSummary(null);
     setShowPostApplyNote(false);
+    setVerificationMessage(null);
   };
 
   const toggleChange = (id: string) => {
@@ -505,6 +550,9 @@ export default function App() {
               <button className="secondary" onClick={clearPlan} disabled={loading}>
                 Close Suggested Changes
               </button>
+              {verificationMessage ? (
+                <div className="verify-status">{verificationMessage}</div>
+              ) : null}
               {applyResult ? <pre className="apply-result">{applyResult}</pre> : null}
               {showPostApplyNote ? (
                 <div className="post-apply">

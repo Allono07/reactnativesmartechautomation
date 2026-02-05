@@ -64,13 +64,37 @@ app.post("/api/plan", async (req, res) => {
 app.post("/api/apply", async (req, res) => {
   try {
     const changes = req.body?.changes;
+    const selectedIds = Array.isArray(req.body?.selectedChangeIds)
+      ? (req.body.selectedChangeIds as string[])
+      : null;
+    const options = req.body?.options as IntegrationOptions | undefined;
 
     if (!Array.isArray(changes)) {
       return res.status(400).json({ error: "changes array is required" });
     }
 
     const results = await applyChanges(changes, false);
-    res.json({ results });
+    let remaining: string[] = [];
+    let retryResults: typeof results = [];
+
+    if (options?.rootPath && options?.parts?.length) {
+      const verifyPlan = await planIntegration(options);
+      const filtered = selectedIds
+        ? verifyPlan.changes.filter((change) => selectedIds.includes(change.id))
+        : verifyPlan.changes;
+      remaining = filtered.map((change) => change.id);
+
+      if (filtered.length > 0) {
+        retryResults = await applyChanges(filtered, false);
+        const verifyPlan2 = await planIntegration(options);
+        const filtered2 = selectedIds
+          ? verifyPlan2.changes.filter((change) => selectedIds.includes(change.id))
+          : verifyPlan2.changes;
+        remaining = filtered2.map((change) => change.id);
+      }
+    }
+
+    res.json({ results, retryResults, remaining });
   } catch (error) {
     res.status(500).json({ error: "Failed to apply changes" });
   }
