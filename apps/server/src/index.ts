@@ -42,7 +42,7 @@ app.post("/api/plan", async (req, res) => {
     }
 
     if (options.appPlatform === "flutter") {
-      options.parts = ["base"];
+      options.parts = options.parts.includes("push") ? ["base", "push"] : ["base"];
     }
 
     if (!options.inputs?.smartechAppId) {
@@ -59,6 +59,17 @@ app.post("/api/plan", async (req, res) => {
       }
       if (!options.inputs?.baseSdkVersion) {
         return res.status(400).json({ error: "baseSdkVersion is required for Flutter" });
+      }
+      if (options.parts.includes("push")) {
+        if (!options.inputs?.flutterPushSdkVersion) {
+          return res.status(400).json({ error: "flutterPushSdkVersion is required for Flutter Push" });
+        }
+        if (!options.inputs?.pushSdkVersion) {
+          return res.status(400).json({ error: "pushSdkVersion is required for Flutter Push" });
+        }
+        if (!options.inputs?.mainDartPath) {
+          return res.status(400).json({ error: "mainDartPath is required for Flutter Push" });
+        }
       }
     }
 
@@ -111,7 +122,7 @@ app.post("/api/apply", async (req, res) => {
         options.appPlatform = (await detectFlutterProject(options.rootPath)) ? "flutter" : "react-native";
       }
       if (options.appPlatform === "flutter") {
-        options.parts = ["base"];
+        options.parts = options.parts.includes("push") ? ["base", "push"] : ["base"];
       }
 
       const maxAttempts = 2;

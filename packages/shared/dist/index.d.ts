@@ -35,6 +35,8 @@ export type IntegrationOptions = {
         deeplinkScheme?: string;
         baseSdkVersion?: string;
         flutterBaseSdkVersion?: string;
+        flutterPushSdkVersion?: string;
+        mainDartPath?: string;
         pushSdkVersion?: string;
         rnPushVersion?: string;
         firebaseVersion?: string;

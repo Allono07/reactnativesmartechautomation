@@ -81,6 +81,25 @@ button {
   margin-top: 14px;
 }
 
+.docs-top {
+  margin-top: 14px;
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+}
+
+.docs-top > div {
+  background: var(--card);
+  border-radius: 16px;
+  padding: 12px 14px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.18);
+}
+
+.docs-top h4 {
+  margin: 0 0 8px;
+}
+
 .platform {
   border-radius: 14px;
   padding: 12px 14px;
@@ -470,6 +489,12 @@ button:disabled {
   font-size: 0.85rem;
 }
 
+.post-apply.alert {
+  border-color: rgba(252, 94, 2, 0.7);
+  background: rgba(252, 94, 2, 0.18);
+  font-weight: 600;
+}
+
 .verify-banner {
   margin: 12px 0 4px;
   padding: 12px 14px;
@@ -502,28 +527,26 @@ button:disabled {
   margin: 0 0 6px;
 }
 
-.summary-docs a {
-  display: block;
-  color: #ffffff;
-  text-decoration: none;
-  font-size: 0.85rem;
-}
-
-.summary-docs a:hover {
-  text-decoration: underline;
-}
-
 .doc-link {
   padding: 8px 10px;
   border-radius: 10px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  background: #2c1438;
   font-weight: 600;
+  color: #ffffff;
+  text-decoration: none;
+  display: block;
+  font-size: 0.85rem;
 }
 
 .doc-link::after {
   content: " ↗";
   font-weight: 400;
+}
+
+.doc-link:hover {
+  background: #351a46;
+  border-color: rgba(255, 255, 255, 0.36);
 }
 
 @media (max-width: 900px) {

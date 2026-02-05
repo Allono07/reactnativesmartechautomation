@@ -28,6 +28,7 @@ export default function App() {
   const [deeplinkScheme, setDeeplinkScheme] = useState<string>("");
   const [baseSdkVersion, setBaseSdkVersion] = useState<string>("3.7.6");
   const [flutterBaseSdkVersion, setFlutterBaseSdkVersion] = useState<string>("^3.5.0");
+  const [flutterPushSdkVersion, setFlutterPushSdkVersion] = useState<string>("^3.5.0");
   const [pushSdkVersion, setPushSdkVersion] = useState<string>("3.5.13");
   const [rnPushVersion, setRnPushVersion] = useState<string>("^3.7.2");
   const [firebaseVersion, setFirebaseVersion] = useState<string>("^18.6.0");
@@ -38,6 +39,7 @@ export default function App() {
   const [hanselAppId, setHanselAppId] = useState<string>("");
   const [hanselAppKey, setHanselAppKey] = useState<string>("");
   const [pxScheme, setPxScheme] = useState<string>("");
+  const [mainDartPath, setMainDartPath] = useState<string>("lib/main.dart");
   const [parts, setParts] = useState<IntegrationPart[]>(initialParts);
   const [plan, setPlan] = useState<IntegrationPlan | null>(null);
   const [loading, setLoading] = useState(false);
@@ -87,13 +89,15 @@ export default function App() {
     try {
       const activeParts =
         appPlatform === "flutter"
-          ? (["base"] as IntegrationPart[])
+          ? (parts.includes("push") ? (["base", "push"] as IntegrationPart[]) : (["base"] as IntegrationPart[]))
           : ["base", ...parts.filter((part) => part !== "base")];
       const inputs: Record<string, any> = {
         smartechAppId,
         deeplinkScheme,
         baseSdkVersion,
         flutterBaseSdkVersion,
+        flutterPushSdkVersion,
+        mainDartPath,
         pushSdkVersion,
         rnPushVersion,
         firebaseVersion,
@@ -156,7 +160,7 @@ export default function App() {
     try {
       const activeParts =
         appPlatform === "flutter"
-          ? (["base"] as IntegrationPart[])
+          ? (parts.includes("push") ? (["base", "push"] as IntegrationPart[]) : (["base"] as IntegrationPart[]))
           : ["base", ...parts.filter((part) => part !== "base")];
       const response = await fetch("http://localhost:8787/api/apply", {
         method: "POST",
@@ -175,6 +179,8 @@ export default function App() {
               deeplinkScheme,
               baseSdkVersion,
               flutterBaseSdkVersion,
+              flutterPushSdkVersion,
+              mainDartPath,
               pushSdkVersion,
               rnPushVersion,
               firebaseVersion,
@@ -273,6 +279,141 @@ export default function App() {
             Point the tool at a client project, choose modules, and generate a precise integration
             plan with safe edits and previews.
           </p>
+          <div className="docs-top">
+            {parts.includes("base") ? (
+              <div>
+                <h4>Base SDK Docs</h4>
+                {appPlatform === "flutter" ? (
+                  <>
+                    <a
+                      className="doc-link"
+                      href="https://developer.netcorecloud.com/docs/flutter-new-sdk-integration"
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      Flutter SDK integration
+                    </a>
+                    <a
+                      className="doc-link"
+                      href="https://developer.netcorecloud.com/docs/flutter-new-user-event-tracking"
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      Custom events & user tracking
+                    </a>
+                  </>
+                ) : (
+                  <>
+                    <a
+                      className="doc-link"
+                      href="https://developer.netcorecloud.com/docs/react-native-modular-sdk-integration-user-guide"
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      SDK integration guide
+                    </a>
+                    <a
+                      className="doc-link"
+                      href="https://developer.netcorecloud.com/docs/react-native-user-event-tracking"
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      Custom event & user tracking
+                    </a>
+                  </>
+                )}
+              </div>
+            ) : null}
+            {parts.includes("push") ? (
+              <div>
+                <h4>Push Docs</h4>
+                {appPlatform === "flutter" ? (
+                  <>
+                    <a
+                      className="doc-link"
+                      href="https://developer.netcorecloud.com/docs/flutter-new-customer-engagement"
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      Push notification integration
+                    </a>
+                    <a
+                      className="doc-link"
+                      href="https://developer.netcorecloud.com/docs/flutter-app-inbox"
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      App Inbox documentation
+                    </a>
+                    <a
+                      className="doc-link"
+                      href="https://developer.netcorecloud.com/docs/flutter-sdk-app-content-personalization"
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      Content personalization
+                    </a>
+                    <a
+                      className="doc-link"
+                      href="https://developer.netcorecloud.com/docs/android-new-customer-engagement#customizing-notification-appearance"
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      Customize notification appearance
+                    </a>
+                  </>
+                ) : (
+                  <>
+                    <a
+                      className="doc-link"
+                      href="https://developer.netcorecloud.com/docs/android-new-customer-engagement#customizing-notification-appearance"
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      Customize notification appearance
+                    </a>
+                    <a
+                      className="doc-link"
+                      href="https://developer.netcorecloud.com/docs/react-native-app-inbox-integration"
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      App Inbox integration
+                    </a>
+                    <a
+                      className="doc-link"
+                      href="https://developer.netcorecloud.com/docs/app-content-personalization-react"
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      App content personalization
+                    </a>
+                  </>
+                )}
+              </div>
+            ) : null}
+            {parts.includes("px") ? (
+              <div>
+                <h4>PX Docs</h4>
+                <a
+                  className="doc-link"
+                  href="https://developer.netcorecloud.com/docs/nudges-handling-invisible-containers-1"
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  Handling invisible container
+                </a>
+                <a
+                  className="doc-link"
+                  href="https://developer.netcorecloud.com/docs/setting-up-hansel-index-for-dynamic-views"
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  Handling dynamic views
+                </a>
+              </div>
+            ) : null}
+          </div>
           <div className="platforms">
             <button
               className={appPlatform === "react-native" ? "platform active" : "platform"}
@@ -371,12 +512,12 @@ export default function App() {
                   onClick={() => togglePart(part.id)}
                   className={parts.includes(part.id) ? "module active" : "module"}
                   aria-pressed={parts.includes(part.id)}
-                  disabled={part.id === "base" || (appPlatform === "flutter" && part.id !== "base")}
+                  disabled={part.id === "base" || (appPlatform === "flutter" && part.id === "px")}
                 >
                   <div className="module-title">{part.label}</div>
                   <div className="module-desc">{part.description}</div>
                   {part.id === "base" ? <div className="module-lock">Required</div> : null}
-                  {appPlatform === "flutter" && part.id !== "base" ? (
+                  {appPlatform === "flutter" && part.id === "px" ? (
                     <div className="module-lock">Coming soon</div>
                   ) : null}
                 </button>
@@ -410,6 +551,54 @@ export default function App() {
                   placeholder="^18.6.0"
                   value={firebaseVersion}
                   onChange={(event) => setFirebaseVersion(event.target.value)}
+                />
+              </div>
+              <div className="field">
+                <span className="label">Auto Ask Notification Permission</span>
+                <div className="toggle-row">
+                  <button
+                    className={autoAskPermission ? "toggle active" : "toggle"}
+                    onClick={() => setAutoAskPermission(true)}
+                  >
+                    Yes
+                  </button>
+                  <button
+                    className={!autoAskPermission ? "toggle active" : "toggle"}
+                    onClick={() => setAutoAskPermission(false)}
+                  >
+                    No
+                  </button>
+                </div>
+              </div>
+            </div>
+          ) : null}
+          {parts.includes("push") && appPlatform === "flutter" ? (
+            <div className="push-block">
+              <div className="field">
+                <span className="label">Flutter Push SDK Version</span>
+                <input
+                  className="path-input"
+                  placeholder="^3.5.0"
+                  value={flutterPushSdkVersion}
+                  onChange={(event) => setFlutterPushSdkVersion(event.target.value)}
+                />
+              </div>
+              <div className="field">
+                <span className="label">Android Push SDK Version</span>
+                <input
+                  className="path-input"
+                  placeholder="3.5.13"
+                  value={pushSdkVersion}
+                  onChange={(event) => setPushSdkVersion(event.target.value)}
+                />
+              </div>
+              <div className="field">
+                <span className="label">Main Dart Path</span>
+                <input
+                  className="path-input"
+                  placeholder="lib/main.dart"
+                  value={mainDartPath}
+                  onChange={(event) => setMainDartPath(event.target.value)}
                 />
               </div>
               <div className="field">
@@ -595,9 +784,9 @@ export default function App() {
               ) : null}
               {applyResult ? <pre className="apply-result">{applyResult}</pre> : null}
               {showPostApplyNote ? (
-                <div className="post-apply">
-                  Please review the integration code snippets added by the tool and complete any
-                  required Gradle and React Native library sync steps.
+                <div className="post-apply alert">
+                  Please review the integration changes, run the required Gradle or Flutter sync
+                  steps, and resolve any build or runtime errors before release.
                 </div>
               ) : null}
             </div>
@@ -612,79 +801,6 @@ export default function App() {
                     </li>
                   ))}
                 </ul>
-                <div className="summary-docs">
-                  {parts.includes("base") ? (
-                    <div>
-                      <h4>Base SDK Docs</h4>
-                      <a
-                        className="doc-link"
-                        href="https://developer.netcorecloud.com/docs/react-native-modular-sdk-integration-user-guide"
-                        target="_blank"
-                        rel="noreferrer"
-                      >
-                        SDK integration guide
-                      </a>
-                      <a
-                        className="doc-link"
-                        href="https://developer.netcorecloud.com/docs/react-native-user-event-tracking"
-                        target="_blank"
-                        rel="noreferrer"
-                      >
-                        Custom event & user tracking
-                      </a>
-                    </div>
-                  ) : null}
-                  {parts.includes("push") ? (
-                    <div>
-                      <h4>Push Docs</h4>
-                      <a
-                        className="doc-link"
-                        href="https://developer.netcorecloud.com/docs/android-new-customer-engagement#customizing-notification-appearance"
-                        target="_blank"
-                        rel="noreferrer"
-                      >
-                        Customize notification appearance
-                      </a>
-                      <a
-                        className="doc-link"
-                        href="https://developer.netcorecloud.com/docs/react-native-app-inbox-integration"
-                        target="_blank"
-                        rel="noreferrer"
-                      >
-                        App Inbox integration
-                      </a>
-                      <a
-                        className="doc-link"
-                        href="https://developer.netcorecloud.com/docs/app-content-personalization-react"
-                        target="_blank"
-                        rel="noreferrer"
-                      >
-                        App content personalization
-                      </a>
-                    </div>
-                  ) : null}
-                  {parts.includes("px") ? (
-                    <div>
-                      <h4>PX Docs</h4>
-                      <a
-                        className="doc-link"
-                        href="https://developer.netcorecloud.com/docs/nudges-handling-invisible-containers-1"
-                        target="_blank"
-                        rel="noreferrer"
-                      >
-                        Handling invisible container
-                      </a>
-                      <a
-                        className="doc-link"
-                        href="https://developer.netcorecloud.com/docs/setting-up-hansel-index-for-dynamic-views"
-                        target="_blank"
-                        rel="noreferrer"
-                      >
-                        Handling dynamic views
-                      </a>
-                    </div>
-                  ) : null}
-                </div>
               </div>
             ) : null}
           </section>
