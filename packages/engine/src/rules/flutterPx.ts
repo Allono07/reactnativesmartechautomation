@@ -15,6 +15,20 @@ const DEFAULT_ANDROID_PX_VERSION = "10.2.12";
 
 const PX_IMPORT = "package:smartech_nudges/smartech_nudges.dart";
 
+const FLUTTER_PX_REGISTRATION_SNIPPET = `// In main(), after initialization:
+NetcorePX.instance.registerPxDeeplinkListener(_PxDeeplinkListenerImpl());
+NetcorePX.instance.registerPxInternalEventsListener(_PxInternalEventsListener());
+`;
+
+const FLUTTER_PX_WIDGET_SNIPPET = `// Wrap your top-level app widget
+return SmartechPxWidget(
+  child: MaterialApp(
+    navigatorObservers: [PxNavigationObserver()],
+    home: const MyHomePage(),
+  ),
+);
+`;
+
 type FlutterPxContext = {
   scan: ProjectScan;
   rootPath: string;
@@ -98,6 +112,7 @@ export async function runFlutterPxRules(context: FlutterPxContext): Promise<Chan
         summary:
           "Existing PX listener classes were found, but registration calls are missing. Register them in main().",
         confidence: 0.2,
+        manualSnippet: FLUTTER_PX_REGISTRATION_SNIPPET,
         module: "px"
       });
     }
@@ -282,7 +297,8 @@ async function ensureMainDartPx(filePath: string, includeListenerImport: boolean
         newContent: originalContent,
         summary:
           "Could not safely wrap the top-level app widget or inject PX hooks. Please add PX hooks manually.",
-        confidence: 0.2
+        confidence: 0.2,
+        manualSnippet: FLUTTER_PX_WIDGET_SNIPPET
       });
     }
     return null;

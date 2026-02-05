@@ -53,6 +53,16 @@ export default function App() {
   } | null>(null);
   const [showPostApplyNote, setShowPostApplyNote] = useState(false);
   const [verificationMessage, setVerificationMessage] = useState<string | null>(null);
+  const [manualSteps, setManualSteps] = useState<
+    {
+      id: string;
+      title: string;
+      summary: string;
+      filePath: string;
+      manualSnippet?: string;
+      module?: string;
+    }[]
+  >([]);
 
   const canRun =
     rootPath.trim().length > 0 && smartechAppId.trim().length > 0 && deeplinkScheme.trim().length > 0;
@@ -84,6 +94,7 @@ export default function App() {
     setError(null);
     setApplyResult(null);
     setVerificationMessage(null);
+    setManualSteps([]);
     setSummary(null);
     setShowPostApplyNote(false);
 
@@ -162,6 +173,7 @@ export default function App() {
     setLoading(true);
     setError(null);
     setApplyResult(null);
+    setManualSteps([]);
 
     try {
       const activeParts =
@@ -219,6 +231,14 @@ export default function App() {
         results: { changeId: string; applied: boolean; message: string }[];
         retryResults: { changeId: string; applied: boolean; message: string }[];
         remaining: string[];
+        remainingChanges: {
+          id: string;
+          title: string;
+          summary: string;
+          filePath: string;
+          manualSnippet?: string;
+          module?: string;
+        }[];
       };
       const appliedIds = payload.results
         .filter((result) => result.applied)
@@ -244,9 +264,11 @@ export default function App() {
         setVerificationMessage(
           `Verification incomplete: ${payload.remaining.length} change(s) still pending.`
         );
+        setManualSteps(payload.remainingChanges ?? []);
       } else {
         setApplyResult(`${summaryText}${retryText}\nAll suggested changes were verified.`);
         setVerificationMessage("Verification successful: all selected changes are applied.");
+        setManualSteps([]);
       }
       setShowPostApplyNote(true);
     } catch (err) {
@@ -773,6 +795,28 @@ export default function App() {
                 <p className="muted">No issues detected during scan.</p>
               )}
             </div>
+            {plan.changes.filter((change) => !change.patch).length > 0 ? (
+              <div className="panel manual-steps">
+                <h3>Manual Steps Required</h3>
+                <p className="muted">
+                  The tool could not safely inject the following steps. Please apply them manually.
+                </p>
+                <ul className="notes">
+                  {plan.changes
+                    .filter((change) => !change.patch)
+                    .map((change) => (
+                      <li key={change.id}>
+                        <div className="change-title">{change.title}</div>
+                        <div className="change-path">{change.filePath}</div>
+                        <div className="change-summary">{change.summary}</div>
+                        {change.manualSnippet ? (
+                          <pre className="manual-snippet">{change.manualSnippet}</pre>
+                        ) : null}
+                      </li>
+                    ))}
+                </ul>
+              </div>
+            ) : null}
 
             <div className="panel changes-panel">
               <h3>Proposed Changes</h3>
@@ -849,6 +893,26 @@ export default function App() {
                 </div>
               ) : null}
             </div>
+            {manualSteps.length > 0 ? (
+              <div className="panel manual-steps">
+                <h3>Manual Steps Required</h3>
+                <p className="muted">
+                  The tool could not safely inject the following steps. Please apply them manually.
+                </p>
+                <ul className="notes">
+                  {manualSteps.map((step) => (
+                    <li key={step.id}>
+                      <div className="change-title">{step.title}</div>
+                      <div className="change-path">{step.filePath}</div>
+                      <div className="change-summary">{step.summary}</div>
+                      {step.manualSnippet ? (
+                        <pre className="manual-snippet">{step.manualSnippet}</pre>
+                      ) : null}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
             {summary ? (
               <div className="panel summary-panel">
                 <h3>Integration Summary</h3>

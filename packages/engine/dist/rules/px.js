@@ -13,6 +13,40 @@ const PX_DEP_KTS = "implementation(\"com.netcore.android:smartech-nudges:${SMART
 const PX_IMPORT = "import { HanselTrackerRn } from 'smartech-reactnative-nudges';";
 const BASE_REACT_IMPORT = "import SmartechBaseReact from 'smartech-base-react-native';";
 const PX_USE_EFFECT = `useEffect(() => {\n  HanselTrackerRn.addListener('HanselInternalEvent', (e) => {\n    console.log('Event Detail:', e);\n    SmartechBaseReact.trackEvent(e.eventName, e.properties);\n  });\n\n  HanselTrackerRn.addListener('HanselDeepLinkListener', (e) => {\n    console.log('DeepLink Listener URL:', e.deeplink);\n  });\n\n  HanselTrackerRn.registerHanselTrackerListener();\n\n  HanselTrackerRn.registerHanselDeeplinkListener();\n}, []);`;
+const RN_PX_MANUAL_SNIPPET = `import { HanselTrackerRn } from 'smartech-reactnative-nudges';
+import SmartechBaseReact from 'smartech-base-react-native';
+
+useEffect(() => {
+  HanselTrackerRn.addListener('HanselInternalEvent', (e) => {
+    console.log('Event Detail:', e);
+    SmartechBaseReact.trackEvent(e.eventName, e.properties);
+  });
+
+  HanselTrackerRn.addListener('HanselDeepLinkListener', (e) => {
+    console.log('DeepLink Listener URL:', e.deeplink);
+  });
+
+  HanselTrackerRn.registerHanselTrackerListener();
+
+  HanselTrackerRn.registerHanselDeeplinkListener();
+}, []);
+`;
+const RN_PX_MAINACTIVITY_SNIPPET = `// Kotlin MainActivity
+import io.hansel.hanselsdk.Hansel
+
+override fun onCreate(savedInstanceState: Bundle?) {
+  super.onCreate(savedInstanceState)
+  Hansel.pairTestDevice(intent?.dataString)
+}
+
+// AndroidManifest.xml (launcher activity)
+<intent-filter>
+  <action android:name="android.intent.action.VIEW" />
+  <category android:name="android.intent.category.DEFAULT" />
+  <category android:name="android.intent.category.BROWSABLE" />
+  <data android:scheme="YOUR_CUSTOM_SCHEME" />
+</intent-filter>
+`;
 export async function runPxRules(context) {
     const changes = [];
     if (!context.scan.platforms.includes("android"))
@@ -41,17 +75,56 @@ export async function runPxRules(context) {
         if (intentChange)
             changes.push(intentChange);
     }
+    if (!launcher) {
+        changes.push({
+            id: "android-manifest-px-intent-manual",
+            title: "Hansel deeplink intent filter not injected",
+            filePath: manifestFile,
+            kind: "insert",
+            patch: "",
+            summary: "Launcher activity not found. Add Hansel intent filter manually.",
+            confidence: 0.2,
+            manualSnippet: RN_PX_MAINACTIVITY_SNIPPET,
+            module: "px"
+        });
+    }
     const appFile = await findAppEntryFile(context.rootPath);
     if (appFile) {
         const appChange = await ensurePxUseEffect(appFile);
         if (appChange)
             changes.push(appChange);
     }
+    else {
+        changes.push({
+            id: "rn-app-px-manual",
+            title: "PX hooks not injected",
+            filePath: path.join(context.rootPath, "App.js"),
+            kind: "insert",
+            patch: "",
+            summary: "App entry file not found. Add Hansel listeners manually.",
+            confidence: 0.2,
+            manualSnippet: RN_PX_MANUAL_SNIPPET,
+            module: "px"
+        });
+    }
     const mainActivity = await findMainActivityFile(context.rootPath, launcher);
     if (mainActivity) {
         const mainChange = await ensurePxMainActivity(mainActivity);
         if (mainChange)
             changes.push(mainChange);
+    }
+    else {
+        changes.push({
+            id: "android-mainactivity-hansel-manual",
+            title: "Hansel pairTestDevice not injected",
+            filePath: path.join(context.rootPath, "android", "app", "src", "main"),
+            kind: "insert",
+            patch: "",
+            summary: "MainActivity not found. Add Hansel.pairTestDevice manually.",
+            confidence: 0.2,
+            manualSnippet: RN_PX_MAINACTIVITY_SNIPPET,
+            module: "px"
+        });
     }
     return changes;
 }

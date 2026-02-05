@@ -46,6 +46,26 @@ const DEEPLINK_SNIPPET_KOTLIN = [
     "    // Handle deeplink on app side",
     "}"
 ];
+const BASE_DEEPLINK_MANUAL_SNIPPET = `// MainActivity onCreate (Kotlin)
+override fun onCreate(savedInstanceState: Bundle?) {
+  super.onCreate(savedInstanceState)
+  val isSmartechHandledDeeplink =
+      Smartech.getInstance(WeakReference(this)).isDeepLinkFromSmartech(intent)
+  if (!isSmartechHandledDeeplink) {
+    // Handle deeplink on app side
+  }
+}
+
+// AndroidManifest.xml (launcher activity)
+<intent-filter>
+  <action android:name="android.intent.action.VIEW" />
+  <category android:name="android.intent.category.DEFAULT" />
+  <category android:name="android.intent.category.BROWSABLE" />
+  <data
+      android:scheme="YOUR_CUSTOM_SCHEME"
+      android:host="smartech_sdk_td" />
+</intent-filter>
+`;
 export async function runBaseRules(context) {
     const changes = [];
     if (!context.scan.platforms.includes("android")) {
@@ -138,6 +158,7 @@ export async function runBaseRules(context) {
             patch: "",
             summary: "Could not locate the launcher activity from AndroidManifest.xml. MainActivity deeplink integration was skipped.",
             confidence: 0.2,
+            manualSnippet: BASE_DEEPLINK_MANUAL_SNIPPET,
             module: "base"
         });
     }

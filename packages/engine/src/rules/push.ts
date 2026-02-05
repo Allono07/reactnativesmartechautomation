@@ -34,6 +34,58 @@ const FOREGROUND_HANDLER = `// For foreground state\nconst unsubscribe = messagi
 
 const BACKGROUND_HANDLER = `// For background/terminated state\nmessaging().setBackgroundMessageHandler(async remoteMessage => {\n  SmartechPushReact.handlePushNotification(remoteMessage.data, (result) => {\n    console.log('isNotificationHandled by smartech :: ', result);\n    // if result is false then notification is from other sources\n  });\n});`;
 
+const RN_PUSH_MANUAL_SNIPPET = `import messaging from '@react-native-firebase/messaging';
+import SmartechPushReact from 'smartech-push-react-native';
+import SmartechReact from 'smartech-base-react-native';
+
+useEffect(() => {
+  const getFCMToken = async () => {
+    try {
+      const token = await messaging().getToken();
+      SmartechPushReact.setDevicePushToken(token);
+    } catch (e) {
+      console.log(error);
+    }
+  };
+
+  const handleDeeplinkWithPayload = (smartechData) => {
+    console.log('Smartech Data :: ', smartechData);
+    console.log('Smartech Deeplink :: ', smartechData.smtDeeplink);
+    console.log('Smartech CustomPayload:: ', smartechData.smtCustomPayload);
+    // Handle the deeplink and custom payload as needed
+  };
+
+  getFCMToken();
+  SmartechReact.addListener(SmartechReact.SmartechDeeplink, handleDeeplinkWithPayload);
+
+  // For foreground state
+  const unsubscribe = messaging().onMessage(async remoteMessage => {
+    SmartechPushReact.handlePushNotification(remoteMessage.data, (result) => {
+      console.log('isNotificationHandled by smartech :: ', result);
+      // if result is false then notification is from other sources
+      //also check if this listener is used anywhere else in the app
+    });
+  });
+
+  return () => {
+    SmartechReact.removeListener(SmartechReact.SmartechDeeplink);
+    unsubscribe();
+  };
+}, []);
+`;
+
+const RN_PUSH_BACKGROUND_MANUAL_SNIPPET = `import messaging from '@react-native-firebase/messaging';
+import SmartechPushReact from 'smartech-push-react-native';
+
+// For background/terminated state
+messaging().setBackgroundMessageHandler(async remoteMessage => {
+  SmartechPushReact.handlePushNotification(remoteMessage.data, (result) => {
+    console.log('isNotificationHandled by smartech :: ', result);
+    // if result is false then notification is from other sources
+  });
+});
+`;
+
 type PushRuleContext = {
   scan: ProjectScan;
   rootPath: string;
@@ -67,12 +119,37 @@ export async function runPushRules(context: PushRuleContext): Promise<Change[]> 
   if (appFile) {
     const appChange = await ensureAppPushLogic(appFile);
     if (appChange) changes.push(appChange);
+  } else {
+    changes.push({
+      id: "rn-app-push-manual",
+      title: "Push hooks not injected",
+      filePath: path.join(context.rootPath, "App.js"),
+      kind: "insert",
+      patch: "",
+      summary:
+        "App entry file not found. Add push token, deeplink listener, and foreground handler manually.",
+      confidence: 0.2,
+      manualSnippet: RN_PUSH_MANUAL_SNIPPET,
+      module: "push"
+    });
   }
 
   const indexFile = await findIndexFile(context.rootPath);
   if (indexFile) {
     const indexChange = await ensureIndexPushLogic(indexFile);
     if (indexChange) changes.push(indexChange);
+  } else {
+    changes.push({
+      id: "rn-index-push-manual",
+      title: "Background push handler not injected",
+      filePath: path.join(context.rootPath, "index.js"),
+      kind: "insert",
+      patch: "",
+      summary: "Index entry file not found. Add background push handler manually.",
+      confidence: 0.2,
+      manualSnippet: RN_PUSH_BACKGROUND_MANUAL_SNIPPET,
+      module: "push"
+    });
   }
 
   const manifestPath = path.join(

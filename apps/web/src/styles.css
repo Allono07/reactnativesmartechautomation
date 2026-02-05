@@ -495,6 +495,34 @@ button:disabled {
   font-weight: 600;
 }
 
+.manual-steps {
+  border-color: rgba(252, 94, 2, 0.4);
+  background: #2a1522;
+}
+
+.manual-steps .change-title {
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.manual-steps .change-path {
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+
+.manual-snippet {
+  margin-top: 10px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: #1d1226;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
+    "Courier New", monospace;
+  font-size: 0.75rem;
+  color: #ffffff;
+  white-space: pre-wrap;
+}
+
 .verify-banner {
   margin: 12px 0 4px;
   padding: 12px 14px;

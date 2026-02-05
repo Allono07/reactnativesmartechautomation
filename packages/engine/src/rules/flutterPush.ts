@@ -18,8 +18,42 @@ const DEFAULT_ANDROID_PUSH_VERSION = "3.5.13";
 const PUSH_DEP_GROOVY = "api \"com.netcore.android:smartech-push:${SMARTECH_PUSH_SDK_VERSION}\"";
 const PUSH_DEP_KTS = "api(\"com.netcore.android:smartech-push:${SMARTECH_PUSH_SDK_VERSION}\")";
 
-// const SMARTECH_BASE_IMPORT = "com.netcore.android.smartech_flutter.SmartechBasePlugin";
 const SMARTECH_PUSH_IMPORT = "com.netcore.android.smartech_push.SmartechPushPlugin";
+
+const FLUTTER_PUSH_MANUAL_SNIPPET = `// In your State<T> class:
+@override
+void initState() {
+  super.initState();
+  _registerPushToken();
+  FirebaseMessaging.onMessage.listen((RemoteMessage message) async {
+    bool isFromSmt =
+        await SmartechPush().isNotificationFromSmartech(message.data.toString());
+
+    if (isFromSmt) {
+      SmartechPush().handlePushNotification(message.data.toString());
+      return;
+    }
+
+    // Handle non-Smartech notification
+  });
+
+  Smartech().onHandleDeeplink((
+    String? smtDeeplinkSource,
+    String? smtDeeplink,
+    Map<dynamic, dynamic>? smtPayload,
+    Map<dynamic, dynamic>? smtCustomPayload,
+  ) async {
+    // Perform action on notification click
+  });
+}
+
+Future<void> _registerPushToken() async {
+  final androidToken = await FirebaseMessaging.instance.getToken();
+  if (androidToken != null) {
+    SmartechPush().setDevicePushToken(androidToken);
+  }
+}
+`;
 
 type FlutterPushContext = {
   scan: ProjectScan;
@@ -354,6 +388,25 @@ async function ensureMainDartPush(filePath: string): Promise<Change | null> {
   const stateChange = ensureStatefulPushSetup(newContent);
   if (stateChange.updated) {
     newContent = stateChange.content;
+  } else if (stateChange.content === originalContent) {
+    const needsHooks =
+      !originalContent.includes("_registerPushToken") ||
+      !originalContent.includes("FirebaseMessaging.onMessage") ||
+      !originalContent.includes("onHandleDeeplink");
+    if (needsHooks) {
+      return buildChange({
+        id: "flutter-main-dart-push-missing",
+        title: "Flutter push hooks not injected",
+        filePath,
+        kind: "insert",
+        originalContent,
+        newContent: originalContent,
+        summary:
+          "Could not safely inject push hooks into main.dart. Please add _registerPushToken, foreground handler, and deeplink callback manually.",
+        confidence: 0.2,
+        manualSnippet: FLUTTER_PUSH_MANUAL_SNIPPET
+      });
+    }
   }
 
   if (newContent === originalContent) {
@@ -371,7 +424,8 @@ async function ensureMainDartPush(filePath: string): Promise<Change | null> {
         newContent: originalContent,
         summary:
           "Could not locate a StatefulWidget State class to inject initState push setup. Add push hooks manually.",
-        confidence: 0.2
+        confidence: 0.2,
+        manualSnippet: FLUTTER_PUSH_MANUAL_SNIPPET
       });
     }
     return null;
@@ -466,6 +520,7 @@ function ensureStatefulPushSetup(source: string): { updated: boolean; content: s
   const hasInitState = /initState\s*\(\s*\)/.test(body);
   const hasOnMessage = /FirebaseMessaging\.onMessage/.test(body);
   const hasDeeplink = /onHandleDeeplink/.test(body);
+  const hasSmartechPush = /SmartechPush/.test(body);
 
   const initLines: string[] = [];
   if (!hasRegisterMethod) {
@@ -500,18 +555,23 @@ function ensureStatefulPushSetup(source: string): { updated: boolean; content: s
   }
 
   if (hasInitState) {
-    if (initLines.length > 0) {
+    if (initLines.length > 0 && hasSmartechPush) {
       updatedBody = updatedBody.replace(
         /super\.initState\s*\(\s*\);\s*/g,
         (match) => `${match}\n${initLines.join("\n")}\n`
       );
+    } else if (initLines.length > 0) {
+      // If the class exists but doesn't look like a Smartech-friendly state, skip injection.
+      return { updated: false, content: source };
     }
   } else {
-    if (initLines.length > 0) {
+    if (initLines.length > 0 && hasSmartechPush) {
       const initBlock = `\n  @override\n  void initState() {\n    super.initState();\n${initLines.join(
         "\n"
       )}\n  }\n`;
       updatedBody = `${initBlock}${updatedBody}`;
+    } else if (initLines.length > 0) {
+      return { updated: false, content: source };
     }
   }
 

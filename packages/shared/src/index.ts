@@ -16,6 +16,7 @@ export type Change = {
   confidence: number;
   originalContent?: string;
   newContent?: string;
+  manualSnippet?: string;
   module?: IntegrationPart;
 };
 

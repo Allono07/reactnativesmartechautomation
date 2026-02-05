@@ -174,7 +174,20 @@ app.post("/api/apply", async (req, res) => {
       remaining = finalFiltered.map((change) => change.id);
     }
 
-    res.json({ results, retryResults, remaining });
+    const remainingChanges = options?.rootPath && options?.parts?.length
+      ? (await planIntegration(options)).changes
+          .filter((change) => (selectedIds ? selectedIds.includes(change.id) : true))
+          .map((change) => ({
+            id: change.id,
+            title: change.title,
+            summary: change.summary,
+            filePath: change.filePath,
+            manualSnippet: change.manualSnippet,
+            module: change.module
+          }))
+      : [];
+
+    res.json({ results, retryResults, remaining, remainingChanges });
   } catch (error) {
     res.status(500).json({ error: "Failed to apply changes" });
   }
