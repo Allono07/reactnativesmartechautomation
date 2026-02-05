@@ -23,9 +23,11 @@ const initialParts: IntegrationPart[] = ["base"];
 
 export default function App() {
   const [rootPath, setRootPath] = useState<string>("");
+  const [appPlatform, setAppPlatform] = useState<"react-native" | "flutter">("react-native");
   const [smartechAppId, setSmartechAppId] = useState<string>("");
   const [deeplinkScheme, setDeeplinkScheme] = useState<string>("");
   const [baseSdkVersion, setBaseSdkVersion] = useState<string>("3.7.6");
+  const [flutterBaseSdkVersion, setFlutterBaseSdkVersion] = useState<string>("^3.5.0");
   const [pushSdkVersion, setPushSdkVersion] = useState<string>("3.5.13");
   const [rnPushVersion, setRnPushVersion] = useState<string>("^3.7.2");
   const [firebaseVersion, setFirebaseVersion] = useState<string>("^18.6.0");
@@ -83,10 +85,15 @@ export default function App() {
     setShowPostApplyNote(false);
 
     try {
+      const activeParts =
+        appPlatform === "flutter"
+          ? (["base"] as IntegrationPart[])
+          : ["base", ...parts.filter((part) => part !== "base")];
       const inputs: Record<string, any> = {
         smartechAppId,
         deeplinkScheme,
         baseSdkVersion,
+        flutterBaseSdkVersion,
         pushSdkVersion,
         rnPushVersion,
         firebaseVersion,
@@ -94,7 +101,7 @@ export default function App() {
         autoFetchLocation
       };
 
-      if (parts.includes("px")) {
+      if (parts.includes("px") && appPlatform === "react-native") {
         inputs.pxSdkVersion = pxSdkVersion;
         inputs.rnPxVersion = rnPxVersion;
         inputs.hanselAppId = hanselAppId;
@@ -109,7 +116,8 @@ export default function App() {
         },
         body: JSON.stringify({
           rootPath,
-          parts: ["base", ...parts.filter((part) => part !== "base")],
+          parts: activeParts,
+          appPlatform,
           inputs
         })
       });
@@ -146,6 +154,10 @@ export default function App() {
     setApplyResult(null);
 
     try {
+      const activeParts =
+        appPlatform === "flutter"
+          ? (["base"] as IntegrationPart[])
+          : ["base", ...parts.filter((part) => part !== "base")];
       const response = await fetch("http://localhost:8787/api/apply", {
         method: "POST",
         headers: {
@@ -156,17 +168,19 @@ export default function App() {
           selectedChangeIds: selectedList.map((change) => change.id),
           options: {
             rootPath,
-            parts: ["base", ...parts.filter((part) => part !== "base")],
+            parts: activeParts,
+            appPlatform,
             inputs: {
               smartechAppId,
               deeplinkScheme,
               baseSdkVersion,
+              flutterBaseSdkVersion,
               pushSdkVersion,
               rnPushVersion,
               firebaseVersion,
               autoAskNotificationPermission: autoAskPermission,
               autoFetchLocation,
-              ...(parts.includes("px")
+              ...(parts.includes("px") && appPlatform === "react-native"
                 ? {
                     pxSdkVersion,
                     rnPxVersion,
@@ -247,29 +261,40 @@ export default function App() {
     setSelectedChanges(next);
   };
 
+  const platformLabel = appPlatform === "flutter" ? "Flutter" : "React Native";
+
   return (
     <div className="app">
       <header className="hero">
         <div>
           <p className="eyebrow">Smartech SDK Integrator</p>
-          <h1>Automate React Native SDK setup with confidence.</h1>
+          <h1>Automate {platformLabel} SDK setup with confidence.</h1>
           <p className="subtitle">
             Point the tool at a client project, choose modules, and generate a precise integration
             plan with safe edits and previews.
           </p>
           <div className="platforms">
-            <div className="platform active">
+            <button
+              className={appPlatform === "react-native" ? "platform active" : "platform"}
+              onClick={() => setAppPlatform("react-native")}
+            >
               <div className="platform-title">React Native</div>
               <div className="platform-status">Active</div>
-            </div>
+            </button>
             <div className="platform disabled">
               <div className="platform-title">Android Native</div>
               <div className="platform-status">Coming soon</div>
             </div>
-            <div className="platform disabled">
+            <button
+              className={appPlatform === "flutter" ? "platform active" : "platform"}
+              onClick={() => {
+                setAppPlatform("flutter");
+                setParts(["base"]);
+              }}
+            >
               <div className="platform-title">Flutter</div>
-              <div className="platform-status">Coming soon</div>
-            </div>
+              <div className="platform-status">Active</div>
+            </button>
           </div>
         </div>
         <div className="hero-card">
@@ -277,7 +302,7 @@ export default function App() {
             <span className="label">Project Path</span>
             <input
               className="path-input"
-              placeholder="/path/to/react-native-project"
+              placeholder="/path/to/project"
               value={rootPath}
               onChange={(event) => setRootPath(event.target.value)}
             />
@@ -292,7 +317,7 @@ export default function App() {
             />
           </div>
           <div className="field">
-            <span className="label">Deeplink Scheme</span>
+            <span className="label">Custom Scheme</span>
             <input
               className="path-input"
               placeholder="your-custom-scheme"
@@ -301,7 +326,7 @@ export default function App() {
             />
           </div>
           <div className="field">
-            <span className="label">Base SDK Version</span>
+            <span className="label">Android Base SDK Version</span>
             <input
               className="path-input"
               placeholder="3.7.6"
@@ -309,6 +334,17 @@ export default function App() {
               onChange={(event) => setBaseSdkVersion(event.target.value)}
             />
           </div>
+          {appPlatform === "flutter" ? (
+            <div className="field">
+              <span className="label">Flutter Base SDK Version</span>
+              <input
+                className="path-input"
+                placeholder="^3.5.0"
+                value={flutterBaseSdkVersion}
+                onChange={(event) => setFlutterBaseSdkVersion(event.target.value)}
+              />
+            </div>
+          ) : null}
           <div className="field">
             <span className="label">Auto Fetch Location</span>
             <div className="toggle-row">
@@ -335,16 +371,19 @@ export default function App() {
                   onClick={() => togglePart(part.id)}
                   className={parts.includes(part.id) ? "module active" : "module"}
                   aria-pressed={parts.includes(part.id)}
-                  disabled={part.id === "base"}
+                  disabled={part.id === "base" || (appPlatform === "flutter" && part.id !== "base")}
                 >
                   <div className="module-title">{part.label}</div>
                   <div className="module-desc">{part.description}</div>
                   {part.id === "base" ? <div className="module-lock">Required</div> : null}
+                  {appPlatform === "flutter" && part.id !== "base" ? (
+                    <div className="module-lock">Coming soon</div>
+                  ) : null}
                 </button>
               ))}
             </div>
           </div>
-          {parts.includes("push") ? (
+          {parts.includes("push") && appPlatform === "react-native" ? (
             <div className="push-block">
               <div className="field">
                 <span className="label">Push SDK Version</span>
@@ -392,7 +431,7 @@ export default function App() {
               </div>
             </div>
           ) : null}
-          {parts.includes("px") ? (
+          {parts.includes("px") && appPlatform === "react-native" ? (
             <div className="push-block">
               <div className="field">
                 <span className="label">PX SDK Version</span>
@@ -472,6 +511,7 @@ export default function App() {
                 </div>
               </div>
             </div>
+            {verificationMessage ? <div className="verify-banner">{verificationMessage}</div> : null}
 
             <div className="panel scan-notes">
               <h3>Scan Notes</h3>

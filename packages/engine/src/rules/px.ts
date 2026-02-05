@@ -19,7 +19,7 @@ const PX_DEP_KTS =
 const PX_IMPORT = "import { HanselTrackerRn } from 'smartech-reactnative-nudges';";
 const BASE_REACT_IMPORT = "import SmartechBaseReact from 'smartech-base-react-native';";
 
-const PX_USE_EFFECT = `useEffect(() => {\n  HanselTrackerRn.addListener('HanselInternalEvent', (e) => {\n    console.log('Event Detail:', e);\n  });\n\n  HanselTrackerRn.addListener('HanselDeepLinkListener', (e) => {\n    console.log('DeepLink Listener URL:', e.deeplink);\n  });\n\n  HanselTrackerRn.registerHanselTrackerListener();\n\n  HanselTrackerRn.registerHanselDeeplinkListener();\n}, []);`;
+const PX_USE_EFFECT = `useEffect(() => {\n  HanselTrackerRn.addListener('HanselInternalEvent', (e) => {\n    console.log('Event Detail:', e);\n    SmartechBaseReact.trackEvent(e.eventName, e.properties);\n  });\n\n  HanselTrackerRn.addListener('HanselDeepLinkListener', (e) => {\n    console.log('DeepLink Listener URL:', e.deeplink);\n  });\n\n  HanselTrackerRn.registerHanselTrackerListener();\n\n  HanselTrackerRn.registerHanselDeeplinkListener();\n}, []);`;
 
 type PxRuleContext = {
   scan: ProjectScan;
@@ -288,6 +288,12 @@ async function ensurePxUseEffect(filePath: string): Promise<Change | null> {
     newContent = ensureReactUseEffectImport(newContent);
   }
 
+  const hasInternalListener = /HanselInternalEvent/.test(newContent);
+  const hasTrackEvent = /SmartechBaseReact\.trackEvent/.test(newContent);
+  if (hasInternalListener && !hasTrackEvent) {
+    newContent = ensureHanselTrackEvent(newContent);
+  }
+
   const needsInternalListener = !/HanselInternalEvent/.test(newContent);
   const needsDeepLinkListener = !/HanselDeepLinkListener/.test(newContent);
   const needsTracker = !/registerHanselTrackerListener/.test(newContent);
@@ -482,6 +488,29 @@ function ensureReactUseEffectImport(source: string): string {
     );
   }
   return `import React, { useEffect } from 'react';\n${source}`;
+}
+
+function ensureHanselTrackEvent(source: string): string {
+  const listenerRegex =
+    /HanselTrackerRn\.addListener\('HanselInternalEvent',\s*\(e\)\s*=>\s*\{([\s\S]*?)\n\s*\}\);/;
+  const match = source.match(listenerRegex);
+  if (!match) return source;
+
+  const body = match[1];
+  if (body.includes("SmartechBaseReact.trackEvent")) return source;
+
+  const lines = body.split("\n");
+  const insertLine = "    SmartechBaseReact.trackEvent(e.eventName, e.properties);";
+  const consoleIndex = lines.findIndex((line) => line.includes("console.log('Event Detail'"));
+
+  if (consoleIndex >= 0) {
+    lines.splice(consoleIndex + 1, 0, insertLine);
+  } else {
+    lines.push(insertLine);
+  }
+
+  const rebuilt = `HanselTrackerRn.addListener('HanselInternalEvent', (e) => {${lines.join("\n")}\n  });`;
+  return source.replace(listenerRegex, rebuilt);
 }
 
 function escapeRegex(value: string): string {

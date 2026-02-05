@@ -2,6 +2,8 @@
 
 Desktop tool (Electron + React) that generates an integration plan for Smartech SDK in React Native projects. The engine is modular, with rule-based scanners that can safely propose or apply changes.
 
+See CONTEXT.md for full project context, architecture, and extension guidance.
+
 ## Workspace
 - `apps/web`: Local web UI (Vite + React)
 - `apps/server`: Local API server (Express)

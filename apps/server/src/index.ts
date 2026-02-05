@@ -1,5 +1,7 @@
 import express from "express";
 import cors from "cors";
+import path from "node:path";
+import { promises as fs } from "node:fs";
 import { planIntegration, applyChanges } from "@smartech/engine";
 import type { IntegrationOptions } from "@smartech/shared";
 
@@ -13,6 +15,16 @@ app.get("/api/health", (_req, res) => {
   res.json({ ok: true });
 });
 
+async function detectFlutterProject(rootPath: string): Promise<boolean> {
+  try {
+    const pubspecPath = path.join(rootPath, "pubspec.yaml");
+    const contents = await fs.readFile(pubspecPath, "utf-8");
+    return /(^|\n)flutter:\s*$/m.test(contents);
+  } catch {
+    return false;
+  }
+}
+
 app.post("/api/plan", async (req, res) => {
   try {
     const options = req.body as IntegrationOptions;
@@ -25,12 +37,29 @@ app.post("/api/plan", async (req, res) => {
       return res.status(400).json({ error: "parts must include base" });
     }
 
+    if (!options.appPlatform) {
+      options.appPlatform = (await detectFlutterProject(options.rootPath)) ? "flutter" : "react-native";
+    }
+
+    if (options.appPlatform === "flutter") {
+      options.parts = ["base"];
+    }
+
     if (!options.inputs?.smartechAppId) {
       return res.status(400).json({ error: "smartechAppId is required" });
     }
 
     if (!options.inputs?.deeplinkScheme) {
       return res.status(400).json({ error: "deeplinkScheme is required" });
+    }
+
+    if (options.appPlatform === "flutter") {
+      if (!options.inputs?.flutterBaseSdkVersion) {
+        return res.status(400).json({ error: "flutterBaseSdkVersion is required for Flutter" });
+      }
+      if (!options.inputs?.baseSdkVersion) {
+        return res.status(400).json({ error: "baseSdkVersion is required for Flutter" });
+      }
     }
 
     if (options.parts.includes("px")) {
@@ -50,7 +79,7 @@ app.post("/api/plan", async (req, res) => {
       Boolean(options.inputs?.hanselAppKey) ||
       Boolean(options.inputs?.pxScheme);
 
-    if (pxInputPresent && !options.parts.includes("px")) {
+    if (pxInputPresent && !options.parts.includes("px") && options.appPlatform !== "flutter") {
       options.parts = [...options.parts, "px"];
     }
 
@@ -78,20 +107,32 @@ app.post("/api/apply", async (req, res) => {
     let retryResults: typeof results = [];
 
     if (options?.rootPath && options?.parts?.length) {
-      const verifyPlan = await planIntegration(options);
-      const filtered = selectedIds
-        ? verifyPlan.changes.filter((change) => selectedIds.includes(change.id))
-        : verifyPlan.changes;
-      remaining = filtered.map((change) => change.id);
-
-      if (filtered.length > 0) {
-        retryResults = await applyChanges(filtered, false);
-        const verifyPlan2 = await planIntegration(options);
-        const filtered2 = selectedIds
-          ? verifyPlan2.changes.filter((change) => selectedIds.includes(change.id))
-          : verifyPlan2.changes;
-        remaining = filtered2.map((change) => change.id);
+      if (!options.appPlatform) {
+        options.appPlatform = (await detectFlutterProject(options.rootPath)) ? "flutter" : "react-native";
       }
+      if (options.appPlatform === "flutter") {
+        options.parts = ["base"];
+      }
+
+      const maxAttempts = 2;
+      for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
+        const verifyPlan = await planIntegration(options);
+        const filtered = selectedIds
+          ? verifyPlan.changes.filter((change) => selectedIds.includes(change.id))
+          : verifyPlan.changes;
+        remaining = filtered.map((change) => change.id);
+
+        if (filtered.length === 0) break;
+
+        const attemptResults = await applyChanges(filtered, false);
+        retryResults = retryResults.concat(attemptResults);
+      }
+
+      const finalPlan = await planIntegration(options);
+      const finalFiltered = selectedIds
+        ? finalPlan.changes.filter((change) => selectedIds.includes(change.id))
+        : finalPlan.changes;
+      remaining = finalFiltered.map((change) => change.id);
     }
 
     res.json({ results, retryResults, remaining });

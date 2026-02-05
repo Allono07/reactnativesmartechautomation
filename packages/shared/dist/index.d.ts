@@ -1,5 +1,6 @@
 export type IntegrationPart = "base" | "push" | "px";
 export type Platform = "android" | "ios";
+export type AppPlatform = "react-native" | "flutter";
 export type ChangeKind = "create" | "update" | "insert";
 export type Change = {
     id: string;
@@ -28,10 +29,12 @@ export type IntegrationOptions = {
     rootPath: string;
     parts: IntegrationPart[];
     dryRun?: boolean;
+    appPlatform?: AppPlatform;
     inputs?: {
         smartechAppId?: string;
         deeplinkScheme?: string;
         baseSdkVersion?: string;
+        flutterBaseSdkVersion?: string;
         pushSdkVersion?: string;
         rnPushVersion?: string;
         firebaseVersion?: string;
