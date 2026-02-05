@@ -210,11 +210,11 @@ async function ensurePushPluginInit(filePath) {
         ? `import ${SMARTECH_PUSH_IMPORT}`
         : `import ${SMARTECH_PUSH_IMPORT};`;
     // const baseImportLine = isKotlin
-    //     ? `import ${SMARTECH_BASE_IMPORT}`
-    //     : `import ${SMARTECH_BASE_IMPORT};`;
+    // ? `import ${SMARTECH_BASE_IMPORT}`
+    // : `import ${SMARTECH_BASE_IMPORT};`;
     let newContent = originalContent;
     // if (!newContent.includes(baseImportLine)) {
-    //     newContent = newContent.replace(/(package\s+[^\n]+\n)/, `$1${baseImportLine}\n`);
+    //   newContent = newContent.replace(/(package\s+[^\n]+\n)/, `$1${baseImportLine}\n`);
     // }
     if (!newContent.includes(importLine)) {
         newContent = newContent.replace(/(package\s+[^\n]+\n)/, `$1${importLine}\n`);

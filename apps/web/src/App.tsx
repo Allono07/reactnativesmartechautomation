@@ -29,6 +29,7 @@ export default function App() {
   const [baseSdkVersion, setBaseSdkVersion] = useState<string>("3.7.6");
   const [flutterBaseSdkVersion, setFlutterBaseSdkVersion] = useState<string>("^3.5.0");
   const [flutterPushSdkVersion, setFlutterPushSdkVersion] = useState<string>("^3.5.0");
+  const [flutterPxSdkVersion, setFlutterPxSdkVersion] = useState<string>("^1.1.0");
   const [pushSdkVersion, setPushSdkVersion] = useState<string>("3.5.13");
   const [rnPushVersion, setRnPushVersion] = useState<string>("^3.7.2");
   const [firebaseVersion, setFirebaseVersion] = useState<string>("^18.6.0");
@@ -89,7 +90,11 @@ export default function App() {
     try {
       const activeParts =
         appPlatform === "flutter"
-          ? (parts.includes("push") ? (["base", "push"] as IntegrationPart[]) : (["base"] as IntegrationPart[]))
+          ? ([
+              "base",
+              ...(parts.includes("push") ? ["push"] : []),
+              ...(parts.includes("px") ? ["px"] : [])
+            ] as IntegrationPart[])
           : ["base", ...parts.filter((part) => part !== "base")];
       const inputs: Record<string, any> = {
         smartechAppId,
@@ -97,6 +102,7 @@ export default function App() {
         baseSdkVersion,
         flutterBaseSdkVersion,
         flutterPushSdkVersion,
+        flutterPxSdkVersion,
         mainDartPath,
         pushSdkVersion,
         rnPushVersion,
@@ -105,7 +111,7 @@ export default function App() {
         autoFetchLocation
       };
 
-      if (parts.includes("px") && appPlatform === "react-native") {
+      if (parts.includes("px")) {
         inputs.pxSdkVersion = pxSdkVersion;
         inputs.rnPxVersion = rnPxVersion;
         inputs.hanselAppId = hanselAppId;
@@ -160,7 +166,11 @@ export default function App() {
     try {
       const activeParts =
         appPlatform === "flutter"
-          ? (parts.includes("push") ? (["base", "push"] as IntegrationPart[]) : (["base"] as IntegrationPart[]))
+          ? ([
+              "base",
+              ...(parts.includes("push") ? ["push"] : []),
+              ...(parts.includes("px") ? ["px"] : [])
+            ] as IntegrationPart[])
           : ["base", ...parts.filter((part) => part !== "base")];
       const response = await fetch("http://localhost:8787/api/apply", {
         method: "POST",
@@ -180,13 +190,14 @@ export default function App() {
               baseSdkVersion,
               flutterBaseSdkVersion,
               flutterPushSdkVersion,
+              flutterPxSdkVersion,
               mainDartPath,
               pushSdkVersion,
               rnPushVersion,
               firebaseVersion,
               autoAskNotificationPermission: autoAskPermission,
               autoFetchLocation,
-              ...(parts.includes("px") && appPlatform === "react-native"
+              ...(parts.includes("px")
                 ? {
                     pxSdkVersion,
                     rnPxVersion,
@@ -486,6 +497,17 @@ export default function App() {
               />
             </div>
           ) : null}
+          {appPlatform === "flutter" && (parts.includes("push") || parts.includes("px")) ? (
+            <div className="field">
+              <span className="label">Main Dart Path</span>
+              <input
+                className="path-input"
+                placeholder="lib/main.dart"
+                value={mainDartPath}
+                onChange={(event) => setMainDartPath(event.target.value)}
+              />
+            </div>
+          ) : null}
           <div className="field">
             <span className="label">Auto Fetch Location</span>
             <div className="toggle-row">
@@ -512,14 +534,11 @@ export default function App() {
                   onClick={() => togglePart(part.id)}
                   className={parts.includes(part.id) ? "module active" : "module"}
                   aria-pressed={parts.includes(part.id)}
-                  disabled={part.id === "base" || (appPlatform === "flutter" && part.id === "px")}
+                  disabled={part.id === "base"}
                 >
                   <div className="module-title">{part.label}</div>
                   <div className="module-desc">{part.description}</div>
                   {part.id === "base" ? <div className="module-lock">Required</div> : null}
-                  {appPlatform === "flutter" && part.id === "px" ? (
-                    <div className="module-lock">Coming soon</div>
-                  ) : null}
                 </button>
               ))}
             </div>
@@ -593,15 +612,6 @@ export default function App() {
                 />
               </div>
               <div className="field">
-                <span className="label">Main Dart Path</span>
-                <input
-                  className="path-input"
-                  placeholder="lib/main.dart"
-                  value={mainDartPath}
-                  onChange={(event) => setMainDartPath(event.target.value)}
-                />
-              </div>
-              <div className="field">
                 <span className="label">Auto Ask Notification Permission</span>
                 <div className="toggle-row">
                   <button
@@ -617,6 +627,55 @@ export default function App() {
                     No
                   </button>
                 </div>
+              </div>
+            </div>
+          ) : null}
+          {parts.includes("px") && appPlatform === "flutter" ? (
+            <div className="push-block">
+              <div className="field">
+                <span className="label">Flutter PX SDK Version</span>
+                <input
+                  className="path-input"
+                  placeholder="^1.1.0"
+                  value={flutterPxSdkVersion}
+                  onChange={(event) => setFlutterPxSdkVersion(event.target.value)}
+                />
+              </div>
+              <div className="field">
+                <span className="label">Android PX SDK Version</span>
+                <input
+                  className="path-input"
+                  placeholder="10.2.12"
+                  value={pxSdkVersion}
+                  onChange={(event) => setPxSdkVersion(event.target.value)}
+                />
+              </div>
+              <div className="field">
+                <span className="label">Hansel App ID</span>
+                <input
+                  className="path-input"
+                  placeholder="Your Hansel App ID"
+                  value={hanselAppId}
+                  onChange={(event) => setHanselAppId(event.target.value)}
+                />
+              </div>
+              <div className="field">
+                <span className="label">Hansel App Key</span>
+                <input
+                  className="path-input"
+                  placeholder="Your Hansel App Key"
+                  value={hanselAppKey}
+                  onChange={(event) => setHanselAppKey(event.target.value)}
+                />
+              </div>
+              <div className="field">
+                <span className="label">PX Scheme</span>
+                <input
+                  className="path-input"
+                  placeholder="your-custom-scheme"
+                  value={pxScheme}
+                  onChange={(event) => setPxScheme(event.target.value)}
+                />
               </div>
             </div>
           ) : null}

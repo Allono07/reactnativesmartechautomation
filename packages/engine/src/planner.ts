@@ -5,6 +5,7 @@ import { runPushRules } from "./rules/push.js";
 import { runPxRules } from "./rules/px.js";
 import { runFlutterBaseRules } from "./rules/flutterBase.js";
 import { runFlutterPushRules } from "./rules/flutterPush.js";
+import { runFlutterPxRules } from "./rules/flutterPx.js";
 
 export async function planIntegration(options: IntegrationOptions): Promise<IntegrationPlan> {
   const scan = await scanProject(options.rootPath);
@@ -47,13 +48,22 @@ export async function planIntegration(options: IntegrationOptions): Promise<Inte
     }
   }
 
-  if (options.appPlatform !== "flutter" && options.parts.includes("px")) {
-    const pxChanges = await runPxRules({
-      scan,
-      rootPath: options.rootPath,
-      inputs: options.inputs
-    });
-    changes.push(...pxChanges);
+  if (options.parts.includes("px")) {
+    if (options.appPlatform === "flutter") {
+      const flutterPxChanges = await runFlutterPxRules({
+        scan,
+        rootPath: options.rootPath,
+        inputs: options.inputs
+      });
+      changes.push(...flutterPxChanges);
+    } else {
+      const pxChanges = await runPxRules({
+        scan,
+        rootPath: options.rootPath,
+        inputs: options.inputs
+      });
+      changes.push(...pxChanges);
+    }
   }
 
   return {

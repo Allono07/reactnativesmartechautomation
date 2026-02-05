@@ -42,7 +42,11 @@ app.post("/api/plan", async (req, res) => {
     }
 
     if (options.appPlatform === "flutter") {
-      options.parts = options.parts.includes("push") ? ["base", "push"] : ["base"];
+      options.parts = [
+        "base",
+        ...(options.parts.includes("push") ? ["push"] : []),
+        ...(options.parts.includes("px") ? ["px"] : [])
+      ];
     }
 
     if (!options.inputs?.smartechAppId) {
@@ -69,6 +73,26 @@ app.post("/api/plan", async (req, res) => {
         }
         if (!options.inputs?.mainDartPath) {
           return res.status(400).json({ error: "mainDartPath is required for Flutter Push" });
+        }
+      }
+      if (options.parts.includes("px")) {
+        if (!options.inputs?.flutterPxSdkVersion) {
+          return res.status(400).json({ error: "flutterPxSdkVersion is required for Flutter PX" });
+        }
+        if (!options.inputs?.pxSdkVersion) {
+          return res.status(400).json({ error: "pxSdkVersion is required for Flutter PX" });
+        }
+        if (!options.inputs?.hanselAppId) {
+          return res.status(400).json({ error: "hanselAppId is required for Flutter PX" });
+        }
+        if (!options.inputs?.hanselAppKey) {
+          return res.status(400).json({ error: "hanselAppKey is required for Flutter PX" });
+        }
+        if (!options.inputs?.pxScheme) {
+          return res.status(400).json({ error: "pxScheme is required for Flutter PX" });
+        }
+        if (!options.inputs?.mainDartPath) {
+          return res.status(400).json({ error: "mainDartPath is required for Flutter PX" });
         }
       }
     }
@@ -122,7 +146,11 @@ app.post("/api/apply", async (req, res) => {
         options.appPlatform = (await detectFlutterProject(options.rootPath)) ? "flutter" : "react-native";
       }
       if (options.appPlatform === "flutter") {
-        options.parts = options.parts.includes("push") ? ["base", "push"] : ["base"];
+        options.parts = [
+          "base",
+          ...(options.parts.includes("push") ? ["push"] : []),
+          ...(options.parts.includes("px") ? ["px"] : [])
+        ];
       }
 
       const maxAttempts = 2;

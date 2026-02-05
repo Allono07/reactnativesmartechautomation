@@ -43,6 +43,7 @@ export type IntegrationOptions = {
     baseSdkVersion?: string;
     flutterBaseSdkVersion?: string;
     flutterPushSdkVersion?: string;
+    flutterPxSdkVersion?: string;
     mainDartPath?: string;
     pushSdkVersion?: string;
     rnPushVersion?: string;
