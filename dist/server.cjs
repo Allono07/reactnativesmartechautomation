@@ -26291,6 +26291,7 @@ var GRADLE_PROPERTIES_RELATIVE3 = import_node_path4.default.join("android", "gra
 var APP_BUILD_GRADLE3 = import_node_path4.default.join("android", "app", "build.gradle");
 var APP_BUILD_GRADLE_KTS3 = import_node_path4.default.join("android", "app", "build.gradle.kts");
 var MANIFEST_PATH = import_node_path4.default.join("android", "app", "src", "main", "AndroidManifest.xml");
+var ANDROID_SRC2 = import_node_path4.default.join("android", "app", "src", "main");
 var DEFAULT_PX_SDK_VERSION = "10.2.12";
 var DEFAULT_RN_PX_VERSION = "^3.7.0";
 var PX_DEP_GROOVY = "implementation 'com.netcore.android:smartech-nudges:${SMARTECH_PX_SDK_VERSION}'";
@@ -26331,6 +26332,55 @@ override fun onCreate(savedInstanceState: Bundle?) {
   <data android:scheme="YOUR_CUSTOM_SCHEME" />
 </intent-filter>
 `;
+var RN_PX_NATIVE_SNIPPET = `// MainApplication (Kotlin)
+// Uncomment these blocks only if your use case requires dynamic/ignore view mapping.
+import android.view.View
+import com.facebook.react.uimanager.util.ReactFindViewUtil
+import io.hansel.react.HanselRn
+import YOUR.PACKAGE.R
+
+override fun onCreate() {
+  super.onCreate()
+  // val nativeIdSetDynamic: MutableSet<String> = HashSet()
+  // nativeIdSetDynamic.add("hansel_dynamic_view")
+  //
+  // ReactFindViewUtil.addViewsListener(
+  //   ReactFindViewUtil.OnMultipleViewsFoundListener { view, nativeID ->
+  //     if (nativeID == "hansel_dynamic_view") {
+  //       val values = view.tag.toString().split("#")
+  //       val hanselIndex = values[0]
+  //       val n = if (values.size < 2 || values[1].isEmpty()) 0 else values[1].toInt()
+  //       HanselRn.setDynamicHanselIndex(view, hanselIndex, n)
+  //     }
+  //   },
+  //   nativeIdSetDynamic
+  // )
+  //
+  // val nativeIdSetIgnore: MutableSet<String> = HashSet()
+  // nativeIdSetIgnore.add("hansel_ignore_view_overlay")
+  // nativeIdSetIgnore.add("hansel_ignore_view")
+  //
+  // ReactFindViewUtil.addViewsListener(
+  //   ReactFindViewUtil.OnMultipleViewsFoundListener { view, nativeID ->
+  //     if (nativeID == "hansel_ignore_view_overlay") {
+  //       val values = view.tag.toString().split("#")
+  //       val parentsLayerCount = values[0].toInt()
+  //       val childLayerIndex =
+  //           if (values.size < 2 || values[1].isEmpty()) 0 else values[1].toInt()
+  //       HanselRn.setHanselIgnoreViewTag(view, parentsLayerCount, childLayerIndex)
+  //     } else {
+  //       view.setTag(R.id.hansel_ignore_view, true)
+  //     }
+  //   },
+  //   nativeIdSetIgnore
+  // )
+}
+
+// res/values/tags.xml
+<resources>
+  <item name="hansel_ignore_view" type="id"/>
+</resources>
+`;
 async function runPxRules(context) {
   const changes = [];
   if (!context.scan.platforms.includes("android"))
@@ -26350,6 +26400,9 @@ async function runPxRules(context) {
   if (rnDepChange)
     changes.push(rnDepChange);
   const manifestFile = import_node_path4.default.join(context.rootPath, MANIFEST_PATH);
+  const androidMain = import_node_path4.default.join(context.rootPath, ANDROID_SRC2);
+  const javaRoot = import_node_path4.default.join(androidMain, "java");
+  const manifestPackage = await readManifestPackage2(manifestFile);
   const metaChange = await ensureHanselMeta(manifestFile, hanselAppId, hanselAppKey);
   if (metaChange)
     changes.push(metaChange);
@@ -26408,6 +26461,29 @@ async function runPxRules(context) {
       module: "px"
     });
   }
+  if (await pathExists(javaRoot)) {
+    const appClass = await findAndroidApplicationClass2(javaRoot);
+    if (appClass) {
+      const appChange = await ensureHanselNativeEnhancements(appClass.filePath, manifestPackage);
+      if (appChange)
+        changes.push(appChange);
+    } else {
+      changes.push({
+        id: "android-hansel-native-manual",
+        title: "Hansel native enhancements not injected",
+        filePath: javaRoot,
+        kind: "insert",
+        patch: "",
+        summary: "Application class not found. Add Hansel dynamic view mapping and ignore view handling manually.",
+        confidence: 0.2,
+        manualSnippet: RN_PX_NATIVE_SNIPPET,
+        module: "px"
+      });
+    }
+  }
+  const tagsChange = await ensureHanselTagsXml(context.rootPath);
+  if (tagsChange)
+    changes.push(tagsChange);
   return changes;
 }
 function buildChange3(input) {
@@ -26814,14 +26890,408 @@ function buildPxUseEffectBlock(needsInternalListener, needsDeepLinkListener, nee
   lines.push("}, []);");
   return lines.join("\n");
 }
+async function ensureHanselTagsXml(rootPath) {
+  const valuesDir = import_node_path4.default.join(rootPath, "android", "app", "src", "main", "res", "values");
+  const filePath = import_node_path4.default.join(valuesDir, "tags.xml");
+  const tagLine = '    <item name="hansel_ignore_view" type="id"/>';
+  if (!await pathExists(valuesDir)) {
+    return null;
+  }
+  if (!await pathExists(filePath)) {
+    const newContent2 = `<resources>
+${tagLine}
+</resources>
+`;
+    return buildChange3({
+      id: "android-tags-xml",
+      title: "Add Hansel tags.xml",
+      filePath,
+      kind: "create",
+      originalContent: "",
+      newContent: newContent2,
+      summary: "Create tags.xml with hansel_ignore_view id.",
+      confidence: 0.35
+    });
+  }
+  const originalContent = await import_node_fs4.promises.readFile(filePath, "utf-8");
+  if (originalContent.includes("hansel_ignore_view")) {
+    return null;
+  }
+  let newContent = originalContent;
+  if (/<resources[^>]*>/.test(originalContent)) {
+    newContent = originalContent.replace(/<resources[^>]*>/, (match) => `${match}
+${tagLine}`);
+  } else {
+    newContent = `${originalContent.trimEnd()}
+<resources>
+${tagLine}
+</resources>
+`;
+  }
+  if (newContent === originalContent)
+    return null;
+  return buildChange3({
+    id: "android-tags-xml",
+    title: "Add Hansel tags.xml entry",
+    filePath,
+    kind: "insert",
+    originalContent,
+    newContent,
+    summary: "Add hansel_ignore_view id entry to tags.xml.",
+    confidence: 0.35
+  });
+}
+async function ensureHanselNativeEnhancements(filePath, manifestPackage) {
+  const originalContent = await import_node_fs4.promises.readFile(filePath, "utf-8");
+  const isKotlin = filePath.endsWith(".kt");
+  const packageName = manifestPackage ?? readPackageName(originalContent);
+  let updated = originalContent;
+  const imports = isKotlin ? [
+    "android.view.View",
+    "com.facebook.react.uimanager.util.ReactFindViewUtil",
+    "io.hansel.react.HanselRn",
+    packageName ? `${packageName}.R` : null
+  ] : [
+    "android.view.View",
+    "com.facebook.react.uimanager.util.ReactFindViewUtil",
+    "java.util.Set",
+    "java.util.HashSet",
+    "io.hansel.react.HanselRn",
+    packageName ? `${packageName}.R` : null
+  ];
+  updated = isKotlin ? ensureKotlinImports2(updated, imports) : ensureJavaImports2(updated, imports);
+  const hasDynamicMarker = /hansel_dynamic_view/.test(updated);
+  const hasIgnoreMarker = /hansel_ignore_view_overlay/.test(updated);
+  const hasDynamic = hasDynamicMarker && /setDynamicHanselIndex/.test(updated);
+  const hasIgnore = hasIgnoreMarker && /setHanselIgnoreViewTag/.test(updated);
+  const needsDynamic = !hasDynamic;
+  const needsIgnore = !hasIgnore;
+  if (needsDynamic || needsIgnore) {
+    if (/onCreate\s*\(/.test(updated)) {
+      if (needsDynamic && needsIgnore && !hasDynamicMarker && !hasIgnoreMarker) {
+        const combined = `${buildIgnoreBlock(isKotlin)}
+
+${buildDynamicBlock(isKotlin)}`;
+        updated = insertAfterAnchor(updated, combined) ?? insertAfterSuper(updated, combined);
+      } else {
+        if (needsIgnore) {
+          updated = upsertHanselBlock(updated, buildIgnoreBlock(isKotlin), "hansel_ignore_view_overlay");
+        }
+        if (needsDynamic) {
+          updated = upsertHanselBlock(updated, buildDynamicBlock(isKotlin), "hansel_dynamic_view");
+        }
+      }
+    } else {
+      const blocks = [];
+      if (needsIgnore)
+        blocks.push(buildIgnoreBlock(isKotlin));
+      if (needsDynamic)
+        blocks.push(buildDynamicBlock(isKotlin));
+      updated = addOnCreateWithBlocks(updated, blocks, isKotlin);
+    }
+  }
+  if (updated === originalContent)
+    return null;
+  return buildChange3({
+    id: "android-hansel-native",
+    title: "Add Hansel native view handling",
+    filePath,
+    kind: "insert",
+    originalContent,
+    newContent: updated,
+    summary: "Inject Hansel dynamic view mapping and ignore view handling in Application.onCreate.",
+    confidence: 0.4
+  });
+}
+function buildDynamicBlock(isKotlin) {
+  if (isKotlin) {
+    const lines2 = [
+      "val nativeIdSetDynamic: MutableSet<String> = HashSet()",
+      'nativeIdSetDynamic.add("hansel_dynamic_view")',
+      "",
+      "ReactFindViewUtil.addViewsListener(",
+      "    ReactFindViewUtil.OnMultipleViewsFoundListener { view, nativeID ->",
+      '        if (nativeID == "hansel_dynamic_view") {',
+      '            val values = view.tag.toString().split("#")',
+      "            val hanselIndex = values[0]",
+      "            val n = if (values.size < 2 || values[1].isEmpty()) {",
+      "                0",
+      "            } else {",
+      "                values[1].toInt()",
+      "            }",
+      "            HanselRn.setDynamicHanselIndex(view, hanselIndex, n)",
+      "        }",
+      "    },",
+      "    nativeIdSetDynamic",
+      ")"
+    ];
+    return commentBlock(lines2, "Hansel dynamic view mapping (uncomment if needed)");
+  }
+  const lines = [
+    "Set<String> nativeIdSetDynamic = new HashSet<>();",
+    'nativeIdSetDynamic.add("hansel_dynamic_view");',
+    "",
+    "ReactFindViewUtil.addViewsListener(",
+    "    new ReactFindViewUtil.OnMultipleViewsFoundListener() {",
+    "        @Override",
+    "        public void onViewFound(final View view, String nativeID) {",
+    '            if (nativeID.equals("hansel_dynamic_view")) {',
+    '                String[] values1 = view.getTag().toString().split("#");',
+    "                String hanselIndex = values1[0];",
+    "                int N;",
+    "                if (values1.length < 2 || values1[1].isEmpty()) {",
+    "                    N = 0;",
+    "                } else {",
+    "                    N = Integer.parseInt(values1[1]);",
+    "                }",
+    "                HanselRn.setDynamicHanselIndex(view, hanselIndex, N);",
+    "            }",
+    "        }",
+    "    },",
+    "    nativeIdSetDynamic",
+    ");"
+  ];
+  return commentBlock(lines, "Hansel dynamic view mapping (uncomment if needed)");
+}
+function buildIgnoreBlock(isKotlin) {
+  if (isKotlin) {
+    const lines2 = [
+      "val nativeIdSetIgnore: MutableSet<String> = HashSet()",
+      'nativeIdSetIgnore.add("hansel_ignore_view_overlay")',
+      'nativeIdSetIgnore.add("hansel_ignore_view")',
+      "",
+      "ReactFindViewUtil.addViewsListener(",
+      "    ReactFindViewUtil.OnMultipleViewsFoundListener { view, nativeID ->",
+      '        if (nativeID == "hansel_ignore_view_overlay") {',
+      '            val values = view.tag.toString().split("#")',
+      "            val parentsLayerCount = values[0].toInt()",
+      "            val childLayerIndex =",
+      "                if (values.size < 2 || values[1].isEmpty()) 0 else values[1].toInt()",
+      "            HanselRn.setHanselIgnoreViewTag(",
+      "                view,",
+      "                parentsLayerCount,",
+      "                childLayerIndex",
+      "            )",
+      "        } else {",
+      "            view.setTag(R.id.hansel_ignore_view, true)",
+      "        }",
+      "    },",
+      "    nativeIdSetIgnore",
+      ")"
+    ];
+    return commentBlock(lines2, "Hansel ignore view handling (uncomment if needed)");
+  }
+  const lines = [
+    "Set<String> nativeIdSetIgnore = new HashSet<>();",
+    'nativeIdSetIgnore.add("hansel_ignore_view_overlay");',
+    'nativeIdSetIgnore.add("hansel_ignore_view");',
+    "",
+    "ReactFindViewUtil.addViewsListener(",
+    "    new ReactFindViewUtil.OnMultipleViewsFoundListener() {",
+    "        @Override",
+    "        public void onViewFound(final View view, String nativeID) {",
+    '            if (nativeID.equals("hansel_ignore_view_overlay")) {',
+    '                String[] values = view.getTag().toString().split("#");',
+    "                int parentsLayerCount = Integer.parseInt(values[0]);",
+    "                int childLayerIndex;",
+    "                if (values.length < 2 || values[1].isEmpty()) {",
+    "                    childLayerIndex = 0;",
+    "                } else {",
+    "                    childLayerIndex = Integer.parseInt(values[1]);",
+    "                }",
+    "                HanselRn.setHanselIgnoreViewTag(",
+    "                    view,",
+    "                    parentsLayerCount,",
+    "                    childLayerIndex",
+    "                );",
+    "            } else {",
+    "                view.setTag(R.id.hansel_ignore_view, true);",
+    "            }",
+    "        }",
+    "    },",
+    "    nativeIdSetIgnore",
+    ");"
+  ];
+  return commentBlock(lines, "Hansel ignore view handling (uncomment if needed)");
+}
+function addOnCreateWithBlocks(source, blocks, isKotlin) {
+  if (blocks.length === 0)
+    return source;
+  const body = blocks.join("\n\n");
+  if (isKotlin) {
+    return source.replace(/class\s+\w+\s*:\s*[^\{]+\{/, (match) => `${match}
+
+    override fun onCreate() {
+        super.onCreate()
+${indentBlock(body, "        ")}
+    }
+`);
+  }
+  return source.replace(/class\s+\w+\s+extends\s+\w+\s*\{/, (match) => `${match}
+
+    @Override
+    public void onCreate() {
+        super.onCreate();
+${indentBlock(body, "        ")}
+    }
+`);
+}
+function upsertHanselBlock(source, block, marker) {
+  const lines = source.split("\n");
+  const markerIndex = lines.findIndex((line) => line.includes(marker));
+  if (markerIndex === -1) {
+    return insertAfterAnchor(source, block) ?? insertAfterSuper(source, block);
+  }
+  let startIndex = -1;
+  for (let i = markerIndex; i >= 0; i -= 1) {
+    if (lines[i].includes("nativeIdSet")) {
+      startIndex = i;
+      break;
+    }
+    if (lines[i].includes("ReactFindViewUtil.addViewsListener")) {
+      startIndex = i;
+      break;
+    }
+  }
+  if (startIndex === -1) {
+    return insertAfterSuper(source, block);
+  }
+  let endIndex = -1;
+  for (let i = markerIndex; i < lines.length; i += 1) {
+    if (lines[i].trim() === ");" || lines[i].trim() === ")" || lines[i].trim().endsWith(");")) {
+      endIndex = i;
+      break;
+    }
+  }
+  if (endIndex === -1) {
+    return insertAfterAnchor(source, block) ?? insertAfterSuper(source, block);
+  }
+  const indent = (lines[startIndex].match(/^\s*/) ?? [""])[0];
+  const blockLines = indentBlock(block, indent).split("\n");
+  const next = [...lines.slice(0, startIndex), ...blockLines, "", ...lines.slice(endIndex + 1)];
+  return next.join("\n");
+}
+function insertAfterAnchor(source, block) {
+  const anchorRegexes = [
+    /smartechBasePlugin\.init\s*\(\s*this\s*\)/,
+    /smartechBasePlugin\.init\s*\(\s*this\s*\)\s*;/,
+    /val\s+smartechBasePlugin\s*=\s*SmartechBasePlugin\.getInstance\(\)/,
+    /SmartechBasePlugin\.getInstance\(\)/,
+    /SmartechBasePlugin\.instance/,
+    /SmartechBasePlugin\.getInstance\(\)\s*;/
+  ];
+  for (const regex of anchorRegexes) {
+    const match = source.match(regex);
+    if (!match)
+      continue;
+    const indent = (match[0].match(/^\s*/) ?? [""])[0];
+    const blockIndented = indentBlock(block, indent);
+    return source.replace(regex, (m) => `${m}
+${blockIndented}
+`);
+  }
+  return null;
+}
+function insertAfterSuper(source, block) {
+  const superRegex = /super\.onCreate\s*\([^\)]*\)\s*;?/;
+  const match = source.match(superRegex);
+  if (!match)
+    return source;
+  const indent = (match[0].match(/^\s*/) ?? [""])[0];
+  const blockIndented = indentBlock(block, indent);
+  return source.replace(superRegex, (m) => `${m}
+${blockIndented}
+`);
+}
+function indentBlock(block, indent) {
+  return block.split("\n").map((line) => line.trim().length === 0 ? line : `${indent}${line}`).join("\n");
+}
+function commentBlock(lines, header) {
+  const commented = [`// ${header}`];
+  for (const line of lines) {
+    if (line.trim().length === 0) {
+      commented.push("//");
+    } else {
+      commented.push(`// ${line}`);
+    }
+  }
+  commented.push("//");
+  return commented.join("\n");
+}
+function ensureJavaImports2(source, imports) {
+  let updated = source;
+  for (const imp of imports) {
+    if (!imp)
+      continue;
+    if (!updated.includes(`import ${imp};`)) {
+      updated = updated.replace(/(package\s+[^;]+;\s*)/m, `$1
+import ${imp};
+`);
+    }
+  }
+  return updated;
+}
+function ensureKotlinImports2(source, imports) {
+  let updated = source;
+  for (const imp of imports) {
+    if (!imp)
+      continue;
+    if (!updated.includes(`import ${imp}`)) {
+      updated = updated.replace(/(package\s+[^\n]+\n)/, `$1import ${imp}
+`);
+    }
+  }
+  return updated;
+}
+function readPackageName(source) {
+  const match = source.match(/package\s+([^\s;]+)/);
+  return match ? match[1] : null;
+}
+async function readManifestPackage2(manifestPath) {
+  if (!await pathExists(manifestPath))
+    return null;
+  const contents = await import_node_fs4.promises.readFile(manifestPath, "utf-8");
+  const match = contents.match(/package\s*=\s*"([^"]+)"/);
+  return match ? match[1] : null;
+}
+async function findAndroidApplicationClass2(javaRoot) {
+  const candidates = await walkFiles2(javaRoot, [".java", ".kt"]);
+  for (const filePath of candidates) {
+    const contents = await import_node_fs4.promises.readFile(filePath, "utf-8");
+    const classMatch = contents.match(/class\s+(\w+)\s+extends\s+(Application|ReactApplication)/);
+    if (classMatch) {
+      return { filePath, className: classMatch[1] };
+    }
+    const kotlinMatch = contents.match(/class\s+(\w+)\s*:\s*(Application|ReactApplication)/);
+    if (kotlinMatch) {
+      return { filePath, className: kotlinMatch[1] };
+    }
+  }
+  return null;
+}
+async function walkFiles2(root, extensions) {
+  const entries = await import_node_fs4.promises.readdir(root, { withFileTypes: true });
+  const files = [];
+  for (const entry of entries) {
+    const fullPath = import_node_path4.default.join(root, entry.name);
+    if (entry.isDirectory()) {
+      files.push(...await walkFiles2(fullPath, extensions));
+      continue;
+    }
+    if (extensions.some((ext) => entry.name.endsWith(ext))) {
+      files.push(fullPath);
+    }
+  }
+  return files;
+}
 
 // packages/engine/dist/rules/flutterBase.js
 var import_node_path5 = __toESM(require("node:path"), 1);
 var import_node_fs5 = require("node:fs");
-var ANDROID_SRC2 = import_node_path5.default.join("android", "app", "src", "main");
-var MANIFEST_RELATIVE2 = import_node_path5.default.join(ANDROID_SRC2, "AndroidManifest.xml");
-var JAVA_SRC = import_node_path5.default.join(ANDROID_SRC2, "java");
-var KOTLIN_SRC = import_node_path5.default.join(ANDROID_SRC2, "kotlin");
+var ANDROID_SRC3 = import_node_path5.default.join("android", "app", "src", "main");
+var MANIFEST_RELATIVE2 = import_node_path5.default.join(ANDROID_SRC3, "AndroidManifest.xml");
+var JAVA_SRC = import_node_path5.default.join(ANDROID_SRC3, "java");
+var KOTLIN_SRC = import_node_path5.default.join(ANDROID_SRC3, "kotlin");
 var GRADLE_PROPERTIES_RELATIVE4 = import_node_path5.default.join("android", "gradle.properties");
 var APP_BUILD_GRADLE4 = import_node_path5.default.join("android", "app", "build.gradle");
 var APP_BUILD_GRADLE_KTS4 = import_node_path5.default.join("android", "app", "build.gradle.kts");
@@ -26868,7 +27338,7 @@ async function runFlutterBaseRules(context) {
   if (!context.scan.platforms.includes("android"))
     return changes;
   const rootPath = context.rootPath;
-  const androidMain = import_node_path5.default.join(rootPath, ANDROID_SRC2);
+  const androidMain = import_node_path5.default.join(rootPath, ANDROID_SRC3);
   const javaRoot = import_node_path5.default.join(androidMain, "java");
   const kotlinRoot = import_node_path5.default.join(androidMain, "kotlin");
   const manifestPath = import_node_path5.default.join(rootPath, MANIFEST_RELATIVE2);
@@ -26905,7 +27375,7 @@ async function runFlutterBaseRules(context) {
   if (pubspecChange)
     changes.push(pubspecChange);
   const appClass = await findFlutterApplicationClass(sourceRoots);
-  const manifestPackage = await readManifestPackage2(manifestPath);
+  const manifestPackage = await readManifestPackage3(manifestPath);
   if (!appClass) {
     const fallbackPackage = manifestPackage ?? "com.smartech.app";
     const className = "MyApplication";
@@ -27133,7 +27603,7 @@ async function ensurePubspecDependency(rootPath, version) {
     confidence: 0.4
   });
 }
-async function readManifestPackage2(manifestPath) {
+async function readManifestPackage3(manifestPath) {
   if (!await pathExists(manifestPath))
     return null;
   const contents = await import_node_fs5.promises.readFile(manifestPath, "utf-8");
@@ -27142,7 +27612,7 @@ async function readManifestPackage2(manifestPath) {
 }
 async function findFlutterApplicationClass(sourceRoots) {
   for (const root of sourceRoots) {
-    const candidates = await walkFiles2(root, [".java", ".kt"]);
+    const candidates = await walkFiles3(root, [".java", ".kt"]);
     for (const filePath of candidates) {
       const contents = await import_node_fs5.promises.readFile(filePath, "utf-8");
       if (/extends\s+(Application|FlutterApplication)/.test(contents)) {
@@ -27174,7 +27644,7 @@ async function ensureApplicationInit2(filePath) {
 }
 function injectJavaInit2(source) {
   let updated = source;
-  updated = ensureJavaImports2(updated, [WEAKREF_IMPORT, SMARTECH_IMPORT2, SMARTECH_FLUTTER_IMPORT]);
+  updated = ensureJavaImports3(updated, [WEAKREF_IMPORT, SMARTECH_IMPORT2, SMARTECH_FLUTTER_IMPORT]);
   const missing = getMissingJavaInitLines2(updated);
   if (missing.length === 0)
     return updated;
@@ -27193,7 +27663,7 @@ function injectJavaInit2(source) {
 }
 function injectKotlinInit2(source) {
   let updated = source;
-  updated = ensureKotlinImports2(updated, [WEAKREF_IMPORT, SMARTECH_IMPORT2, SMARTECH_FLUTTER_IMPORT]);
+  updated = ensureKotlinImports3(updated, [WEAKREF_IMPORT, SMARTECH_IMPORT2, SMARTECH_FLUTTER_IMPORT]);
   const missing = getMissingKotlinInitLines2(updated);
   if (missing.length === 0)
     return updated;
@@ -27251,7 +27721,7 @@ function dedupeLines2(lines) {
     return true;
   });
 }
-function ensureJavaImports2(source, imports) {
+function ensureJavaImports3(source, imports) {
   let updated = source;
   for (const imp of imports) {
     if (!updated.includes(`import ${imp};`)) {
@@ -27262,7 +27732,7 @@ import ${imp};
   }
   return updated;
 }
-function ensureKotlinImports2(source, imports) {
+function ensureKotlinImports3(source, imports) {
   let updated = source;
   for (const imp of imports) {
     if (!updated.includes(`import ${imp}`)) {
@@ -27488,7 +27958,7 @@ async function ensureMainActivityDeeplink2(filePath) {
 }
 function injectJavaDeeplink2(source) {
   let updated = source;
-  updated = ensureJavaImports2(updated, [SMARTECH_IMPORT2, WEAKREF_IMPORT]);
+  updated = ensureJavaImports3(updated, [SMARTECH_IMPORT2, WEAKREF_IMPORT]);
   const missing = getMissingJavaDeeplinkLines(updated);
   if (missing.length === 0)
     return updated;
@@ -27507,7 +27977,7 @@ function injectJavaDeeplink2(source) {
 }
 function injectKotlinDeeplink2(source) {
   let updated = source;
-  updated = ensureKotlinImports2(updated, [SMARTECH_IMPORT2, WEAKREF_IMPORT]);
+  updated = ensureKotlinImports3(updated, [SMARTECH_IMPORT2, WEAKREF_IMPORT]);
   const missing = getMissingKotlinDeeplinkLines(updated);
   if (missing.length === 0)
     return updated;
@@ -27635,13 +28105,13 @@ function resolveActivityClass3(name, manifestPackage) {
   }
   return `${manifestPackage ?? ""}.${name}`;
 }
-async function walkFiles2(root, extensions) {
+async function walkFiles3(root, extensions) {
   const entries = await import_node_fs5.promises.readdir(root, { withFileTypes: true });
   const files = [];
   for (const entry of entries) {
     const fullPath = import_node_path5.default.join(root, entry.name);
     if (entry.isDirectory()) {
-      files.push(...await walkFiles2(fullPath, extensions));
+      files.push(...await walkFiles3(fullPath, extensions));
       continue;
     }
     if (extensions.some((ext) => entry.name.endsWith(ext))) {
@@ -27655,7 +28125,7 @@ function escapeRegex3(value) {
 }
 async function findFlutterActivityClass(sourceRoots) {
   for (const root of sourceRoots) {
-    const candidates = await walkFiles2(root, [".java", ".kt"]);
+    const candidates = await walkFiles3(root, [".java", ".kt"]);
     for (const filePath of candidates) {
       const contents = await import_node_fs5.promises.readFile(filePath, "utf-8");
       if (/extends\s+FlutterActivity/.test(contents)) {
@@ -27690,10 +28160,10 @@ async function findByClassName2(sourceRoots, className) {
 // packages/engine/dist/rules/flutterPush.js
 var import_node_path6 = __toESM(require("node:path"), 1);
 var import_node_fs6 = require("node:fs");
-var ANDROID_SRC3 = import_node_path6.default.join("android", "app", "src", "main");
-var JAVA_SRC2 = import_node_path6.default.join(ANDROID_SRC3, "java");
-var KOTLIN_SRC2 = import_node_path6.default.join(ANDROID_SRC3, "kotlin");
-var MANIFEST_RELATIVE3 = import_node_path6.default.join(ANDROID_SRC3, "AndroidManifest.xml");
+var ANDROID_SRC4 = import_node_path6.default.join("android", "app", "src", "main");
+var JAVA_SRC2 = import_node_path6.default.join(ANDROID_SRC4, "java");
+var KOTLIN_SRC2 = import_node_path6.default.join(ANDROID_SRC4, "kotlin");
+var MANIFEST_RELATIVE3 = import_node_path6.default.join(ANDROID_SRC4, "AndroidManifest.xml");
 var GRADLE_PROPERTIES_RELATIVE5 = import_node_path6.default.join("android", "gradle.properties");
 var APP_BUILD_GRADLE5 = import_node_path6.default.join("android", "app", "build.gradle");
 var APP_BUILD_GRADLE_KTS5 = import_node_path6.default.join("android", "app", "build.gradle.kts");
@@ -27741,7 +28211,7 @@ async function runFlutterPushRules(context) {
   if (!context.scan.platforms.includes("android"))
     return changes;
   const rootPath = context.rootPath;
-  const androidMain = import_node_path6.default.join(rootPath, ANDROID_SRC3);
+  const androidMain = import_node_path6.default.join(rootPath, ANDROID_SRC4);
   const javaRoot = import_node_path6.default.join(androidMain, "java");
   const kotlinRoot = import_node_path6.default.join(androidMain, "kotlin");
   const manifestPath = import_node_path6.default.join(rootPath, MANIFEST_RELATIVE3);
@@ -27908,7 +28378,7 @@ async function ensurePubspecDependency2(rootPath, version) {
 }
 async function findFlutterApplicationClass2(sourceRoots) {
   for (const root of sourceRoots) {
-    const candidates = await walkFiles3(root, [".java", ".kt"]);
+    const candidates = await walkFiles4(root, [".java", ".kt"]);
     for (const filePath of candidates) {
       const contents = await import_node_fs6.promises.readFile(filePath, "utf-8");
       if (/extends\s+(Application|FlutterApplication)/.test(contents)) {
@@ -28199,13 +28669,13 @@ ${initLines.join("\n")}
   const updated = `${before}${updatedBody}${after}`;
   return { updated: updated !== source, content: updated };
 }
-async function walkFiles3(root, extensions) {
+async function walkFiles4(root, extensions) {
   const entries = await import_node_fs6.promises.readdir(root, { withFileTypes: true });
   const files = [];
   for (const entry of entries) {
     const fullPath = import_node_path6.default.join(root, entry.name);
     if (entry.isDirectory()) {
-      files.push(...await walkFiles3(fullPath, extensions));
+      files.push(...await walkFiles4(fullPath, extensions));
       continue;
     }
     if (extensions.some((ext) => entry.name.endsWith(ext))) {
@@ -28218,10 +28688,10 @@ async function walkFiles3(root, extensions) {
 // packages/engine/dist/rules/flutterPx.js
 var import_node_path7 = __toESM(require("node:path"), 1);
 var import_node_fs7 = require("node:fs");
-var ANDROID_SRC4 = import_node_path7.default.join("android", "app", "src", "main");
-var JAVA_SRC3 = import_node_path7.default.join(ANDROID_SRC4, "java");
-var KOTLIN_SRC3 = import_node_path7.default.join(ANDROID_SRC4, "kotlin");
-var MANIFEST_RELATIVE4 = import_node_path7.default.join(ANDROID_SRC4, "AndroidManifest.xml");
+var ANDROID_SRC5 = import_node_path7.default.join("android", "app", "src", "main");
+var JAVA_SRC3 = import_node_path7.default.join(ANDROID_SRC5, "java");
+var KOTLIN_SRC3 = import_node_path7.default.join(ANDROID_SRC5, "kotlin");
+var MANIFEST_RELATIVE4 = import_node_path7.default.join(ANDROID_SRC5, "AndroidManifest.xml");
 var GRADLE_PROPERTIES_RELATIVE6 = import_node_path7.default.join("android", "gradle.properties");
 var DEFAULT_FLUTTER_PX_VERSION = "^1.1.0";
 var DEFAULT_ANDROID_PX_VERSION = "10.2.12";
@@ -28243,7 +28713,7 @@ async function runFlutterPxRules(context) {
   if (!context.scan.platforms.includes("android"))
     return changes;
   const rootPath = context.rootPath;
-  const androidMain = import_node_path7.default.join(rootPath, ANDROID_SRC4);
+  const androidMain = import_node_path7.default.join(rootPath, ANDROID_SRC5);
   const javaRoot = import_node_path7.default.join(androidMain, "java");
   const kotlinRoot = import_node_path7.default.join(androidMain, "kotlin");
   const manifestPath = import_node_path7.default.join(rootPath, MANIFEST_RELATIVE4);
@@ -28503,7 +28973,7 @@ ${updated}`;
 async function findPxListeners(libDir) {
   if (!await pathExists(libDir))
     return { hasAny: false };
-  const files = await walkFiles4(libDir, [".dart"]);
+  const files = await walkFiles5(libDir, [".dart"]);
   for (const filePath of files) {
     const contents = await import_node_fs7.promises.readFile(filePath, "utf-8");
     if (/extends\s+PxDeeplinkListener/.test(contents)) {
@@ -28531,7 +29001,6 @@ class _PxInternalEventsListener extends PxInternalEventsListener {
   @override
   void onEvent(String eventName, Map dataFromHansel) {
     debugPrint('PXEvent: $eventName eventData : $dataFromHansel');
-    Smartech().trackEvent(eventName, dataFromHansel.cast<String, dynamic>());
   }
 }
 `;
@@ -28562,7 +29031,6 @@ class _PxInternalEventsListener extends PxInternalEventsListener {
   @override
   void onEvent(String eventName, Map dataFromHansel) {
     debugPrint('PXEvent: $eventName eventData : $dataFromHansel');
-      Smartech().trackEvent(eventName, dataFromHansel.cast<String, dynamic>());
   }
 }
 `;
@@ -28817,7 +29285,7 @@ async function locateJavaOrKotlinFile4(sourceRoots, fqcn) {
 }
 async function findFlutterActivityClass2(sourceRoots) {
   for (const root of sourceRoots) {
-    const candidates = await walkFiles4(root, [".java", ".kt"]);
+    const candidates = await walkFiles5(root, [".java", ".kt"]);
     for (const filePath of candidates) {
       const contents = await import_node_fs7.promises.readFile(filePath, "utf-8");
       if (/extends\s+FlutterActivity/.test(contents)) {
@@ -28848,13 +29316,13 @@ async function findByClassName3(sourceRoots, className) {
   }
   return null;
 }
-async function walkFiles4(root, extensions) {
+async function walkFiles5(root, extensions) {
   const entries = await import_node_fs7.promises.readdir(root, { withFileTypes: true });
   const files = [];
   for (const entry of entries) {
     const fullPath = import_node_path7.default.join(root, entry.name);
     if (entry.isDirectory()) {
-      files.push(...await walkFiles4(fullPath, extensions));
+      files.push(...await walkFiles5(fullPath, extensions));
       continue;
     }
     if (extensions.some((ext) => entry.name.endsWith(ext))) {

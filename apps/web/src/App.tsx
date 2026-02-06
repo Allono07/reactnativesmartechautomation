@@ -307,7 +307,7 @@ export default function App() {
       <header className="hero">
         <div>
           <p className="eyebrow">Smartech SDK Integrator</p>
-          <h1>Automate {platformLabel} SDK setup with confidence.</h1>
+          <h1>Automate {platformLabel} SDK </h1>
           <p className="subtitle">
             Point the tool at a client project, choose modules, and generate a precise integration
             plan with safe edits and previews.

@@ -8,6 +8,7 @@ const GRADLE_PROPERTIES_RELATIVE = path.join("android", "gradle.properties");
 const APP_BUILD_GRADLE = path.join("android", "app", "build.gradle");
 const APP_BUILD_GRADLE_KTS = path.join("android", "app", "build.gradle.kts");
 const MANIFEST_PATH = path.join("android", "app", "src", "main", "AndroidManifest.xml");
+const ANDROID_SRC = path.join("android", "app", "src", "main");
 
 const DEFAULT_PX_SDK_VERSION = "10.2.12";
 const DEFAULT_RN_PX_VERSION = "^3.7.0";
@@ -57,6 +58,56 @@ override fun onCreate(savedInstanceState: Bundle?) {
 </intent-filter>
 `;
 
+const RN_PX_NATIVE_SNIPPET = `// MainApplication (Kotlin)
+// Uncomment these blocks only if your use case requires dynamic/ignore view mapping.
+import android.view.View
+import com.facebook.react.uimanager.util.ReactFindViewUtil
+import io.hansel.react.HanselRn
+import YOUR.PACKAGE.R
+
+override fun onCreate() {
+  super.onCreate()
+  // val nativeIdSetDynamic: MutableSet<String> = HashSet()
+  // nativeIdSetDynamic.add("hansel_dynamic_view")
+  //
+  // ReactFindViewUtil.addViewsListener(
+  //   ReactFindViewUtil.OnMultipleViewsFoundListener { view, nativeID ->
+  //     if (nativeID == "hansel_dynamic_view") {
+  //       val values = view.tag.toString().split("#")
+  //       val hanselIndex = values[0]
+  //       val n = if (values.size < 2 || values[1].isEmpty()) 0 else values[1].toInt()
+  //       HanselRn.setDynamicHanselIndex(view, hanselIndex, n)
+  //     }
+  //   },
+  //   nativeIdSetDynamic
+  // )
+  //
+  // val nativeIdSetIgnore: MutableSet<String> = HashSet()
+  // nativeIdSetIgnore.add("hansel_ignore_view_overlay")
+  // nativeIdSetIgnore.add("hansel_ignore_view")
+  //
+  // ReactFindViewUtil.addViewsListener(
+  //   ReactFindViewUtil.OnMultipleViewsFoundListener { view, nativeID ->
+  //     if (nativeID == "hansel_ignore_view_overlay") {
+  //       val values = view.tag.toString().split("#")
+  //       val parentsLayerCount = values[0].toInt()
+  //       val childLayerIndex =
+  //           if (values.size < 2 || values[1].isEmpty()) 0 else values[1].toInt()
+  //       HanselRn.setHanselIgnoreViewTag(view, parentsLayerCount, childLayerIndex)
+  //     } else {
+  //       view.setTag(R.id.hansel_ignore_view, true)
+  //     }
+  //   },
+  //   nativeIdSetIgnore
+  // )
+}
+
+// res/values/tags.xml
+<resources>
+  <item name="hansel_ignore_view" type="id"/>
+</resources>
+`;
+
 type PxRuleContext = {
   scan: ProjectScan;
   rootPath: string;
@@ -83,6 +134,9 @@ export async function runPxRules(context: PxRuleContext): Promise<Change[]> {
   if (rnDepChange) changes.push(rnDepChange);
 
   const manifestFile = path.join(context.rootPath, MANIFEST_PATH);
+  const androidMain = path.join(context.rootPath, ANDROID_SRC);
+  const javaRoot = path.join(androidMain, "java");
+  const manifestPackage = await readManifestPackage(manifestFile);
   const metaChange = await ensureHanselMeta(manifestFile, hanselAppId, hanselAppKey);
   if (metaChange) changes.push(metaChange);
 
@@ -140,6 +194,30 @@ export async function runPxRules(context: PxRuleContext): Promise<Change[]> {
       module: "px"
     });
   }
+
+  if (await pathExists(javaRoot)) {
+    const appClass = await findAndroidApplicationClass(javaRoot);
+    if (appClass) {
+      const appChange = await ensureHanselNativeEnhancements(appClass.filePath, manifestPackage);
+      if (appChange) changes.push(appChange);
+    } else {
+      changes.push({
+        id: "android-hansel-native-manual",
+        title: "Hansel native enhancements not injected",
+        filePath: javaRoot,
+        kind: "insert",
+        patch: "",
+        summary:
+          "Application class not found. Add Hansel dynamic view mapping and ignore view handling manually.",
+        confidence: 0.2,
+        manualSnippet: RN_PX_NATIVE_SNIPPET,
+        module: "px"
+      });
+    }
+  }
+
+  const tagsChange = await ensureHanselTagsXml(context.rootPath);
+  if (tagsChange) changes.push(tagsChange);
 
   return changes;
 }
@@ -624,4 +702,425 @@ function buildPxUseEffectBlock(
 
   lines.push("}, []);");
   return lines.join("\n");
+}
+
+async function ensureHanselTagsXml(rootPath: string): Promise<Change | null> {
+  const valuesDir = path.join(rootPath, "android", "app", "src", "main", "res", "values");
+  const filePath = path.join(valuesDir, "tags.xml");
+  const tagLine = "    <item name=\"hansel_ignore_view\" type=\"id\"/>";
+
+  if (!(await pathExists(valuesDir))) {
+    return null;
+  }
+
+  if (!(await pathExists(filePath))) {
+    const newContent = `<resources>\n${tagLine}\n</resources>\n`;
+    return buildChange({
+      id: "android-tags-xml",
+      title: "Add Hansel tags.xml",
+      filePath,
+      kind: "create",
+      originalContent: "",
+      newContent,
+      summary: "Create tags.xml with hansel_ignore_view id.",
+      confidence: 0.35
+    });
+  }
+
+  const originalContent = await fs.readFile(filePath, "utf-8");
+  if (originalContent.includes("hansel_ignore_view")) {
+    return null;
+  }
+
+  let newContent = originalContent;
+  if (/<resources[^>]*>/.test(originalContent)) {
+    newContent = originalContent.replace(/<resources[^>]*>/, (match) => `${match}\n${tagLine}`);
+  } else {
+    newContent = `${originalContent.trimEnd()}\n<resources>\n${tagLine}\n</resources>\n`;
+  }
+
+  if (newContent === originalContent) return null;
+
+  return buildChange({
+    id: "android-tags-xml",
+    title: "Add Hansel tags.xml entry",
+    filePath,
+    kind: "insert",
+    originalContent,
+    newContent,
+    summary: "Add hansel_ignore_view id entry to tags.xml.",
+    confidence: 0.35
+  });
+}
+
+async function ensureHanselNativeEnhancements(
+  filePath: string,
+  manifestPackage: string | null
+): Promise<Change | null> {
+  const originalContent = await fs.readFile(filePath, "utf-8");
+  const isKotlin = filePath.endsWith(".kt");
+  const packageName = manifestPackage ?? readPackageName(originalContent);
+  let updated = originalContent;
+
+  const imports = isKotlin
+    ? [
+        "android.view.View",
+        "com.facebook.react.uimanager.util.ReactFindViewUtil",
+        "io.hansel.react.HanselRn",
+        packageName ? `${packageName}.R` : null
+      ]
+    : [
+        "android.view.View",
+        "com.facebook.react.uimanager.util.ReactFindViewUtil",
+        "java.util.Set",
+        "java.util.HashSet",
+        "io.hansel.react.HanselRn",
+        packageName ? `${packageName}.R` : null
+      ];
+
+  updated = isKotlin ? ensureKotlinImports(updated, imports) : ensureJavaImports(updated, imports);
+
+  const hasDynamicMarker = /hansel_dynamic_view/.test(updated);
+  const hasIgnoreMarker = /hansel_ignore_view_overlay/.test(updated);
+  const hasDynamic = hasDynamicMarker && /setDynamicHanselIndex/.test(updated);
+  const hasIgnore = hasIgnoreMarker && /setHanselIgnoreViewTag/.test(updated);
+
+  const needsDynamic = !hasDynamic;
+  const needsIgnore = !hasIgnore;
+
+  if (needsDynamic || needsIgnore) {
+    if (/onCreate\s*\(/.test(updated)) {
+      if (needsDynamic && needsIgnore && !hasDynamicMarker && !hasIgnoreMarker) {
+        const combined = `${buildIgnoreBlock(isKotlin)}\n\n${buildDynamicBlock(isKotlin)}`;
+        updated = insertAfterAnchor(updated, combined) ?? insertAfterSuper(updated, combined);
+      } else {
+        if (needsIgnore) {
+          updated = upsertHanselBlock(updated, buildIgnoreBlock(isKotlin), "hansel_ignore_view_overlay");
+        }
+        if (needsDynamic) {
+          updated = upsertHanselBlock(updated, buildDynamicBlock(isKotlin), "hansel_dynamic_view");
+        }
+      }
+    } else {
+      const blocks: string[] = [];
+      if (needsIgnore) blocks.push(buildIgnoreBlock(isKotlin));
+      if (needsDynamic) blocks.push(buildDynamicBlock(isKotlin));
+      updated = addOnCreateWithBlocks(updated, blocks, isKotlin);
+    }
+  }
+
+  if (updated === originalContent) return null;
+
+  return buildChange({
+    id: "android-hansel-native",
+    title: "Add Hansel native view handling",
+    filePath,
+    kind: "insert",
+    originalContent,
+    newContent: updated,
+    summary: "Inject Hansel dynamic view mapping and ignore view handling in Application.onCreate.",
+    confidence: 0.4
+  });
+}
+
+function buildDynamicBlock(isKotlin: boolean): string {
+  if (isKotlin) {
+    const lines = [
+      "val nativeIdSetDynamic: MutableSet<String> = HashSet()",
+      "nativeIdSetDynamic.add(\"hansel_dynamic_view\")",
+      "",
+      "ReactFindViewUtil.addViewsListener(",
+      "    ReactFindViewUtil.OnMultipleViewsFoundListener { view, nativeID ->",
+      "        if (nativeID == \"hansel_dynamic_view\") {",
+      "            val values = view.tag.toString().split(\"#\")",
+      "            val hanselIndex = values[0]",
+      "            val n = if (values.size < 2 || values[1].isEmpty()) {",
+      "                0",
+      "            } else {",
+      "                values[1].toInt()",
+      "            }",
+      "            HanselRn.setDynamicHanselIndex(view, hanselIndex, n)",
+      "        }",
+      "    },",
+      "    nativeIdSetDynamic",
+      ")"
+    ];
+    return commentBlock(lines, "Hansel dynamic view mapping (uncomment if needed)");
+  }
+
+  const lines = [
+    "Set<String> nativeIdSetDynamic = new HashSet<>();",
+    "nativeIdSetDynamic.add(\"hansel_dynamic_view\");",
+    "",
+    "ReactFindViewUtil.addViewsListener(",
+    "    new ReactFindViewUtil.OnMultipleViewsFoundListener() {",
+    "        @Override",
+    "        public void onViewFound(final View view, String nativeID) {",
+    "            if (nativeID.equals(\"hansel_dynamic_view\")) {",
+    "                String[] values1 = view.getTag().toString().split(\"#\");",
+    "                String hanselIndex = values1[0];",
+    "                int N;",
+    "                if (values1.length < 2 || values1[1].isEmpty()) {",
+    "                    N = 0;",
+    "                } else {",
+    "                    N = Integer.parseInt(values1[1]);",
+    "                }",
+    "                HanselRn.setDynamicHanselIndex(view, hanselIndex, N);",
+    "            }",
+    "        }",
+    "    },",
+    "    nativeIdSetDynamic",
+    ");"
+  ];
+  return commentBlock(lines, "Hansel dynamic view mapping (uncomment if needed)");
+}
+
+function buildIgnoreBlock(isKotlin: boolean): string {
+  if (isKotlin) {
+    const lines = [
+      "val nativeIdSetIgnore: MutableSet<String> = HashSet()",
+      "nativeIdSetIgnore.add(\"hansel_ignore_view_overlay\")",
+      "nativeIdSetIgnore.add(\"hansel_ignore_view\")",
+      "",
+      "ReactFindViewUtil.addViewsListener(",
+      "    ReactFindViewUtil.OnMultipleViewsFoundListener { view, nativeID ->",
+      "        if (nativeID == \"hansel_ignore_view_overlay\") {",
+      "            val values = view.tag.toString().split(\"#\")",
+      "            val parentsLayerCount = values[0].toInt()",
+      "            val childLayerIndex =",
+      "                if (values.size < 2 || values[1].isEmpty()) 0 else values[1].toInt()",
+      "            HanselRn.setHanselIgnoreViewTag(",
+      "                view,",
+      "                parentsLayerCount,",
+      "                childLayerIndex",
+      "            )",
+      "        } else {",
+      "            view.setTag(R.id.hansel_ignore_view, true)",
+      "        }",
+      "    },",
+      "    nativeIdSetIgnore",
+      ")"
+    ];
+    return commentBlock(lines, "Hansel ignore view handling (uncomment if needed)");
+  }
+
+  const lines = [
+    "Set<String> nativeIdSetIgnore = new HashSet<>();",
+    "nativeIdSetIgnore.add(\"hansel_ignore_view_overlay\");",
+    "nativeIdSetIgnore.add(\"hansel_ignore_view\");",
+    "",
+    "ReactFindViewUtil.addViewsListener(",
+    "    new ReactFindViewUtil.OnMultipleViewsFoundListener() {",
+    "        @Override",
+    "        public void onViewFound(final View view, String nativeID) {",
+    "            if (nativeID.equals(\"hansel_ignore_view_overlay\")) {",
+    "                String[] values = view.getTag().toString().split(\"#\");",
+    "                int parentsLayerCount = Integer.parseInt(values[0]);",
+    "                int childLayerIndex;",
+    "                if (values.length < 2 || values[1].isEmpty()) {",
+    "                    childLayerIndex = 0;",
+    "                } else {",
+    "                    childLayerIndex = Integer.parseInt(values[1]);",
+    "                }",
+    "                HanselRn.setHanselIgnoreViewTag(",
+    "                    view,",
+    "                    parentsLayerCount,",
+    "                    childLayerIndex",
+    "                );",
+    "            } else {",
+    "                view.setTag(R.id.hansel_ignore_view, true);",
+    "            }",
+    "        }",
+    "    },",
+    "    nativeIdSetIgnore",
+    ");"
+  ];
+  return commentBlock(lines, "Hansel ignore view handling (uncomment if needed)");
+}
+
+function addOnCreateWithBlocks(source: string, blocks: string[], isKotlin: boolean): string {
+  if (blocks.length === 0) return source;
+  const body = blocks.join("\n\n");
+
+  if (isKotlin) {
+    return source.replace(
+      /class\s+\w+\s*:\s*[^\{]+\{/,
+      (match) =>
+        `${match}\n\n    override fun onCreate() {\n        super.onCreate()\n${indentBlock(
+          body,
+          "        "
+        )}\n    }\n`
+    );
+  }
+
+  return source.replace(
+    /class\s+\w+\s+extends\s+\w+\s*\{/,
+    (match) =>
+      `${match}\n\n    @Override\n    public void onCreate() {\n        super.onCreate();\n${indentBlock(
+        body,
+        "        "
+      )}\n    }\n`
+  );
+}
+
+function upsertHanselBlock(source: string, block: string, marker: string): string {
+  const lines = source.split("\n");
+  const markerIndex = lines.findIndex((line) => line.includes(marker));
+  if (markerIndex === -1) {
+    return insertAfterAnchor(source, block) ?? insertAfterSuper(source, block);
+  }
+
+  let startIndex = -1;
+  for (let i = markerIndex; i >= 0; i -= 1) {
+    if (lines[i].includes("nativeIdSet")) {
+      startIndex = i;
+      break;
+    }
+    if (lines[i].includes("ReactFindViewUtil.addViewsListener")) {
+      startIndex = i;
+      break;
+    }
+  }
+
+  if (startIndex === -1) {
+    return insertAfterSuper(source, block);
+  }
+
+  let endIndex = -1;
+  for (let i = markerIndex; i < lines.length; i += 1) {
+    if (lines[i].trim() === ");" || lines[i].trim() === ")" || lines[i].trim().endsWith(");")) {
+      endIndex = i;
+      break;
+    }
+  }
+
+  if (endIndex === -1) {
+    return insertAfterAnchor(source, block) ?? insertAfterSuper(source, block);
+  }
+
+  const indent = (lines[startIndex].match(/^\s*/) ?? [""])[0];
+  const blockLines = indentBlock(block, indent).split("\n");
+  const next = [...lines.slice(0, startIndex), ...blockLines, "", ...lines.slice(endIndex + 1)];
+  return next.join("\n");
+}
+
+function insertAfterAnchor(source: string, block: string): string | null {
+  const anchorRegexes = [
+    /smartechBasePlugin\.init\s*\(\s*this\s*\)/,
+    /smartechBasePlugin\.init\s*\(\s*this\s*\)\s*;/,
+    /val\s+smartechBasePlugin\s*=\s*SmartechBasePlugin\.getInstance\(\)/,
+    /SmartechBasePlugin\.getInstance\(\)/,
+    /SmartechBasePlugin\.instance/,
+    /SmartechBasePlugin\.getInstance\(\)\s*;/
+  ];
+
+  for (const regex of anchorRegexes) {
+    const match = source.match(regex);
+    if (!match) continue;
+    const indent = (match[0].match(/^\s*/) ?? [""])[0];
+    const blockIndented = indentBlock(block, indent);
+    return source.replace(regex, (m) => `${m}\n${blockIndented}\n`);
+  }
+  return null;
+}
+
+function insertAfterSuper(source: string, block: string): string {
+  const superRegex = /super\.onCreate\s*\([^\)]*\)\s*;?/;
+  const match = source.match(superRegex);
+  if (!match) return source;
+  const indent = (match[0].match(/^\s*/) ?? [""])[0];
+  const blockIndented = indentBlock(block, indent);
+  return source.replace(superRegex, (m) => `${m}\n${blockIndented}\n`);
+}
+
+function indentBlock(block: string, indent: string): string {
+  return block
+    .split("\n")
+    .map((line) => (line.trim().length === 0 ? line : `${indent}${line}`))
+    .join("\n");
+}
+
+function commentBlock(lines: string[], header: string): string {
+  const commented = [`// ${header}`];
+  for (const line of lines) {
+    if (line.trim().length === 0) {
+      commented.push("//");
+    } else {
+      commented.push(`// ${line}`);
+    }
+  }
+  commented.push("//");
+  return commented.join("\n");
+}
+
+function ensureJavaImports(source: string, imports: (string | null)[]): string {
+  let updated = source;
+  for (const imp of imports) {
+    if (!imp) continue;
+    if (!updated.includes(`import ${imp};`)) {
+      updated = updated.replace(/(package\s+[^;]+;\s*)/m, `$1\nimport ${imp};\n`);
+    }
+  }
+  return updated;
+}
+
+function ensureKotlinImports(source: string, imports: (string | null)[]): string {
+  let updated = source;
+  for (const imp of imports) {
+    if (!imp) continue;
+    if (!updated.includes(`import ${imp}`)) {
+      updated = updated.replace(/(package\s+[^\n]+\n)/, `$1import ${imp}\n`);
+    }
+  }
+  return updated;
+}
+
+function readPackageName(source: string): string | null {
+  const match = source.match(/package\s+([^\s;]+)/);
+  return match ? match[1] : null;
+}
+
+async function readManifestPackage(manifestPath: string): Promise<string | null> {
+  if (!(await pathExists(manifestPath))) return null;
+  const contents = await fs.readFile(manifestPath, "utf-8");
+  const match = contents.match(/package\s*=\s*"([^"]+)"/);
+  return match ? match[1] : null;
+}
+
+async function findAndroidApplicationClass(javaRoot: string): Promise<
+  | {
+      filePath: string;
+      className: string;
+    }
+  | null
+> {
+  const candidates = await walkFiles(javaRoot, [".java", ".kt"]);
+  for (const filePath of candidates) {
+    const contents = await fs.readFile(filePath, "utf-8");
+    const classMatch = contents.match(/class\s+(\w+)\s+extends\s+(Application|ReactApplication)/);
+    if (classMatch) {
+      return { filePath, className: classMatch[1] };
+    }
+    const kotlinMatch = contents.match(/class\s+(\w+)\s*:\s*(Application|ReactApplication)/);
+    if (kotlinMatch) {
+      return { filePath, className: kotlinMatch[1] };
+    }
+  }
+  return null;
+}
+
+async function walkFiles(root: string, extensions: string[]): Promise<string[]> {
+  const entries = await fs.readdir(root, { withFileTypes: true });
+  const files: string[] = [];
+  for (const entry of entries) {
+    const fullPath = path.join(root, entry.name);
+    if (entry.isDirectory()) {
+      files.push(...(await walkFiles(fullPath, extensions)));
+      continue;
+    }
+    if (extensions.some((ext) => entry.name.endsWith(ext))) {
+      files.push(fullPath);
+    }
+  }
+  return files;
 }
