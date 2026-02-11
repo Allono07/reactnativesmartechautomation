@@ -497,6 +497,16 @@ export default function App() {
               <div className="platform-status">Active</div>
             </button>
           </div>
+          <div style={{ marginTop: "1rem" }}>
+            <a
+              href="https://cdnt.netcoresmartech.com/smartechapp-team/sdk-versions/smartech-sdk-versions.html?v=1.0.0"
+              target="_blank"
+              rel="noreferrer"
+              style={{ fontSize: "0.9rem", color: "var(--accent)", textDecoration: "none", fontWeight: 500 }}
+            >
+              Check latest SDK versions &rarr;
+            </a>
+          </div>
         </div>
         <div className="hero-card">
           <div className="field">

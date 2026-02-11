@@ -13,7 +13,7 @@ const ANDROID_SRC = path.join("android", "app", "src", "main");
 const DEFAULT_PX_SDK_VERSION = "10.2.12";
 const DEFAULT_RN_PX_VERSION = "^3.7.0";
 
-const PX_DEP_GROOVY = "implementation 'com.netcore.android:smartech-nudges:${SMARTECH_PX_SDK_VERSION}'";
+const PX_DEP_GROOVY = "implementation \"com.netcore.android:smartech-nudges:${SMARTECH_PX_SDK_VERSION}\"";
 const PX_DEP_KTS =
   "implementation(\"com.netcore.android:smartech-nudges:${SMARTECH_PX_SDK_VERSION}\")";
 
