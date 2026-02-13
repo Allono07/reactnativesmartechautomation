@@ -758,7 +758,7 @@ function injectJavaDeeplink(source: string): string {
 
   if (/void\s+onCreate\s*\(/.test(updated)) {
     return updated.replace(
-      /super\.onCreate\s*\(\s*\)\s*;?/,
+      /super\.onCreate\s*\(\s*[^\)]*\)\s*;?/,
       (match) => `${match}\n        ${missing.join("\n        ")}`
     );
   }
@@ -781,7 +781,7 @@ function injectKotlinDeeplink(source: string): string {
 
   if (/fun\s+onCreate\s*\(/.test(updated)) {
     return updated.replace(
-      /super\.onCreate\s*\(\s*.*\)/,
+      /super\.onCreate\s*\(\s*[^\)]*\)/,
       (match) => `${match}\n        ${missing.join("\n        ")}`
     );
   }

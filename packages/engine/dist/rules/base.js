@@ -637,7 +637,7 @@ function injectJavaDeeplink(source) {
     let updated = source;
     updated = ensureJavaImports(updated, [SMARTECH_IMPORT, SMARTECH_WEAKREF_IMPORT]);
     if (/void\s+onCreate\s*\(/.test(updated)) {
-        return updated.replace(/super\.onCreate\s*\(\s*\)\s*;?/, (match) => `${match}\n        ${DEEPLINK_SNIPPET_JAVA.join("\n        ")}`);
+        return updated.replace(/super\.onCreate\s*\(\s*[^\)]*\)\s*;?/, (match) => `${match}\n        ${DEEPLINK_SNIPPET_JAVA.join("\n        ")}`);
     }
     return updated.replace(/class\s+\w+\s+extends\s+\w+\s*\{/, (match) => `${match}\n\n    @Override\n    protected void onCreate(android.os.Bundle savedInstanceState) {\n        super.onCreate(savedInstanceState);\n        ${DEEPLINK_SNIPPET_JAVA.join("\n        ")}\n    }\n`);
 }
@@ -645,7 +645,7 @@ function injectKotlinDeeplink(source) {
     let updated = source;
     updated = ensureKotlinImports(updated, [SMARTECH_IMPORT, SMARTECH_WEAKREF_IMPORT]);
     if (/fun\s+onCreate\s*\(/.test(updated)) {
-        return updated.replace(/super\.onCreate\s*\(\s*\)/, (match) => `${match}\n        ${DEEPLINK_SNIPPET_KOTLIN.join("\n        ")}`);
+        return updated.replace(/super\.onCreate\s*\(\s*[^\)]*\)/, (match) => `${match}\n        ${DEEPLINK_SNIPPET_KOTLIN.join("\n        ")}`);
     }
     return updated.replace(/class\s+\w+\s*:\s*\w+\s*\(\s*\)\s*\{/, (match) => `${match}\n\n    override fun onCreate(savedInstanceState: android.os.Bundle?) {\n        super.onCreate(savedInstanceState)\n        ${DEEPLINK_SNIPPET_KOTLIN.join("\n        ")}\n    }\n`);
 }

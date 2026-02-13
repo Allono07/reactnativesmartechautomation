@@ -25149,20 +25149,37 @@ function injectJavaInit(source) {
     SMARTECH_BASE_PLUGIN_IMPORT,
     "android.content.Context"
   ]);
-  const missingLines = getMissingJavaInitLines(updated);
-  if (missingLines.length === 0) {
+  const missingSections = getMissingJavaInitSections(updated);
+  const hasMissing = missingSections.afterSuper.length > 0 || missingSections.afterInitialize.length > 0;
+  if (!hasMissing) {
     return updated;
   }
   if (/void\s+onCreate\s*\(/.test(updated)) {
-    return updated.replace(/super\.onCreate\s*\(\s*\)\s*;?/, (match) => `${match}
-        ${missingLines.join("\n        ")}`);
+    if (missingSections.afterSuper.length > 0) {
+      updated = updated.replace(/super\.onCreate\s*\(\s*\)\s*;?/, (match) => `${match}
+        ${missingSections.afterSuper.join("\n        ")}`);
+    }
+    if (missingSections.afterInitialize.length > 0) {
+      const withPluginAfterInit = insertLinesAfterInitialize(updated, missingSections.afterInitialize);
+      if (withPluginAfterInit !== updated) {
+        updated = withPluginAfterInit;
+      } else if (missingSections.afterSuper.length === 0) {
+        updated = updated.replace(/super\.onCreate\s*\(\s*\)\s*;?/, (match) => `${match}
+        ${missingSections.afterInitialize.join("\n        ")}`);
+      }
+    }
+    return updated;
   }
+  const bootstrapLines = dedupeLines([
+    ...missingSections.afterSuper,
+    ...missingSections.afterInitialize
+  ]);
   return updated.replace(/class\s+\w+\s+extends\s+\w+\s*\{/, (match) => `${match}
 
     @Override
     public void onCreate() {
         super.onCreate();
-        ${missingLines.join("\n        ")}
+        ${bootstrapLines.join("\n        ")}
     }
 `);
 }
@@ -25173,19 +25190,36 @@ function injectKotlinInit(source) {
     SMARTECH_IMPORT,
     SMARTECH_BASE_PLUGIN_IMPORT
   ]);
-  const missingLines = getMissingKotlinInitLines(updated);
-  if (missingLines.length === 0) {
+  const missingSections = getMissingKotlinInitSections(updated);
+  const hasMissing = missingSections.afterSuper.length > 0 || missingSections.afterInitialize.length > 0;
+  if (!hasMissing) {
     return updated;
   }
   if (/fun\s+onCreate\s*\(/.test(updated)) {
-    return updated.replace(/super\.onCreate\s*\(\s*.*\)/, (match) => `${match}
-        ${missingLines.join("\n        ")}`);
+    if (missingSections.afterSuper.length > 0) {
+      updated = updated.replace(/super\.onCreate\s*\(\s*.*\)/, (match) => `${match}
+        ${missingSections.afterSuper.join("\n        ")}`);
+    }
+    if (missingSections.afterInitialize.length > 0) {
+      const withPluginAfterInit = insertLinesAfterInitialize(updated, missingSections.afterInitialize);
+      if (withPluginAfterInit !== updated) {
+        updated = withPluginAfterInit;
+      } else if (missingSections.afterSuper.length === 0) {
+        updated = updated.replace(/super\.onCreate\s*\(\s*.*\)/, (match) => `${match}
+        ${missingSections.afterInitialize.join("\n        ")}`);
+      }
+    }
+    return updated;
   }
+  const bootstrapLines = dedupeLines([
+    ...missingSections.afterSuper,
+    ...missingSections.afterInitialize
+  ]);
   return updated.replace(/class\s+\w+\s*:\s*\w+\s*\(\s*\)\s*\{/, (match) => `${match}
 
-    override fun onCreate(savedInstanceState: android.os.Bundle?) {
-        super.onCreate(savedInstanceState)
-        ${missingLines.join("\n        ")}
+    override fun onCreate() {
+        super.onCreate()
+        ${bootstrapLines.join("\n        ")}
     }
 `);
 }
@@ -25210,53 +25244,62 @@ function ensureKotlinImports(source, imports) {
   }
   return updated;
 }
-function getMissingJavaInitLines(source) {
+function getMissingJavaInitSections(source) {
   const hasInitialize = /Smartech\.getInstance\(.*\)\.initializeSdk\(/.test(source);
   const hasDebug = /Smartech\.getInstance\(.*\)\.setDebugLevel\(/.test(source);
   const hasTrack = /Smartech\.getInstance\(.*\)\.trackAppInstallUpdateBySmartech\(/.test(source);
-  const hasPluginGet = /SmartechBasePlugin\.getInstance\(/.test(source);
-  const hasPluginInit = /smartechBasePlugin\.init\(/.test(source);
-  const hasPluginBlock = hasPluginGet || hasPluginInit;
-  const missing = [];
-  if (!hasInitialize)
-    missing.push(SMARTECH_INIT_LINES[0]);
-  if (!hasDebug)
-    missing.push(SMARTECH_INIT_LINES[1], SMARTECH_INIT_LINES[2]);
-  if (!hasTrack)
-    missing.push(SMARTECH_INIT_LINES[3], SMARTECH_INIT_LINES[4], SMARTECH_INIT_LINES[5]);
-  if (!hasPluginBlock) {
-    if (!missing.includes(SMARTECH_INIT_LINES[4])) {
-      missing.push(SMARTECH_INIT_LINES[4]);
-    }
-    if (!missing.includes(SMARTECH_INIT_LINES[5])) {
-      missing.push(SMARTECH_INIT_LINES[5]);
-    }
+  const hasPluginVar = /SmartechBasePlugin\s+smartechBasePlugin\s*=\s*SmartechBasePlugin\.(getInstance\(\)|instance)\s*;/.test(source);
+  const hasPluginInit = /(smartechBasePlugin|SmartechBasePlugin\.(getInstance\(\)|instance))\.init\(/.test(source);
+  const pluginLines = [];
+  if (!hasPluginInit) {
+    if (!hasPluginVar)
+      pluginLines.push(SMARTECH_INIT_LINES[5]);
+    pluginLines.push(SMARTECH_INIT_LINES[6]);
   }
-  return dedupeLines(missing);
+  const afterSuper = [];
+  if (!hasInitialize) {
+    afterSuper.push(SMARTECH_INIT_LINES[0], ...pluginLines);
+  }
+  if (!hasDebug)
+    afterSuper.push(SMARTECH_INIT_LINES[1], SMARTECH_INIT_LINES[2]);
+  if (!hasTrack)
+    afterSuper.push(SMARTECH_INIT_LINES[3], SMARTECH_INIT_LINES[4]);
+  return {
+    afterSuper: dedupeLines(afterSuper),
+    afterInitialize: hasInitialize ? dedupeLines(pluginLines) : []
+  };
 }
-function getMissingKotlinInitLines(source) {
+function getMissingKotlinInitSections(source) {
   const hasInitialize = /Smartech\.getInstance\(.*\)\.initializeSdk\(/.test(source);
   const hasDebug = /Smartech\.getInstance\(.*\)\.setDebugLevel\(/.test(source);
   const hasTrack = /Smartech\.getInstance\(.*\)\.trackAppInstallUpdateBySmartech\(/.test(source);
-  const hasPluginGet = /SmartechBasePlugin\.(getInstance|instance)/.test(source);
-  const hasPluginInit = /smartechBasePlugin\.init\(/.test(source);
-  const hasPluginBlock = hasPluginGet || hasPluginInit;
-  const missing = [];
-  if (!hasInitialize)
-    missing.push(SMARTECH_INIT_LINES_KOTLIN[0]);
-  if (!hasDebug)
-    missing.push(SMARTECH_INIT_LINES_KOTLIN[1], SMARTECH_INIT_LINES_KOTLIN[2]);
-  if (!hasTrack)
-    missing.push(SMARTECH_INIT_LINES_KOTLIN[3], SMARTECH_INIT_LINES_KOTLIN[4], SMARTECH_INIT_LINES_KOTLIN[5]);
-  if (!hasPluginBlock) {
-    if (!missing.includes(SMARTECH_INIT_LINES_KOTLIN[4])) {
-      missing.push(SMARTECH_INIT_LINES_KOTLIN[4]);
-    }
-    if (!missing.includes(SMARTECH_INIT_LINES_KOTLIN[5])) {
-      missing.push(SMARTECH_INIT_LINES_KOTLIN[5]);
-    }
+  const hasPluginVar = /(val|var)\s+smartechBasePlugin\s*=\s*SmartechBasePlugin\.(getInstance\(\)|instance)/.test(source);
+  const hasPluginInit = /(smartechBasePlugin|SmartechBasePlugin\.(getInstance\(\)|instance))\.init\(/.test(source);
+  const pluginLines = [];
+  if (!hasPluginInit) {
+    if (!hasPluginVar)
+      pluginLines.push(SMARTECH_INIT_LINES_KOTLIN[5]);
+    pluginLines.push(SMARTECH_INIT_LINES_KOTLIN[6]);
   }
-  return dedupeLines(missing);
+  const afterSuper = [];
+  if (!hasInitialize) {
+    afterSuper.push(SMARTECH_INIT_LINES_KOTLIN[0], ...pluginLines);
+  }
+  if (!hasDebug)
+    afterSuper.push(SMARTECH_INIT_LINES_KOTLIN[1], SMARTECH_INIT_LINES_KOTLIN[2]);
+  if (!hasTrack)
+    afterSuper.push(SMARTECH_INIT_LINES_KOTLIN[3], SMARTECH_INIT_LINES_KOTLIN[4]);
+  return {
+    afterSuper: dedupeLines(afterSuper),
+    afterInitialize: hasInitialize ? dedupeLines(pluginLines) : []
+  };
+}
+function insertLinesAfterInitialize(source, lines) {
+  if (lines.length === 0)
+    return source;
+  return source.replace(/(^[ \t]*)Smartech\.getInstance\([^\n]*\)\.initializeSdk\(\s*this\s*\)\s*;?[ \t]*$/m, (match, indent) => `${match}
+${indent}${lines.join(`
+${indent}`)}`);
 }
 function dedupeLines(lines) {
   const seen = /* @__PURE__ */ new Set();
@@ -25571,7 +25614,7 @@ function injectJavaDeeplink(source) {
   let updated = source;
   updated = ensureJavaImports(updated, [SMARTECH_IMPORT, SMARTECH_WEAKREF_IMPORT]);
   if (/void\s+onCreate\s*\(/.test(updated)) {
-    return updated.replace(/super\.onCreate\s*\(\s*\)\s*;?/, (match) => `${match}
+    return updated.replace(/super\.onCreate\s*\(\s*[^\)]*\)\s*;?/, (match) => `${match}
         ${DEEPLINK_SNIPPET_JAVA.join("\n        ")}`);
   }
   return updated.replace(/class\s+\w+\s+extends\s+\w+\s*\{/, (match) => `${match}
@@ -25587,7 +25630,7 @@ function injectKotlinDeeplink(source) {
   let updated = source;
   updated = ensureKotlinImports(updated, [SMARTECH_IMPORT, SMARTECH_WEAKREF_IMPORT]);
   if (/fun\s+onCreate\s*\(/.test(updated)) {
-    return updated.replace(/super\.onCreate\s*\(\s*\)/, (match) => `${match}
+    return updated.replace(/super\.onCreate\s*\(\s*[^\)]*\)/, (match) => `${match}
         ${DEEPLINK_SNIPPET_KOTLIN.join("\n        ")}`);
   }
   return updated.replace(/class\s+\w+\s*:\s*\w+\s*\(\s*\)\s*\{/, (match) => `${match}
@@ -27645,7 +27688,7 @@ async function ensureApplicationInit2(filePath) {
 function injectJavaInit2(source) {
   let updated = source;
   updated = ensureJavaImports3(updated, [WEAKREF_IMPORT, SMARTECH_IMPORT2, SMARTECH_FLUTTER_IMPORT]);
-  const missing = getMissingJavaInitLines2(updated);
+  const missing = getMissingJavaInitLines(updated);
   if (missing.length === 0)
     return updated;
   if (/void\s+onCreate\s*\(/.test(updated)) {
@@ -27664,7 +27707,7 @@ function injectJavaInit2(source) {
 function injectKotlinInit2(source) {
   let updated = source;
   updated = ensureKotlinImports3(updated, [WEAKREF_IMPORT, SMARTECH_IMPORT2, SMARTECH_FLUTTER_IMPORT]);
-  const missing = getMissingKotlinInitLines2(updated);
+  const missing = getMissingKotlinInitLines(updated);
   if (missing.length === 0)
     return updated;
   if (/fun\s+onCreate\s*\(/.test(updated)) {
@@ -27679,7 +27722,7 @@ function injectKotlinInit2(source) {
     }
 `);
 }
-function getMissingJavaInitLines2(source) {
+function getMissingJavaInitLines(source) {
   const hasInit = /initializeSdk\(/.test(source);
   const hasDebug = /setDebugLevel\(/.test(source);
   const hasTrack = /trackAppInstallUpdateBySmartech\(/.test(source);
@@ -27695,7 +27738,7 @@ function getMissingJavaInitLines2(source) {
     lines.push(INIT_LINES_JAVA[5]);
   return dedupeLines2(lines);
 }
-function getMissingKotlinInitLines2(source) {
+function getMissingKotlinInitLines(source) {
   const hasInit = /initializeSdk\(/.test(source);
   const hasDebug = /setDebugLevel\(/.test(source);
   const hasTrack = /trackAppInstallUpdateBySmartech\(/.test(source);
@@ -27963,7 +28006,7 @@ function injectJavaDeeplink2(source) {
   if (missing.length === 0)
     return updated;
   if (/void\s+onCreate\s*\(/.test(updated)) {
-    return updated.replace(/super\.onCreate\s*\(\s*\)\s*;?/, (match) => `${match}
+    return updated.replace(/super\.onCreate\s*\(\s*[^\)]*\)\s*;?/, (match) => `${match}
         ${missing.join("\n        ")}`);
   }
   return updated.replace(/class\s+\w+\s+extends\s+\w+\s*\{/, (match) => `${match}
@@ -27982,7 +28025,7 @@ function injectKotlinDeeplink2(source) {
   if (missing.length === 0)
     return updated;
   if (/fun\s+onCreate\s*\(/.test(updated)) {
-    return updated.replace(/super\.onCreate\s*\(\s*.*\)/, (match) => `${match}
+    return updated.replace(/super\.onCreate\s*\(\s*[^\)]*\)/, (match) => `${match}
         ${missing.join("\n        ")}`);
   }
   return updated.replace(/class\s+\w+\s*:\s*\w+\s*\(\s*\)\s*\{/, (match) => `${match}

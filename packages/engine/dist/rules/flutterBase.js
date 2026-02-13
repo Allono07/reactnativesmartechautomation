@@ -614,7 +614,7 @@ function injectJavaDeeplink(source) {
     if (missing.length === 0)
         return updated;
     if (/void\s+onCreate\s*\(/.test(updated)) {
-        return updated.replace(/super\.onCreate\s*\(\s*\)\s*;?/, (match) => `${match}\n        ${missing.join("\n        ")}`);
+        return updated.replace(/super\.onCreate\s*\(\s*[^\)]*\)\s*;?/, (match) => `${match}\n        ${missing.join("\n        ")}`);
     }
     return updated.replace(/class\s+\w+\s+extends\s+\w+\s*\{/, (match) => `${match}\n\n    @Override\n    public void onCreate(android.os.Bundle savedInstanceState) {\n        super.onCreate(savedInstanceState);\n        ${missing.join("\n        ")}\n    }\n`);
 }
@@ -625,7 +625,7 @@ function injectKotlinDeeplink(source) {
     if (missing.length === 0)
         return updated;
     if (/fun\s+onCreate\s*\(/.test(updated)) {
-        return updated.replace(/super\.onCreate\s*\(\s*.*\)/, (match) => `${match}\n        ${missing.join("\n        ")}`);
+        return updated.replace(/super\.onCreate\s*\(\s*[^\)]*\)/, (match) => `${match}\n        ${missing.join("\n        ")}`);
     }
     return updated.replace(/class\s+\w+\s*:\s*\w+\s*\(\s*\)\s*\{/, (match) => `${match}\n\n    override fun onCreate(savedInstanceState: android.os.Bundle?) {\n        super.onCreate(savedInstanceState)\n        ${missing.join("\n        ")}\n    }\n`);
 }
