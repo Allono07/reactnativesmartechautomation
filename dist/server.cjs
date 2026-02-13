@@ -24950,7 +24950,7 @@ var SMARTECH_INIT_LINES = [
   "Smartech.getInstance(WeakReference(applicationContext)).setDebugLevel(9);",
   "// Add the below line to track app install and update by smartech",
   "Smartech.getInstance(WeakReference(applicationContext)).trackAppInstallUpdateBySmartech();",
-  "SmartechBasePlugin smartechBasePlugin = SmartechBasePlugin.getInstance();",
+  "SmartechBasePlugin smartechBasePlugin = SmartechBasePlugin.instance;",
   "smartechBasePlugin.init(this);"
 ];
 var SMARTECH_INIT_LINES_KOTLIN = [
@@ -24959,7 +24959,7 @@ var SMARTECH_INIT_LINES_KOTLIN = [
   "Smartech.getInstance(WeakReference(applicationContext)).setDebugLevel(9)",
   "// Add the below line to track app install and update by smartech",
   "Smartech.getInstance(WeakReference(applicationContext)).trackAppInstallUpdateBySmartech()",
-  "val smartechBasePlugin = SmartechBasePlugin.getInstance()",
+  "val smartechBasePlugin = SmartechBasePlugin.instance",
   "smartechBasePlugin.init(this)"
 ];
 var DEEPLINK_SNIPPET_JAVA = [
@@ -25721,7 +25721,7 @@ async function ensureAppDependency(rootPath) {
   }
   const originalContent = await import_node_fs2.promises.readFile(filePath, "utf-8");
   const isKotlin = filePath.endsWith(".kts");
-  const depLine = isKotlin ? 'implementation("com.netcore.android:smartech-sdk:${SMARTECH_BASE_SDK_VERSION}")' : "implementation 'com.netcore.android:smartech-sdk:${SMARTECH_BASE_SDK_VERSION}'";
+  const depLine = isKotlin ? 'implementation("com.netcore.android:smartech-sdk:${SMARTECH_BASE_SDK_VERSION}")' : 'implementation "com.netcore.android:smartech-sdk:${SMARTECH_BASE_SDK_VERSION}"';
   let newContent = originalContent;
   if (originalContent.includes("com.netcore.android:smartech-sdk")) {
     newContent = originalContent.replace(/implementation\s*(\(|\s+)['"]com\.netcore\.android:smartech-sdk:[^'")]+['"]\)?/, depLine);
@@ -26294,7 +26294,7 @@ var MANIFEST_PATH = import_node_path4.default.join("android", "app", "src", "mai
 var ANDROID_SRC2 = import_node_path4.default.join("android", "app", "src", "main");
 var DEFAULT_PX_SDK_VERSION = "10.2.12";
 var DEFAULT_RN_PX_VERSION = "^3.7.0";
-var PX_DEP_GROOVY = "implementation 'com.netcore.android:smartech-nudges:${SMARTECH_PX_SDK_VERSION}'";
+var PX_DEP_GROOVY = 'implementation "com.netcore.android:smartech-nudges:${SMARTECH_PX_SDK_VERSION}"';
 var PX_DEP_KTS = 'implementation("com.netcore.android:smartech-nudges:${SMARTECH_PX_SDK_VERSION}")';
 var PX_IMPORT = "import { HanselTrackerRn } from 'smartech-reactnative-nudges';";
 var BASE_REACT_IMPORT = "import SmartechBaseReact from 'smartech-base-react-native';";
@@ -27538,7 +27538,7 @@ async function ensureAndroidDependency(rootPath) {
     return null;
   const originalContent = await import_node_fs5.promises.readFile(filePath, "utf-8");
   const isKotlin = filePath.endsWith(".kts");
-  const depLine = isKotlin ? 'api("com.netcore.android:smartech-sdk:${SMARTECH_BASE_SDK_VERSION}")' : "api 'com.netcore.android:smartech-sdk:${SMARTECH_BASE_SDK_VERSION}'";
+  const depLine = isKotlin ? 'api("com.netcore.android:smartech-sdk:${SMARTECH_BASE_SDK_VERSION}")' : 'api "com.netcore.android:smartech-sdk:${SMARTECH_BASE_SDK_VERSION}"';
   let newContent = originalContent;
   if (originalContent.includes("com.netcore.android:smartech-sdk")) {
     newContent = originalContent.replace(/(api|implementation)\s*(\(|\s+)['\"]com\.netcore\.android:smartech-sdk:[^'\")]+['\"]\)?/, depLine);

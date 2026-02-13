@@ -22,7 +22,7 @@ const SMARTECH_INIT_LINES = [
     "Smartech.getInstance(WeakReference(applicationContext)).setDebugLevel(9);",
     "// Add the below line to track app install and update by smartech",
     "Smartech.getInstance(WeakReference(applicationContext)).trackAppInstallUpdateBySmartech();",
-    "SmartechBasePlugin smartechBasePlugin = SmartechBasePlugin.getInstance();",
+    "SmartechBasePlugin smartechBasePlugin = SmartechBasePlugin.instance;",
     "smartechBasePlugin.init(this);"
 ];
 const SMARTECH_INIT_LINES_KOTLIN = [
@@ -31,7 +31,7 @@ const SMARTECH_INIT_LINES_KOTLIN = [
     "Smartech.getInstance(WeakReference(applicationContext)).setDebugLevel(9)",
     "// Add the below line to track app install and update by smartech",
     "Smartech.getInstance(WeakReference(applicationContext)).trackAppInstallUpdateBySmartech()",
-    "val smartechBasePlugin = SmartechBasePlugin.getInstance()",
+    "val smartechBasePlugin = SmartechBasePlugin.instance",
     "smartechBasePlugin.init(this)"
 ];
 const DEEPLINK_SNIPPET_JAVA = [
@@ -718,7 +718,7 @@ async function ensureAppDependency(rootPath) {
     const isKotlin = filePath.endsWith(".kts");
     const depLine = isKotlin
         ? "implementation(\"com.netcore.android:smartech-sdk:${SMARTECH_BASE_SDK_VERSION}\")"
-        : "implementation 'com.netcore.android:smartech-sdk:${SMARTECH_BASE_SDK_VERSION}'";
+        : "implementation \"com.netcore.android:smartech-sdk:${SMARTECH_BASE_SDK_VERSION}\"";
     let newContent = originalContent;
     if (originalContent.includes("com.netcore.android:smartech-sdk")) {
         newContent = originalContent.replace(/implementation\s*(\(|\s+)['"]com\.netcore\.android:smartech-sdk:[^'")]+['"]\)?/, depLine);

@@ -250,7 +250,7 @@ async function ensureAndroidDependency(rootPath) {
     const isKotlin = filePath.endsWith(".kts");
     const depLine = isKotlin
         ? "api(\"com.netcore.android:smartech-sdk:${SMARTECH_BASE_SDK_VERSION}\")"
-        : "api 'com.netcore.android:smartech-sdk:${SMARTECH_BASE_SDK_VERSION}'";
+        : "api \"com.netcore.android:smartech-sdk:${SMARTECH_BASE_SDK_VERSION}\"";
     let newContent = originalContent;
     if (originalContent.includes("com.netcore.android:smartech-sdk")) {
         newContent = originalContent.replace(/(api|implementation)\s*(\(|\s+)['\"]com\.netcore\.android:smartech-sdk:[^'\")]+['\"]\)?/, depLine);
