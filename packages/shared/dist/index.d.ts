@@ -1,6 +1,6 @@
 export type IntegrationPart = "base" | "push" | "px";
 export type Platform = "android" | "ios";
-export type AppPlatform = "react-native" | "flutter";
+export type AppPlatform = "react-native" | "flutter" | "android-native";
 export type ChangeKind = "create" | "update" | "insert";
 export type Change = {
     id: string;
@@ -32,6 +32,11 @@ export type IntegrationOptions = {
     dryRun?: boolean;
     appPlatform?: AppPlatform;
     inputs?: {
+        nativePxUiType?: "xml" | "compose" | "mixed";
+        useSdkEncryption?: boolean;
+        applicationClassPath?: string;
+        mainActivityPath?: string;
+        firebaseMessagingServicePath?: string;
         smartechAppId?: string;
         deeplinkScheme?: string;
         baseSdkVersion?: string;

@@ -5,6 +5,9 @@ import { runPxRules } from "./rules/px.js";
 import { runFlutterBaseRules } from "./rules/flutterBase.js";
 import { runFlutterPushRules } from "./rules/flutterPush.js";
 import { runFlutterPxRules } from "./rules/flutterPx.js";
+import { runNativeBaseRules } from "./rules/nativeBase.js";
+import { runNativePushRules } from "./rules/nativePush.js";
+import { runNativePxRules } from "./rules/nativePx.js";
 export async function planIntegration(options) {
     const scan = await scanProject(options.rootPath);
     const changes = [];
@@ -16,6 +19,14 @@ export async function planIntegration(options) {
                 inputs: options.inputs
             });
             changes.push(...flutterChanges);
+        }
+        else if (options.appPlatform === "android-native") {
+            const nativeChanges = await runNativeBaseRules({
+                scan,
+                rootPath: options.rootPath,
+                inputs: options.inputs
+            });
+            changes.push(...nativeChanges);
         }
         else {
             const baseChanges = await runBaseRules({
@@ -35,6 +46,14 @@ export async function planIntegration(options) {
             });
             changes.push(...flutterPushChanges);
         }
+        else if (options.appPlatform === "android-native") {
+            const nativePushChanges = await runNativePushRules({
+                scan,
+                rootPath: options.rootPath,
+                inputs: options.inputs
+            });
+            changes.push(...nativePushChanges);
+        }
         else {
             const pushChanges = await runPushRules({
                 scan,
@@ -52,6 +71,14 @@ export async function planIntegration(options) {
                 inputs: options.inputs
             });
             changes.push(...flutterPxChanges);
+        }
+        else if (options.appPlatform === "android-native") {
+            const nativePxChanges = await runNativePxRules({
+                scan,
+                rootPath: options.rootPath,
+                inputs: options.inputs
+            });
+            changes.push(...nativePxChanges);
         }
         else {
             const pxChanges = await runPxRules({

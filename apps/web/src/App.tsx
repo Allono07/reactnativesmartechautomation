@@ -23,7 +23,12 @@ const initialParts: IntegrationPart[] = ["base"];
 
 export default function App() {
   const [rootPath, setRootPath] = useState<string>("");
-  const [appPlatform, setAppPlatform] = useState<"react-native" | "flutter">("react-native");
+  const [appPlatform, setAppPlatform] = useState<"react-native" | "flutter" | "android-native">(
+    "react-native"
+  );
+  const [applicationClassPath, setApplicationClassPath] = useState<string>("");
+  const [mainActivityPath, setMainActivityPath] = useState<string>("");
+  const [firebaseMessagingServicePath, setFirebaseMessagingServicePath] = useState<string>("");
   const [smartechAppId, setSmartechAppId] = useState<string>("");
   const [deeplinkScheme, setDeeplinkScheme] = useState<string>("");
   const [baseSdkVersion, setBaseSdkVersion] = useState<string>("3.7.6");
@@ -36,6 +41,8 @@ export default function App() {
   const [autoAskPermission, setAutoAskPermission] = useState(true);
   const [autoFetchLocation, setAutoFetchLocation] = useState(true);
   const [pxSdkVersion, setPxSdkVersion] = useState<string>("10.2.12");
+  const [nativePxUiType, setNativePxUiType] = useState<"xml" | "compose" | "mixed">("xml");
+  const [useSdkEncryption, setUseSdkEncryption] = useState(false);
   const [rnPxVersion, setRnPxVersion] = useState<string>("^3.7.0");
   const [hanselAppId, setHanselAppId] = useState<string>("");
   const [hanselAppKey, setHanselAppKey] = useState<string>("");
@@ -65,7 +72,18 @@ export default function App() {
   >([]);
 
   const canRun =
-    rootPath.trim().length > 0 && smartechAppId.trim().length > 0 && deeplinkScheme.trim().length > 0;
+    rootPath.trim().length > 0 &&
+    smartechAppId.trim().length > 0 &&
+    deeplinkScheme.trim().length > 0 &&
+    (!parts.includes("px") ||
+      (hanselAppId.trim().length > 0 &&
+        hanselAppKey.trim().length > 0 &&
+        pxScheme.trim().length > 0 &&
+        (appPlatform !== "android-native" || pxSdkVersion.trim().length > 0))) &&
+    (appPlatform !== "android-native" ||
+      (applicationClassPath.trim().length > 0 &&
+        mainActivityPath.trim().length > 0 &&
+        (!parts.includes("push") || firebaseMessagingServicePath.trim().length > 0)));
 
   const scanSummary = useMemo(() => {
     if (!plan) return null;
@@ -106,8 +124,19 @@ export default function App() {
               ...(parts.includes("push") ? ["push"] : []),
               ...(parts.includes("px") ? ["px"] : [])
             ] as IntegrationPart[])
-          : ["base", ...parts.filter((part) => part !== "base")];
+          : appPlatform === "android-native"
+            ? ([
+                "base",
+                ...(parts.includes("push") ? ["push"] : []),
+                ...(parts.includes("px") ? ["px"] : [])
+              ] as IntegrationPart[])
+            : ["base", ...parts.filter((part) => part !== "base")];
       const inputs: Record<string, any> = {
+        nativePxUiType,
+        useSdkEncryption,
+        applicationClassPath,
+        mainActivityPath,
+        firebaseMessagingServicePath,
         smartechAppId,
         deeplinkScheme,
         baseSdkVersion,
@@ -183,7 +212,13 @@ export default function App() {
               ...(parts.includes("push") ? ["push"] : []),
               ...(parts.includes("px") ? ["px"] : [])
             ] as IntegrationPart[])
-          : ["base", ...parts.filter((part) => part !== "base")];
+          : appPlatform === "android-native"
+            ? ([
+                "base",
+                ...(parts.includes("push") ? ["push"] : []),
+                ...(parts.includes("px") ? ["px"] : [])
+              ] as IntegrationPart[])
+            : ["base", ...parts.filter((part) => part !== "base")];
       const response = await fetch("http://localhost:8787/api/apply", {
         method: "POST",
         headers: {
@@ -197,6 +232,11 @@ export default function App() {
             parts: activeParts,
             appPlatform,
             inputs: {
+              nativePxUiType,
+              useSdkEncryption,
+              applicationClassPath,
+              mainActivityPath,
+              firebaseMessagingServicePath,
               smartechAppId,
               deeplinkScheme,
               baseSdkVersion,
@@ -300,7 +340,12 @@ export default function App() {
     setSelectedChanges(next);
   };
 
-  const platformLabel = appPlatform === "flutter" ? "Flutter" : "React Native";
+  const platformLabel =
+    appPlatform === "flutter"
+      ? "Flutter"
+      : appPlatform === "android-native"
+        ? "Native Android"
+        : "React Native";
 
   return (
     <div className="app">
@@ -399,6 +444,25 @@ export default function App() {
                       Customize notification appearance
                     </a>
                   </>
+                ) : appPlatform === "android-native" ? (
+                  <>
+                    <a
+                      className="doc-link"
+                      href="https://developer.netcorecloud.com/docs/android-new-customer-engagement"
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      Push notification integration
+                    </a>
+                    <a
+                      className="doc-link"
+                      href="https://developer.netcorecloud.com/docs/android-new-customer-engagement#customizing-notification-appearance"
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      Customize notification appearance
+                    </a>
+                  </>
                 ) : (
                   <>
                     <a
@@ -451,6 +515,35 @@ export default function App() {
                       Handling scrollable widget
                     </a>
                   </>
+                ) : appPlatform === "android-native" ? (
+                  <>
+                    <a
+                      className="doc-link"
+                      href="https://developer.netcorecloud.com/docs/nudges-handling-invisible-containers"
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      Handling invisible container
+                    </a>
+                    <a
+                      className="doc-link"
+                      href="https://developer.netcorecloud.com/docs/setting-up-hansel-index-for-dynamic-views"
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      Handling dynamic views
+                    </a>
+                    {nativePxUiType !== "xml" ? (
+                      <a
+                        className="doc-link"
+                        href="https://developer.netcorecloud.com/docs/jetpack-compose"
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        Jetpack Compose setup
+                      </a>
+                    ) : null}
+                  </>
                 ) : (
                   <>
                     <a
@@ -482,10 +575,16 @@ export default function App() {
               <div className="platform-title">React Native</div>
               <div className="platform-status">Active</div>
             </button>
-            <div className="platform disabled">
+            <button
+              className={appPlatform === "android-native" ? "platform active" : "platform"}
+              onClick={() => {
+                setAppPlatform("android-native");
+                setParts(["base"]);
+              }}
+            >
               <div className="platform-title">Android Native</div>
-              <div className="platform-status">Coming soon</div>
-            </div>
+              <div className="platform-status">Active</div>
+            </button>
             <button
               className={appPlatform === "flutter" ? "platform active" : "platform"}
               onClick={() => {
@@ -518,6 +617,28 @@ export default function App() {
               onChange={(event) => setRootPath(event.target.value)}
             />
           </div>
+          {appPlatform === "android-native" ? (
+            <div className="field">
+              <span className="label">Application Class Path</span>
+              <input
+                className="path-input"
+                placeholder="/path/to/Application.kt or .java"
+                value={applicationClassPath}
+                onChange={(event) => setApplicationClassPath(event.target.value)}
+              />
+            </div>
+          ) : null}
+          {appPlatform === "android-native" ? (
+            <div className="field">
+              <span className="label">MainActivity Path (Launcher)</span>
+              <input
+                className="path-input"
+                placeholder="/path/to/MainActivity.kt or .java"
+                value={mainActivityPath}
+                onChange={(event) => setMainActivityPath(event.target.value)}
+              />
+            </div>
+          ) : null}
           <div className="field">
             <span className="label">Smartech App ID</span>
             <input
@@ -689,6 +810,45 @@ export default function App() {
               </div>
             </div>
           ) : null}
+          {parts.includes("push") && appPlatform === "android-native" ? (
+            <div className="push-block">
+              <div className="field">
+                <span className="label">Push SDK Version</span>
+                <input
+                  className="path-input"
+                  placeholder="3.5.13"
+                  value={pushSdkVersion}
+                  onChange={(event) => setPushSdkVersion(event.target.value)}
+                />
+              </div>
+              <div className="field">
+                <span className="label">Firebase Messaging Service Path</span>
+                <input
+                  className="path-input"
+                  placeholder="app/src/main/java/com/example/MyFirebaseMessagingService.java"
+                  value={firebaseMessagingServicePath}
+                  onChange={(event) => setFirebaseMessagingServicePath(event.target.value)}
+                />
+              </div>
+              <div className="field">
+                <span className="label">Auto Ask Notification Permission</span>
+                <div className="toggle-row">
+                  <button
+                    className={autoAskPermission ? "toggle active" : "toggle"}
+                    onClick={() => setAutoAskPermission(true)}
+                  >
+                    Yes
+                  </button>
+                  <button
+                    className={!autoAskPermission ? "toggle active" : "toggle"}
+                    onClick={() => setAutoAskPermission(false)}
+                  >
+                    No
+                  </button>
+                </div>
+              </div>
+            </div>
+          ) : null}
           {parts.includes("px") && appPlatform === "flutter" ? (
             <div className="push-block">
               <div className="field">
@@ -735,6 +895,86 @@ export default function App() {
                   value={pxScheme}
                   onChange={(event) => setPxScheme(event.target.value)}
                 />
+              </div>
+            </div>
+          ) : null}
+          {parts.includes("px") && appPlatform === "android-native" ? (
+            <div className="push-block">
+              <div className="field">
+                <span className="label">Android PX SDK Version</span>
+                <input
+                  className="path-input"
+                  placeholder="10.2.17"
+                  value={pxSdkVersion}
+                  onChange={(event) => setPxSdkVersion(event.target.value)}
+                />
+              </div>
+              <div className="field">
+                <span className="label">Native UI Type</span>
+                <div className="toggle-row">
+                  <button
+                    className={nativePxUiType === "xml" ? "toggle active" : "toggle"}
+                    onClick={() => setNativePxUiType("xml")}
+                  >
+                    XML
+                  </button>
+                  <button
+                    className={nativePxUiType === "compose" ? "toggle active" : "toggle"}
+                    onClick={() => setNativePxUiType("compose")}
+                  >
+                    Compose
+                  </button>
+                  <button
+                    className={nativePxUiType === "mixed" ? "toggle active" : "toggle"}
+                    onClick={() => setNativePxUiType("mixed")}
+                  >
+                    XML + Compose
+                  </button>
+                </div>
+              </div>
+              <div className="field">
+                <span className="label">Hansel App ID</span>
+                <input
+                  className="path-input"
+                  placeholder="Your Hansel App ID"
+                  value={hanselAppId}
+                  onChange={(event) => setHanselAppId(event.target.value)}
+                />
+              </div>
+              <div className="field">
+                <span className="label">Hansel App Key</span>
+                <input
+                  className="path-input"
+                  placeholder="Your Hansel App Key"
+                  value={hanselAppKey}
+                  onChange={(event) => setHanselAppKey(event.target.value)}
+                />
+              </div>
+              <div className="field">
+                <span className="label">PX Scheme</span>
+                <input
+                  className="path-input"
+                  placeholder="your-custom-scheme"
+                  value={pxScheme}
+                  onChange={(event) => setPxScheme(event.target.value)}
+                />
+              </div>
+              <div className="field">
+                <span className="label">Use SDK Encryption</span>
+                <div className="toggle-row">
+                  <button
+                    className={useSdkEncryption ? "toggle active" : "toggle"}
+                    onClick={() => setUseSdkEncryption(true)}
+                  >
+                    Yes
+                  </button>
+                  <button
+                    className={!useSdkEncryption ? "toggle active" : "toggle"}
+                    onClick={() => setUseSdkEncryption(false)}
+                  >
+                    No
+                  </button>
+                </div>
               </div>
             </div>
           ) : null}
