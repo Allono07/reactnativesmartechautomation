@@ -384,6 +384,33 @@ export default function App() {
                       Custom events & user tracking
                     </a>
                   </>
+                ) : appPlatform === "android-native" ? (
+                  <>
+                    <a
+                      className="doc-link"
+                      href="https://developer.netcorecloud.com/docs/android-new-sdk-integration"
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      SDK integration
+                    </a>
+                    <a
+                      className="doc-link"
+                      href="https://developer.netcorecloud.com/docs/custom-event-tracking"
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      Custom event tracking
+                    </a>
+                    <a
+                      className="doc-link"
+                      href="https://developer.netcorecloud.com/docs/user-tracking-1"
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      User tracking
+                    </a>
+                  </>
                 ) : (
                   <>
                     <a
@@ -462,6 +489,22 @@ export default function App() {
                     >
                       Customize notification appearance
                     </a>
+                    <a
+                      className="doc-link"
+                      href="https://developer.netcorecloud.com/docs/android-app-inbox-integration"
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      App Inbox integration
+                    </a>
+                    <a
+                      className="doc-link"
+                      href="https://developer.netcorecloud.com/docs/app-content-personalization"
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      App content personalization
+                    </a>
                   </>
                 ) : (
                   <>
@@ -519,30 +562,28 @@ export default function App() {
                   <>
                     <a
                       className="doc-link"
-                      href="https://developer.netcorecloud.com/docs/nudges-handling-invisible-containers"
+                      href="https://developer.netcorecloud.com/docs/android-sdk-product-experience"
                       target="_blank"
                       rel="noreferrer"
                     >
-                      Handling invisible container
+                      PX SDK integration
                     </a>
                     <a
                       className="doc-link"
-                      href="https://developer.netcorecloud.com/docs/setting-up-hansel-index-for-dynamic-views"
+                      href="https://developer.netcorecloud.com/docs/android-handling-invisible-containers"
                       target="_blank"
                       rel="noreferrer"
                     >
-                      Handling dynamic views
+                      Handling invisible containers
                     </a>
-                    {nativePxUiType !== "xml" ? (
-                      <a
-                        className="doc-link"
-                        href="https://developer.netcorecloud.com/docs/jetpack-compose"
-                        target="_blank"
-                        rel="noreferrer"
-                      >
-                        Jetpack Compose setup
-                      </a>
-                    ) : null}
+                    <a
+                      className="doc-link"
+                      href="https://developer.netcorecloud.com/docs/setting-up-hansel-index-android"
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      Handling dynamic elements
+                    </a>
                   </>
                 ) : (
                   <>
