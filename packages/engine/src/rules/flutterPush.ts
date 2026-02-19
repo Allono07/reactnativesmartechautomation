@@ -19,6 +19,10 @@ const PUSH_DEP_GROOVY = "api \"com.netcore.android:smartech-push:${SMARTECH_PUSH
 const PUSH_DEP_KTS = "api(\"com.netcore.android:smartech-push:${SMARTECH_PUSH_SDK_VERSION}\")";
 
 const SMARTECH_PUSH_IMPORT = "com.netcore.android.smartech_push.SmartechPushPlugin";
+const JAVA_BASE_PLUGIN_INIT = "SmartechBasePlugin.Companion.initializePlugin(this);";
+const KOTLIN_BASE_PLUGIN_INIT = "SmartechBasePlugin.initializePlugin(this)";
+const JAVA_PUSH_PLUGIN_INIT = "SmartechPushPlugin.Companion.initializePlugin(this);";
+const KOTLIN_PUSH_PLUGIN_INIT = "SmartechPushPlugin.initializePlugin(this)";
 
 const FLUTTER_PUSH_MANUAL_SNIPPET = `// In your State<T> class:
 @override
@@ -260,9 +264,7 @@ async function findFlutterApplicationClass(sourceRoots: string[]): Promise<{ fil
 async function ensurePushPluginInit(filePath: string): Promise<Change | null> {
   const originalContent = await fs.readFile(filePath, "utf-8");
   const isKotlin = filePath.endsWith(".kt");
-  const pushLine = isKotlin
-    ? "SmartechPushPlugin.initializePlugin(this)"
-    : "SmartechPushPlugin.initializePlugin(this);";
+  const pushLine = isKotlin ? KOTLIN_PUSH_PLUGIN_INIT : JAVA_PUSH_PLUGIN_INIT;
   const importLine = isKotlin
     ? `import ${SMARTECH_PUSH_IMPORT}`
     : `import ${SMARTECH_PUSH_IMPORT};`;
@@ -279,7 +281,13 @@ async function ensurePushPluginInit(filePath: string): Promise<Change | null> {
     newContent = newContent.replace(/(package\s+[^\n]+\n)/, `$1${importLine}\n`);
   }
 
-  const hasBaseInit = /SmartechBasePlugin\.initializePlugin\s*\(\s*this\s*\)\s*;?/.test(newContent);
+  if (!isKotlin) {
+    newContent = normalizeJavaPluginInitCalls(newContent);
+  }
+
+  const hasBaseInit = /SmartechBasePlugin(?:\.Companion)?\.initializePlugin\s*\(\s*this\s*\)\s*;?/.test(
+    newContent
+  );
   if (!hasBaseInit) {
     return buildChange({
       id: "flutter-push-app-base-missing",
@@ -293,9 +301,9 @@ async function ensurePushPluginInit(filePath: string): Promise<Change | null> {
     });
   }
 
-  if (!/SmartechPushPlugin\.initializePlugin\s*\(\s*this\s*\)\s*;?/.test(newContent)) {
+  if (!/SmartechPushPlugin(?:\.Companion)?\.initializePlugin\s*\(\s*this\s*\)\s*;?/.test(newContent)) {
     newContent = newContent.replace(
-      /(SmartechBasePlugin\.initializePlugin\s*\(\s*this\s*\)\s*;?)/,
+      /(SmartechBasePlugin(?:\.Companion)?\.initializePlugin\s*\(\s*this\s*\)\s*;?)/,
       `$1\n        ${pushLine}`
     );
   }
@@ -312,6 +320,19 @@ async function ensurePushPluginInit(filePath: string): Promise<Change | null> {
     summary: "Add SmartechPushPlugin initialization after Base plugin init.",
     confidence: 0.4
   });
+}
+
+function normalizeJavaPluginInitCalls(source: string): string {
+  let updated = source;
+  updated = updated.replace(
+    /SmartechBasePlugin\s*\.\s*initializePlugin\s*\(\s*this\s*\)\s*;?/g,
+    JAVA_BASE_PLUGIN_INIT
+  );
+  updated = updated.replace(
+    /SmartechPushPlugin\s*\.\s*initializePlugin\s*\(\s*this\s*\)\s*;?/g,
+    JAVA_PUSH_PLUGIN_INIT
+  );
+  return updated;
 }
 
 async function ensureManifestFlagMeta(

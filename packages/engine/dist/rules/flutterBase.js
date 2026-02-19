@@ -19,6 +19,10 @@ const SMARTECH_IMPORT = "com.netcore.android.Smartech";
 const SMARTECH_FLUTTER_IMPORT = "com.netcore.android.smartech_base.SmartechBasePlugin";
 const SMARTECH_PUSH_IMPORT = "com.netcore.android.smartech_push.SmartechPushPlugin";
 const WEAKREF_IMPORT = "java.lang.ref.WeakReference";
+const JAVA_BASE_PLUGIN_INIT = "SmartechBasePlugin.Companion.initializePlugin(this);";
+const KOTLIN_BASE_PLUGIN_INIT = "SmartechBasePlugin.initializePlugin(this)";
+const JAVA_PUSH_PLUGIN_INIT = "SmartechPushPlugin.Companion.initializePlugin(this);";
+const KOTLIN_PUSH_PLUGIN_INIT = "SmartechPushPlugin.initializePlugin(this)";
 const FLUTTER_PUBSPEC_DEP = "smartech_base";
 const INIT_LINES_JAVA = [
     "Smartech.getInstance(new WeakReference<>(getApplicationContext())).initializeSdk(this);",
@@ -26,7 +30,7 @@ const INIT_LINES_JAVA = [
     "Smartech.getInstance(new WeakReference<>(getApplicationContext())).setDebugLevel(9);",
     "// Track install/update",
     "Smartech.getInstance(new WeakReference<>(getApplicationContext())).trackAppInstallUpdateBySmartech();",
-    "SmartechBasePlugin.initializePlugin(this);"
+    JAVA_BASE_PLUGIN_INIT
 ];
 const INIT_LINES_KOTLIN = [
     "Smartech.getInstance(WeakReference(applicationContext)).initializeSdk(this)",
@@ -34,7 +38,7 @@ const INIT_LINES_KOTLIN = [
     "Smartech.getInstance(WeakReference(applicationContext)).setDebugLevel(9)",
     "// Track install/update",
     "Smartech.getInstance(WeakReference(applicationContext)).trackAppInstallUpdateBySmartech()",
-    "SmartechBasePlugin.initializePlugin(this)"
+    KOTLIN_BASE_PLUGIN_INIT
 ];
 const DEEPLINK_LINES_JAVA = [
     "boolean isSmartechHandledDeeplink = Smartech.getInstance(new WeakReference<>(this)).isDeepLinkFromSmartech(getIntent());",
@@ -355,6 +359,7 @@ async function ensureApplicationInit(filePath) {
 function injectJavaInit(source) {
     let updated = source;
     updated = ensureJavaImports(updated, [WEAKREF_IMPORT, SMARTECH_IMPORT, SMARTECH_FLUTTER_IMPORT]);
+    updated = normalizeJavaPluginInitCalls(updated);
     const missing = getMissingJavaInitLines(updated);
     if (missing.length === 0)
         return updated;
@@ -378,7 +383,7 @@ function getMissingJavaInitLines(source) {
     const hasInit = /initializeSdk\(/.test(source);
     const hasDebug = /setDebugLevel\(/.test(source);
     const hasTrack = /trackAppInstallUpdateBySmartech\(/.test(source);
-    const hasPlugin = /SmartechBasePlugin\.initializePlugin\(/.test(source);
+    const hasPlugin = /SmartechBasePlugin(?:\.Companion)?\.initializePlugin\(/.test(source);
     const lines = [];
     if (!hasInit)
         lines.push(INIT_LINES_JAVA[0]);
@@ -416,6 +421,12 @@ function dedupeLines(lines) {
         return true;
     });
 }
+function normalizeJavaPluginInitCalls(source) {
+    let updated = source;
+    updated = updated.replace(/SmartechBasePlugin\s*\.\s*initializePlugin\s*\(\s*this\s*\)\s*;?/g, JAVA_BASE_PLUGIN_INIT);
+    updated = updated.replace(/SmartechPushPlugin\s*\.\s*initializePlugin\s*\(\s*this\s*\)\s*;?/g, JAVA_PUSH_PLUGIN_INIT);
+    return updated;
+}
 function ensureJavaImports(source, imports) {
     let updated = source;
     for (const imp of imports) {
@@ -445,7 +456,7 @@ function buildJavaApplicationClass(packageName, className, includePush) {
         .filter(Boolean)
         .join("\n");
     const initLines = includePush
-        ? [...INIT_LINES_JAVA, "SmartechPushPlugin.initializePlugin(this);"]
+        ? [...INIT_LINES_JAVA, JAVA_PUSH_PLUGIN_INIT]
         : INIT_LINES_JAVA;
     return `package ${packageName};\n\n${imports}\n\npublic class ${className} extends Application {\n    @Override\n    public void onCreate() {\n        super.onCreate();\n        ${initLines.join("\n        ")}\n    }\n}\n`;
 }
@@ -460,7 +471,7 @@ function buildKotlinApplicationClass(packageName, className, includePush) {
         .filter(Boolean)
         .join("\n");
     const initLines = includePush
-        ? [...INIT_LINES_KOTLIN, "SmartechPushPlugin.initializePlugin(this)"]
+        ? [...INIT_LINES_KOTLIN, KOTLIN_PUSH_PLUGIN_INIT]
         : INIT_LINES_KOTLIN;
     return `package ${packageName}\n\n${imports}\n\nclass ${className} : Application() {\n    override fun onCreate() {\n        super.onCreate()\n        ${initLines.join("\n        ")}\n    }\n}\n`;
 }
