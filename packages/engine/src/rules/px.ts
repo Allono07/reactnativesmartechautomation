@@ -15,7 +15,7 @@ const DEFAULT_RN_PX_VERSION = "^3.7.0";
 
 const PX_DEP_GROOVY = "implementation \"com.netcore.android:smartech-nudges:${SMARTECH_PX_SDK_VERSION}\"";
 const PX_DEP_KTS =
-  "implementation(\"com.netcore.android:smartech-nudges:${SMARTECH_PX_SDK_VERSION}\")";
+  "implementation(\"com.netcore.android:smartech-nudges:\" + project.property(\"SMARTECH_PX_SDK_VERSION\"))";
 
 const PX_IMPORT = "import { HanselTrackerRn } from 'smartech-reactnative-nudges';";
 const BASE_REACT_IMPORT = "import SmartechBaseReact from 'smartech-base-react-native';";
@@ -269,10 +269,12 @@ async function ensurePxDependency(rootPath: string): Promise<Change | null> {
 
   let newContent = originalContent;
   if (originalContent.includes("com.netcore.android:smartech-nudges")) {
-    newContent = originalContent.replace(
-      /implementation\s*(\(|\s+)['\"]com\.netcore\.android:smartech-nudges:[^'\")]+['\"]\)?/,
-      depLine
-    );
+    newContent = originalContent
+      .replace(/[A-Za-z_]+\s*\([^\n]*com\.netcore\.android:smartech-nudges[^\n]*\)/, depLine)
+      .replace(
+        /implementation\s*(\(|\s+)['\"]com\.netcore\.android:smartech-nudges:[^'\")]+['\"]\)?/,
+        depLine
+      );
   } else if (/dependencies\s*\{/.test(originalContent)) {
     newContent = originalContent.replace(/dependencies\s*\{/, (match) => `${match}\n    ${depLine}`);
   } else {

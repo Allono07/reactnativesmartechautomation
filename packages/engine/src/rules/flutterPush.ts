@@ -16,7 +16,8 @@ const DEFAULT_FLUTTER_PUSH_VERSION = "^3.5.0";
 const DEFAULT_ANDROID_PUSH_VERSION = "3.5.13";
 
 const PUSH_DEP_GROOVY = "api \"com.netcore.android:smartech-push:${SMARTECH_PUSH_SDK_VERSION}\"";
-const PUSH_DEP_KTS = "api(\"com.netcore.android:smartech-push:${SMARTECH_PUSH_SDK_VERSION}\")";
+const PUSH_DEP_KTS =
+  "api(\"com.netcore.android:smartech-push:\" + project.property(\"SMARTECH_PUSH_SDK_VERSION\"))";
 
 const SMARTECH_PUSH_IMPORT = "com.netcore.android.smartech_push.SmartechPushPlugin";
 const JAVA_BASE_PLUGIN_INIT = "SmartechBasePlugin.Companion.initializePlugin(this);";
@@ -178,10 +179,12 @@ async function ensurePushDependency(rootPath: string): Promise<Change | null> {
 
   let newContent = originalContent;
   if (originalContent.includes("com.netcore.android:smartech-push")) {
-    newContent = originalContent.replace(
-      /(api|implementation)\s*(\(|\s+)['\"]com\.netcore\.android:smartech-push:[^'\")]+['\"]\)?/,
-      depLine
-    );
+    newContent = originalContent
+      .replace(/[A-Za-z_]+\s*\([^\n]*com\.netcore\.android:smartech-push[^\n]*\)/, depLine)
+      .replace(
+        /(api|implementation)\s*(\(|\s+)['\"]com\.netcore\.android:smartech-push:[^'\")]+['\"]\)?/,
+        depLine
+      );
   } else if (/dependencies\s*\{/.test(originalContent)) {
     newContent = originalContent.replace(/dependencies\s*\{/, (match) => `${match}\n    ${depLine}`);
   } else {

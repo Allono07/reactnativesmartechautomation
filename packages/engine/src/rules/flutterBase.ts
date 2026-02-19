@@ -306,15 +306,17 @@ async function ensureAndroidDependency(rootPath: string): Promise<Change | null>
   const originalContent = await fs.readFile(filePath, "utf-8");
   const isKotlin = filePath.endsWith(".kts");
   const depLine = isKotlin
-    ? "api(\"com.netcore.android:smartech-sdk:${SMARTECH_BASE_SDK_VERSION}\")"
+    ? "api(\"com.netcore.android:smartech-sdk:\" + project.property(\"SMARTECH_BASE_SDK_VERSION\"))"
     : "api \"com.netcore.android:smartech-sdk:${SMARTECH_BASE_SDK_VERSION}\"";
 
   let newContent = originalContent;
   if (originalContent.includes("com.netcore.android:smartech-sdk")) {
-    newContent = originalContent.replace(
-      /(api|implementation)\s*(\(|\s+)['\"]com\.netcore\.android:smartech-sdk:[^'\")]+['\"]\)?/,
-      depLine
-    );
+    newContent = originalContent
+      .replace(/[A-Za-z_]+\s*\([^\n]*com\.netcore\.android:smartech-sdk[^\n]*\)/, depLine)
+      .replace(
+        /(api|implementation)\s*(\(|\s+)['\"]com\.netcore\.android:smartech-sdk:[^'\")]+['\"]\)?/,
+        depLine
+      );
   } else if (/dependencies\s*\{/.test(originalContent)) {
     newContent = originalContent.replace(/dependencies\s*\{/, (match) => `${match}\n    ${depLine}`);
   } else {
