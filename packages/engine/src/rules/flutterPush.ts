@@ -91,7 +91,10 @@ export async function runFlutterPushRules(context: FlutterPushContext): Promise<
 
   const flutterPushVersion = context.inputs?.flutterPushSdkVersion ?? DEFAULT_FLUTTER_PUSH_VERSION;
   const androidPushVersion = context.inputs?.pushSdkVersion ?? DEFAULT_ANDROID_PUSH_VERSION;
-  const mainDartPath = context.inputs?.mainDartPath ?? path.join(rootPath, "lib", "main.dart");
+  const mainDartInput = context.inputs?.mainDartPath ?? path.join("lib", "main.dart");
+  const mainDartPath = path.isAbsolute(mainDartInput)
+    ? mainDartInput
+    : path.join(rootPath, mainDartInput);
 
   const gradlePropChange = await ensureGradleProperty(rootPath, androidPushVersion);
   if (gradlePropChange) changes.push(gradlePropChange);
@@ -106,17 +109,6 @@ export async function runFlutterPushRules(context: FlutterPushContext): Promise<
   if (appClass) {
     const initChange = await ensurePushPluginInit(appClass.filePath);
     if (initChange) changes.push(initChange);
-  } else {
-    changes.push({
-      id: "flutter-push-app-missing",
-      title: "Application class not found",
-      filePath: androidMain,
-      kind: "insert",
-      patch: "",
-      summary: "Push plugin init requires an Application/FlutterApplication class. Integrate Base SDK first.",
-      confidence: 0.2,
-      module: "push"
-    });
   }
 
   const autoAskPermission = context.inputs?.autoAskNotificationPermission;
@@ -268,9 +260,6 @@ async function findFlutterApplicationClass(sourceRoots: string[]): Promise<{ fil
 async function ensurePushPluginInit(filePath: string): Promise<Change | null> {
   const originalContent = await fs.readFile(filePath, "utf-8");
   const isKotlin = filePath.endsWith(".kt");
-  const baseLine = isKotlin
-    ? "SmartechBasePlugin.initializePlugin(this)"
-    : "SmartechBasePlugin.initializePlugin(this);";
   const pushLine = isKotlin
     ? "SmartechPushPlugin.initializePlugin(this)"
     : "SmartechPushPlugin.initializePlugin(this);";
@@ -290,11 +279,8 @@ async function ensurePushPluginInit(filePath: string): Promise<Change | null> {
     newContent = newContent.replace(/(package\s+[^\n]+\n)/, `$1${importLine}\n`);
   }
 
-  if (newContent.includes(pushLine)) {
-    return null;
-  }
-
-  if (!newContent.includes(baseLine)) {
+  const hasBaseInit = /SmartechBasePlugin\.initializePlugin\s*\(\s*this\s*\)\s*;?/.test(newContent);
+  if (!hasBaseInit) {
     return buildChange({
       id: "flutter-push-app-base-missing",
       title: "Base SDK init not found",
@@ -307,7 +293,12 @@ async function ensurePushPluginInit(filePath: string): Promise<Change | null> {
     });
   }
 
-  newContent = newContent.replace(baseLine, `${baseLine}\n        ${pushLine}`);
+  if (!/SmartechPushPlugin\.initializePlugin\s*\(\s*this\s*\)\s*;?/.test(newContent)) {
+    newContent = newContent.replace(
+      /(SmartechBasePlugin\.initializePlugin\s*\(\s*this\s*\)\s*;?)/,
+      `$1\n        ${pushLine}`
+    );
+  }
 
   if (newContent === originalContent) return null;
 
@@ -516,14 +507,16 @@ function ensureStatefulPushSetup(source: string): { updated: boolean; content: s
   const after = source.slice(bodyEnd);
 
   let updatedBody = body;
-  const hasRegisterMethod = /_registerPushToken\s*\(/.test(body);
+  const hasRegisterMethodDef =
+    /Future<\s*void\s*>\s+_registerPushToken\s*\(/.test(body) ||
+    /void\s+_registerPushToken\s*\(/.test(body);
+  const hasRegisterCall = /_registerPushToken\s*\(\s*\)\s*;/.test(body);
   const hasInitState = /initState\s*\(\s*\)/.test(body);
   const hasOnMessage = /FirebaseMessaging\.onMessage/.test(body);
   const hasDeeplink = /onHandleDeeplink/.test(body);
-  const hasSmartechPush = /SmartechPush/.test(body);
 
   const initLines: string[] = [];
-  if (!hasRegisterMethod) {
+  if (!hasRegisterCall) {
     initLines.push("    _registerPushToken();");
   }
   if (!hasOnMessage) {
@@ -555,27 +548,20 @@ function ensureStatefulPushSetup(source: string): { updated: boolean; content: s
   }
 
   if (hasInitState) {
-    if (initLines.length > 0 && hasSmartechPush) {
+    if (initLines.length > 0) {
       updatedBody = updatedBody.replace(
-        /super\.initState\s*\(\s*\);\s*/g,
+        /super\.initState\s*\(\s*\);\s*/,
         (match) => `${match}\n${initLines.join("\n")}\n`
       );
-    } else if (initLines.length > 0) {
-      // If the class exists but doesn't look like a Smartech-friendly state, skip injection.
-      return { updated: false, content: source };
     }
-  } else {
-    if (initLines.length > 0 && hasSmartechPush) {
-      const initBlock = `\n  @override\n  void initState() {\n    super.initState();\n${initLines.join(
-        "\n"
-      )}\n  }\n`;
-      updatedBody = `${initBlock}${updatedBody}`;
-    } else if (initLines.length > 0) {
-      return { updated: false, content: source };
-    }
+  } else if (initLines.length > 0) {
+    const initBlock = `\n  @override\n  void initState() {\n    super.initState();\n${initLines.join(
+      "\n"
+    )}\n  }\n`;
+    updatedBody = `${initBlock}${updatedBody}`;
   }
 
-  if (!hasRegisterMethod) {
+  if (!hasRegisterMethodDef) {
     const methodBlock = `\n  Future<void> _registerPushToken() async {\n    final androidToken = await FirebaseMessaging.instance.getToken();\n    if (androidToken != null) {\n      SmartechPush().setDevicePushToken(androidToken);\n    }\n  }\n`;
     updatedBody = `${updatedBody}${methodBlock}`;
   }

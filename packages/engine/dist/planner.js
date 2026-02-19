@@ -16,7 +16,8 @@ export async function planIntegration(options) {
             const flutterChanges = await runFlutterBaseRules({
                 scan,
                 rootPath: options.rootPath,
-                inputs: options.inputs
+                inputs: options.inputs,
+                includePush: options.parts.includes("push")
             });
             changes.push(...flutterChanges);
         }

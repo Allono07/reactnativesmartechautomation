@@ -20,7 +20,8 @@ export async function planIntegration(options: IntegrationOptions): Promise<Inte
       const flutterChanges = await runFlutterBaseRules({
         scan,
         rootPath: options.rootPath,
-        inputs: options.inputs
+        inputs: options.inputs,
+        includePush: options.parts.includes("push")
       });
       changes.push(...flutterChanges);
     } else if (options.appPlatform === "android-native") {
