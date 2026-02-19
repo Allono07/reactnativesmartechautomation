@@ -20,8 +20,8 @@ const DEFAULT_ANDROID_SDK_VERSION = "3.7.6";
 const DEFAULT_FLUTTER_SDK_VERSION = "^3.5.0";
 
 const SMARTECH_IMPORT = "com.netcore.android.Smartech";
-const SMARTECH_FLUTTER_IMPORT = "com.netcore.android.smartech_base.SmartechBasePlugin";
-const SMARTECH_PUSH_IMPORT = "com.netcore.android.smartech_push.SmartechPushPlugin";
+const SMARTECH_FLUTTER_IMPORT = "com.netcore.smartech_base.SmartechBasePlugin";
+const SMARTECH_PUSH_IMPORT = "com.netcore.smartech_push.SmartechPushPlugin";
 const WEAKREF_IMPORT = "java.lang.ref.WeakReference";
 const JAVA_BASE_PLUGIN_INIT = "SmartechBasePlugin.Companion.initializePlugin(this);";
 const KOTLIN_BASE_PLUGIN_INIT = "SmartechBasePlugin.initializePlugin(this)";
