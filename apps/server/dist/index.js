@@ -68,11 +68,49 @@ app.post("/api/plan", async (req, res) => {
                 flutterParts.push("px");
             options.parts = flutterParts;
         }
+        else if (options.appPlatform === "android-native") {
+            const nativeParts = ["base"];
+            if (options.parts.includes("push"))
+                nativeParts.push("push");
+            if (options.parts.includes("px"))
+                nativeParts.push("px");
+            options.parts = nativeParts;
+        }
         if (!options.inputs?.smartechAppId) {
             return res.status(400).json({ error: "smartechAppId is required" });
         }
         if (!options.inputs?.deeplinkScheme) {
             return res.status(400).json({ error: "deeplinkScheme is required" });
+        }
+        if (options.appPlatform === "android-native") {
+            if (!options.inputs?.applicationClassPath) {
+                return res.status(400).json({ error: "applicationClassPath is required for Native Android" });
+            }
+            if (!options.inputs?.mainActivityPath) {
+                return res.status(400).json({ error: "mainActivityPath is required for Native Android" });
+            }
+            if (!options.inputs?.baseSdkVersion) {
+                return res.status(400).json({ error: "baseSdkVersion is required for Native Android" });
+            }
+            if (options.parts.includes("push") && !options.inputs?.firebaseMessagingServicePath) {
+                return res.status(400).json({
+                    error: "firebaseMessagingServicePath is required for Native Android Push"
+                });
+            }
+            if (options.parts.includes("px")) {
+                if (!options.inputs?.pxSdkVersion) {
+                    return res.status(400).json({ error: "pxSdkVersion is required for Native Android PX" });
+                }
+                if (!options.inputs?.hanselAppId) {
+                    return res.status(400).json({ error: "hanselAppId is required for Native Android PX" });
+                }
+                if (!options.inputs?.hanselAppKey) {
+                    return res.status(400).json({ error: "hanselAppKey is required for Native Android PX" });
+                }
+                if (!options.inputs?.pxScheme) {
+                    return res.status(400).json({ error: "pxScheme is required for Native Android PX" });
+                }
+            }
         }
         if (options.appPlatform === "flutter") {
             if (!options.inputs?.flutterBaseSdkVersion) {
@@ -127,7 +165,7 @@ app.post("/api/plan", async (req, res) => {
         const pxInputPresent = Boolean(options.inputs?.hanselAppId) ||
             Boolean(options.inputs?.hanselAppKey) ||
             Boolean(options.inputs?.pxScheme);
-        if (pxInputPresent && !options.parts.includes("px") && options.appPlatform !== "flutter") {
+        if (pxInputPresent && !options.parts.includes("px") && options.appPlatform === "react-native") {
             options.parts = [...options.parts, "px"];
         }
         const plan = await planIntegration(options);
@@ -161,6 +199,14 @@ app.post("/api/apply", async (req, res) => {
                 if (options.parts.includes("px"))
                     flutterParts.push("px");
                 options.parts = flutterParts;
+            }
+            else if (options.appPlatform === "android-native") {
+                const nativeParts = ["base"];
+                if (options.parts.includes("push"))
+                    nativeParts.push("push");
+                if (options.parts.includes("px"))
+                    nativeParts.push("px");
+                options.parts = nativeParts;
             }
             const maxAttempts = 2;
             for (let attempt = 0; attempt < maxAttempts; attempt += 1) {

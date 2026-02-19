@@ -1285,8 +1285,8 @@ var require_node = __commonJS({
           }
           break;
         case "FILE":
-          var fs10 = require("fs");
-          stream2 = new fs10.SyncWriteStream(fd2, { autoClose: false });
+          var fs13 = require("fs");
+          stream2 = new fs13.SyncWriteStream(fd2, { autoClose: false });
           stream2._type = "fs";
           break;
         case "PIPE":
@@ -14073,11 +14073,11 @@ var require_mime_types = __commonJS({
       }
       return exts[0];
     }
-    function lookup(path10) {
-      if (!path10 || typeof path10 !== "string") {
+    function lookup(path14) {
+      if (!path14 || typeof path14 !== "string") {
         return false;
       }
-      var extension2 = extname("x." + path10).toLowerCase().substr(1);
+      var extension2 = extname("x." + path14).toLowerCase().substr(1);
       if (!extension2) {
         return false;
       }
@@ -17602,8 +17602,8 @@ var require_node2 = __commonJS({
           }
           break;
         case "FILE":
-          var fs10 = require("fs");
-          stream2 = new fs10.SyncWriteStream(fd2, { autoClose: false });
+          var fs13 = require("fs");
+          stream2 = new fs13.SyncWriteStream(fd2, { autoClose: false });
           stream2._type = "fs";
           break;
         case "PIPE":
@@ -18321,8 +18321,8 @@ var require_node3 = __commonJS({
           }
           break;
         case "FILE":
-          var fs10 = require("fs");
-          stream2 = new fs10.SyncWriteStream(fd2, { autoClose: false });
+          var fs13 = require("fs");
+          stream2 = new fs13.SyncWriteStream(fd2, { autoClose: false });
           stream2._type = "fs";
           break;
         case "PIPE":
@@ -18410,7 +18410,7 @@ var require_path_to_regexp = __commonJS({
   "node_modules/path-to-regexp/index.js"(exports2, module2) {
     module2.exports = pathToRegexp;
     var MATCHING_GROUP_REGEXP = /\\.|\((?:\?<(.*?)>)?(?!\?)/g;
-    function pathToRegexp(path10, keys, options) {
+    function pathToRegexp(path14, keys, options) {
       options = options || {};
       keys = keys || [];
       var strict = options.strict;
@@ -18424,8 +18424,8 @@ var require_path_to_regexp = __commonJS({
       var pos = 0;
       var backtrack = "";
       var m;
-      if (path10 instanceof RegExp) {
-        while (m = MATCHING_GROUP_REGEXP.exec(path10.source)) {
+      if (path14 instanceof RegExp) {
+        while (m = MATCHING_GROUP_REGEXP.exec(path14.source)) {
           if (m[0][0] === "\\") continue;
           keys.push({
             name: m[1] || name++,
@@ -18433,18 +18433,18 @@ var require_path_to_regexp = __commonJS({
             offset: m.index
           });
         }
-        return path10;
+        return path14;
       }
-      if (Array.isArray(path10)) {
-        path10 = path10.map(function(value) {
+      if (Array.isArray(path14)) {
+        path14 = path14.map(function(value) {
           return pathToRegexp(value, keys, options).source;
         });
-        return new RegExp(path10.join("|"), flags);
+        return new RegExp(path14.join("|"), flags);
       }
-      if (typeof path10 !== "string") {
+      if (typeof path14 !== "string") {
         throw new TypeError("path must be a string, array of strings, or regular expression");
       }
-      path10 = path10.replace(
+      path14 = path14.replace(
         /\\.|(\/)?(\.)?:(\w+)(\(.*?\))?(\*)?(\?)?|[.*]|\/\(/g,
         function(match, slash, format, key, capture, star, optional, offset) {
           if (match[0] === "\\") {
@@ -18461,7 +18461,7 @@ var require_path_to_regexp = __commonJS({
           if (slash || format) {
             backtrack = "";
           } else {
-            backtrack += path10.slice(pos, offset);
+            backtrack += path14.slice(pos, offset);
           }
           pos = offset + match.length;
           if (match === "*") {
@@ -18489,7 +18489,7 @@ var require_path_to_regexp = __commonJS({
           return result;
         }
       );
-      while (m = MATCHING_GROUP_REGEXP.exec(path10)) {
+      while (m = MATCHING_GROUP_REGEXP.exec(path14)) {
         if (m[0][0] === "\\") continue;
         if (keysOffset + i === keys.length || keys[keysOffset + i].offset > m.index) {
           keys.splice(keysOffset + i, 0, {
@@ -18501,13 +18501,13 @@ var require_path_to_regexp = __commonJS({
         }
         i++;
       }
-      path10 += strict ? "" : path10[path10.length - 1] === "/" ? "?" : "/?";
+      path14 += strict ? "" : path14[path14.length - 1] === "/" ? "?" : "/?";
       if (end) {
-        path10 += "$";
-      } else if (path10[path10.length - 1] !== "/") {
-        path10 += lookahead ? "(?=/|$)" : "(?:/|$)";
+        path14 += "$";
+      } else if (path14[path14.length - 1] !== "/") {
+        path14 += lookahead ? "(?=/|$)" : "(?:/|$)";
       }
-      return new RegExp("^" + path10, flags);
+      return new RegExp("^" + path14, flags);
     }
   }
 });
@@ -18520,19 +18520,19 @@ var require_layer = __commonJS({
     var debug = require_src3()("express:router:layer");
     var hasOwnProperty = Object.prototype.hasOwnProperty;
     module2.exports = Layer;
-    function Layer(path10, options, fn) {
+    function Layer(path14, options, fn) {
       if (!(this instanceof Layer)) {
-        return new Layer(path10, options, fn);
+        return new Layer(path14, options, fn);
       }
-      debug("new %o", path10);
+      debug("new %o", path14);
       var opts = options || {};
       this.handle = fn;
       this.name = fn.name || "<anonymous>";
       this.params = void 0;
       this.path = void 0;
-      this.regexp = pathRegexp(path10, this.keys = [], opts);
-      this.regexp.fast_star = path10 === "*";
-      this.regexp.fast_slash = path10 === "/" && opts.end === false;
+      this.regexp = pathRegexp(path14, this.keys = [], opts);
+      this.regexp.fast_star = path14 === "*";
+      this.regexp.fast_slash = path14 === "/" && opts.end === false;
     }
     Layer.prototype.handle_error = function handle_error(error, req, res, next) {
       var fn = this.handle;
@@ -18556,20 +18556,20 @@ var require_layer = __commonJS({
         next(err);
       }
     };
-    Layer.prototype.match = function match(path10) {
+    Layer.prototype.match = function match(path14) {
       var match2;
-      if (path10 != null) {
+      if (path14 != null) {
         if (this.regexp.fast_slash) {
           this.params = {};
           this.path = "";
           return true;
         }
         if (this.regexp.fast_star) {
-          this.params = { "0": decode_param(path10) };
-          this.path = path10;
+          this.params = { "0": decode_param(path14) };
+          this.path = path14;
           return true;
         }
-        match2 = this.regexp.exec(path10);
+        match2 = this.regexp.exec(path14);
       }
       if (!match2) {
         this.params = void 0;
@@ -18662,10 +18662,10 @@ var require_route = __commonJS({
     var slice = Array.prototype.slice;
     var toString = Object.prototype.toString;
     module2.exports = Route;
-    function Route(path10) {
-      this.path = path10;
+    function Route(path14) {
+      this.path = path14;
       this.stack = [];
-      debug("new %o", path10);
+      debug("new %o", path14);
       this.methods = {};
     }
     Route.prototype._handles_method = function _handles_method(method) {
@@ -18877,8 +18877,8 @@ var require_router = __commonJS({
         if (++sync > 100) {
           return setImmediate(next, err);
         }
-        var path10 = getPathname(req);
-        if (path10 == null) {
+        var path14 = getPathname(req);
+        if (path14 == null) {
           return done(layerError);
         }
         var layer;
@@ -18886,7 +18886,7 @@ var require_router = __commonJS({
         var route;
         while (match !== true && idx < stack.length) {
           layer = stack[idx++];
-          match = matchLayer(layer, path10);
+          match = matchLayer(layer, path14);
           route = layer.route;
           if (typeof match !== "boolean") {
             layerError = layerError || match;
@@ -18924,18 +18924,18 @@ var require_router = __commonJS({
           } else if (route) {
             layer.handle_request(req, res, next);
           } else {
-            trim_prefix(layer, layerError, layerPath, path10);
+            trim_prefix(layer, layerError, layerPath, path14);
           }
           sync = 0;
         });
       }
-      function trim_prefix(layer, layerError, layerPath, path10) {
+      function trim_prefix(layer, layerError, layerPath, path14) {
         if (layerPath.length !== 0) {
-          if (layerPath !== path10.slice(0, layerPath.length)) {
+          if (layerPath !== path14.slice(0, layerPath.length)) {
             next(layerError);
             return;
           }
-          var c = path10[layerPath.length];
+          var c = path14[layerPath.length];
           if (c && c !== "/" && c !== ".") return next(layerError);
           debug("trim prefix (%s) from url %s", layerPath, req.url);
           removed = layerPath;
@@ -19013,7 +19013,7 @@ var require_router = __commonJS({
     };
     proto.use = function use(fn) {
       var offset = 0;
-      var path10 = "/";
+      var path14 = "/";
       if (typeof fn !== "function") {
         var arg = fn;
         while (Array.isArray(arg) && arg.length !== 0) {
@@ -19021,7 +19021,7 @@ var require_router = __commonJS({
         }
         if (typeof arg !== "function") {
           offset = 1;
-          path10 = fn;
+          path14 = fn;
         }
       }
       var callbacks = flatten(slice.call(arguments, offset));
@@ -19033,8 +19033,8 @@ var require_router = __commonJS({
         if (typeof fn !== "function") {
           throw new TypeError("Router.use() requires a middleware function but got a " + gettype(fn));
         }
-        debug("use %o %s", path10, fn.name || "<anonymous>");
-        var layer = new Layer(path10, {
+        debug("use %o %s", path14, fn.name || "<anonymous>");
+        var layer = new Layer(path14, {
           sensitive: this.caseSensitive,
           strict: false,
           end: false
@@ -19044,9 +19044,9 @@ var require_router = __commonJS({
       }
       return this;
     };
-    proto.route = function route(path10) {
-      var route2 = new Route(path10);
-      var layer = new Layer(path10, {
+    proto.route = function route(path14) {
+      var route2 = new Route(path14);
+      var layer = new Layer(path14, {
         sensitive: this.caseSensitive,
         strict: this.strict,
         end: true
@@ -19056,8 +19056,8 @@ var require_router = __commonJS({
       return route2;
     };
     methods.concat("all").forEach(function(method) {
-      proto[method] = function(path10) {
-        var route = this.route(path10);
+      proto[method] = function(path14) {
+        var route = this.route(path14);
         route[method].apply(route, slice.call(arguments, 1));
         return this;
       };
@@ -19093,9 +19093,9 @@ var require_router = __commonJS({
       }
       return toString.call(obj).replace(objectRegExp, "$1");
     }
-    function matchLayer(layer, path10) {
+    function matchLayer(layer, path14) {
       try {
-        return layer.match(path10);
+        return layer.match(path14);
       } catch (err) {
         return err;
       }
@@ -19213,13 +19213,13 @@ var require_view = __commonJS({
   "node_modules/express/lib/view.js"(exports2, module2) {
     "use strict";
     var debug = require_src3()("express:view");
-    var path10 = require("path");
-    var fs10 = require("fs");
-    var dirname = path10.dirname;
-    var basename = path10.basename;
-    var extname = path10.extname;
-    var join2 = path10.join;
-    var resolve = path10.resolve;
+    var path14 = require("path");
+    var fs13 = require("fs");
+    var dirname = path14.dirname;
+    var basename = path14.basename;
+    var extname = path14.extname;
+    var join2 = path14.join;
+    var resolve = path14.resolve;
     module2.exports = View;
     function View(name, options) {
       var opts = options || {};
@@ -19248,17 +19248,17 @@ var require_view = __commonJS({
       this.path = this.lookup(fileName);
     }
     View.prototype.lookup = function lookup(name) {
-      var path11;
+      var path15;
       var roots = [].concat(this.root);
       debug('lookup "%s"', name);
-      for (var i = 0; i < roots.length && !path11; i++) {
+      for (var i = 0; i < roots.length && !path15; i++) {
         var root = roots[i];
         var loc = resolve(root, name);
         var dir = dirname(loc);
         var file = basename(loc);
-        path11 = this.resolve(dir, file);
+        path15 = this.resolve(dir, file);
       }
-      return path11;
+      return path15;
     };
     View.prototype.render = function render(options, callback) {
       debug('render "%s"', this.path);
@@ -19266,21 +19266,21 @@ var require_view = __commonJS({
     };
     View.prototype.resolve = function resolve2(dir, file) {
       var ext = this.ext;
-      var path11 = join2(dir, file);
-      var stat = tryStat(path11);
+      var path15 = join2(dir, file);
+      var stat = tryStat(path15);
       if (stat && stat.isFile()) {
-        return path11;
+        return path15;
       }
-      path11 = join2(dir, basename(file, ext), "index" + ext);
-      stat = tryStat(path11);
+      path15 = join2(dir, basename(file, ext), "index" + ext);
+      stat = tryStat(path15);
       if (stat && stat.isFile()) {
-        return path11;
+        return path15;
       }
     };
-    function tryStat(path11) {
-      debug('stat "%s"', path11);
+    function tryStat(path15) {
+      debug('stat "%s"', path15);
       try {
-        return fs10.statSync(path11);
+        return fs13.statSync(path15);
       } catch (e) {
         return void 0;
       }
@@ -19943,8 +19943,8 @@ var require_node4 = __commonJS({
           }
           break;
         case "FILE":
-          var fs10 = require("fs");
-          stream2 = new fs10.SyncWriteStream(fd2, { autoClose: false });
+          var fs13 = require("fs");
+          stream2 = new fs13.SyncWriteStream(fd2, { autoClose: false });
           stream2._type = "fs";
           break;
         case "PIPE":
@@ -20116,8 +20116,8 @@ var require_types = __commonJS({
 // node_modules/mime/mime.js
 var require_mime = __commonJS({
   "node_modules/mime/mime.js"(exports2, module2) {
-    var path10 = require("path");
-    var fs10 = require("fs");
+    var path14 = require("path");
+    var fs13 = require("fs");
     function Mime() {
       this.types = /* @__PURE__ */ Object.create(null);
       this.extensions = /* @__PURE__ */ Object.create(null);
@@ -20138,7 +20138,7 @@ var require_mime = __commonJS({
     };
     Mime.prototype.load = function(file) {
       this._loading = file;
-      var map = {}, content = fs10.readFileSync(file, "ascii"), lines = content.split(/[\r\n]+/);
+      var map = {}, content = fs13.readFileSync(file, "ascii"), lines = content.split(/[\r\n]+/);
       lines.forEach(function(line) {
         var fields = line.replace(/\s*#.*|^\s*|\s*$/g, "").split(/\s+/);
         map[fields.shift()] = fields;
@@ -20146,8 +20146,8 @@ var require_mime = __commonJS({
       this.define(map);
       this._loading = null;
     };
-    Mime.prototype.lookup = function(path11, fallback) {
-      var ext = path11.replace(/^.*[\.\/\\]/, "").toLowerCase();
+    Mime.prototype.lookup = function(path15, fallback) {
+      var ext = path15.replace(/^.*[\.\/\\]/, "").toLowerCase();
       return this.types[ext] || fallback || this.default_type;
     };
     Mime.prototype.extension = function(mimeType) {
@@ -20376,33 +20376,33 @@ var require_send = __commonJS({
     var escapeHtml = require_escape_html();
     var etag = require_etag();
     var fresh = require_fresh();
-    var fs10 = require("fs");
+    var fs13 = require("fs");
     var mime = require_mime();
     var ms = require_ms5();
     var onFinished = require_on_finished();
     var parseRange = require_range_parser();
-    var path10 = require("path");
+    var path14 = require("path");
     var statuses = require_statuses();
     var Stream = require("stream");
     var util = require("util");
-    var extname = path10.extname;
-    var join2 = path10.join;
-    var normalize = path10.normalize;
-    var resolve = path10.resolve;
-    var sep = path10.sep;
+    var extname = path14.extname;
+    var join2 = path14.join;
+    var normalize = path14.normalize;
+    var resolve = path14.resolve;
+    var sep = path14.sep;
     var BYTES_RANGE_REGEXP = /^ *bytes=/;
     var MAX_MAXAGE = 60 * 60 * 24 * 365 * 1e3;
     var UP_PATH_REGEXP = /(?:^|[\\/])\.\.(?:[\\/]|$)/;
     module2.exports = send;
     module2.exports.mime = mime;
-    function send(req, path11, options) {
-      return new SendStream(req, path11, options);
+    function send(req, path15, options) {
+      return new SendStream(req, path15, options);
     }
-    function SendStream(req, path11, options) {
+    function SendStream(req, path15, options) {
       Stream.call(this);
       var opts = options || {};
       this.options = opts;
-      this.path = path11;
+      this.path = path15;
       this.req = req;
       this._acceptRanges = opts.acceptRanges !== void 0 ? Boolean(opts.acceptRanges) : true;
       this._cacheControl = opts.cacheControl !== void 0 ? Boolean(opts.cacheControl) : true;
@@ -20448,8 +20448,8 @@ var require_send = __commonJS({
       this._index = index2;
       return this;
     }, "send.index: pass index as option");
-    SendStream.prototype.root = function root(path11) {
-      this._root = resolve(String(path11));
+    SendStream.prototype.root = function root(path15) {
+      this._root = resolve(String(path15));
       debug("root %s", this._root);
       return this;
     };
@@ -20562,10 +20562,10 @@ var require_send = __commonJS({
       var lastModified = this.res.getHeader("Last-Modified");
       return parseHttpDate(lastModified) <= parseHttpDate(ifRange);
     };
-    SendStream.prototype.redirect = function redirect(path11) {
+    SendStream.prototype.redirect = function redirect(path15) {
       var res = this.res;
       if (hasListeners(this, "directory")) {
-        this.emit("directory", res, path11);
+        this.emit("directory", res, path15);
         return;
       }
       if (this.hasTrailingSlash()) {
@@ -20585,42 +20585,42 @@ var require_send = __commonJS({
     SendStream.prototype.pipe = function pipe(res) {
       var root = this._root;
       this.res = res;
-      var path11 = decode(this.path);
-      if (path11 === -1) {
+      var path15 = decode(this.path);
+      if (path15 === -1) {
         this.error(400);
         return res;
       }
-      if (~path11.indexOf("\0")) {
+      if (~path15.indexOf("\0")) {
         this.error(400);
         return res;
       }
       var parts;
       if (root !== null) {
-        if (path11) {
-          path11 = normalize("." + sep + path11);
+        if (path15) {
+          path15 = normalize("." + sep + path15);
         }
-        if (UP_PATH_REGEXP.test(path11)) {
-          debug('malicious path "%s"', path11);
+        if (UP_PATH_REGEXP.test(path15)) {
+          debug('malicious path "%s"', path15);
           this.error(403);
           return res;
         }
-        parts = path11.split(sep);
-        path11 = normalize(join2(root, path11));
+        parts = path15.split(sep);
+        path15 = normalize(join2(root, path15));
       } else {
-        if (UP_PATH_REGEXP.test(path11)) {
-          debug('malicious path "%s"', path11);
+        if (UP_PATH_REGEXP.test(path15)) {
+          debug('malicious path "%s"', path15);
           this.error(403);
           return res;
         }
-        parts = normalize(path11).split(sep);
-        path11 = resolve(path11);
+        parts = normalize(path15).split(sep);
+        path15 = resolve(path15);
       }
       if (containsDotFile(parts)) {
         var access = this._dotfiles;
         if (access === void 0) {
           access = parts[parts.length - 1][0] === "." ? this._hidden ? "allow" : "ignore" : "allow";
         }
-        debug('%s dotfile "%s"', access, path11);
+        debug('%s dotfile "%s"', access, path15);
         switch (access) {
           case "allow":
             break;
@@ -20634,13 +20634,13 @@ var require_send = __commonJS({
         }
       }
       if (this._index.length && this.hasTrailingSlash()) {
-        this.sendIndex(path11);
+        this.sendIndex(path15);
         return res;
       }
-      this.sendFile(path11);
+      this.sendFile(path15);
       return res;
     };
-    SendStream.prototype.send = function send2(path11, stat) {
+    SendStream.prototype.send = function send2(path15, stat) {
       var len = stat.size;
       var options = this.options;
       var opts = {};
@@ -20652,9 +20652,9 @@ var require_send = __commonJS({
         this.headersAlreadySent();
         return;
       }
-      debug('pipe "%s"', path11);
-      this.setHeader(path11, stat);
-      this.type(path11);
+      debug('pipe "%s"', path15);
+      this.setHeader(path15, stat);
+      this.type(path15);
       if (this.isConditionalGET()) {
         if (this.isPreconditionFailure()) {
           this.error(412);
@@ -20703,28 +20703,28 @@ var require_send = __commonJS({
         res.end();
         return;
       }
-      this.stream(path11, opts);
+      this.stream(path15, opts);
     };
-    SendStream.prototype.sendFile = function sendFile(path11) {
+    SendStream.prototype.sendFile = function sendFile(path15) {
       var i = 0;
       var self = this;
-      debug('stat "%s"', path11);
-      fs10.stat(path11, function onstat(err, stat) {
-        if (err && err.code === "ENOENT" && !extname(path11) && path11[path11.length - 1] !== sep) {
+      debug('stat "%s"', path15);
+      fs13.stat(path15, function onstat(err, stat) {
+        if (err && err.code === "ENOENT" && !extname(path15) && path15[path15.length - 1] !== sep) {
           return next(err);
         }
         if (err) return self.onStatError(err);
-        if (stat.isDirectory()) return self.redirect(path11);
-        self.emit("file", path11, stat);
-        self.send(path11, stat);
+        if (stat.isDirectory()) return self.redirect(path15);
+        self.emit("file", path15, stat);
+        self.send(path15, stat);
       });
       function next(err) {
         if (self._extensions.length <= i) {
           return err ? self.onStatError(err) : self.error(404);
         }
-        var p = path11 + "." + self._extensions[i++];
+        var p = path15 + "." + self._extensions[i++];
         debug('stat "%s"', p);
-        fs10.stat(p, function(err2, stat) {
+        fs13.stat(p, function(err2, stat) {
           if (err2) return next(err2);
           if (stat.isDirectory()) return next();
           self.emit("file", p, stat);
@@ -20732,7 +20732,7 @@ var require_send = __commonJS({
         });
       }
     };
-    SendStream.prototype.sendIndex = function sendIndex(path11) {
+    SendStream.prototype.sendIndex = function sendIndex(path15) {
       var i = -1;
       var self = this;
       function next(err) {
@@ -20740,9 +20740,9 @@ var require_send = __commonJS({
           if (err) return self.onStatError(err);
           return self.error(404);
         }
-        var p = join2(path11, self._index[i]);
+        var p = join2(path15, self._index[i]);
         debug('stat "%s"', p);
-        fs10.stat(p, function(err2, stat) {
+        fs13.stat(p, function(err2, stat) {
           if (err2) return next(err2);
           if (stat.isDirectory()) return next();
           self.emit("file", p, stat);
@@ -20751,10 +20751,10 @@ var require_send = __commonJS({
       }
       next();
     };
-    SendStream.prototype.stream = function stream(path11, options) {
+    SendStream.prototype.stream = function stream(path15, options) {
       var self = this;
       var res = this.res;
-      var stream2 = fs10.createReadStream(path11, options);
+      var stream2 = fs13.createReadStream(path15, options);
       this.emit("stream", stream2);
       stream2.pipe(res);
       function cleanup() {
@@ -20769,10 +20769,10 @@ var require_send = __commonJS({
         self.emit("end");
       });
     };
-    SendStream.prototype.type = function type(path11) {
+    SendStream.prototype.type = function type(path15) {
       var res = this.res;
       if (res.getHeader("Content-Type")) return;
-      var type2 = mime.lookup(path11);
+      var type2 = mime.lookup(path15);
       if (!type2) {
         debug("no content-type");
         return;
@@ -20781,9 +20781,9 @@ var require_send = __commonJS({
       debug("content-type %s", type2);
       res.setHeader("Content-Type", type2 + (charset ? "; charset=" + charset : ""));
     };
-    SendStream.prototype.setHeader = function setHeader(path11, stat) {
+    SendStream.prototype.setHeader = function setHeader(path15, stat) {
       var res = this.res;
-      this.emit("headers", res, path11, stat);
+      this.emit("headers", res, path15, stat);
       if (this._acceptRanges && !res.getHeader("Accept-Ranges")) {
         debug("accept ranges");
         res.setHeader("Accept-Ranges", "bytes");
@@ -20842,9 +20842,9 @@ var require_send = __commonJS({
       }
       return err instanceof Error ? createError(status, err, { expose: false }) : createError(status, err);
     }
-    function decode(path11) {
+    function decode(path15) {
       try {
-        return decodeURIComponent(path11);
+        return decodeURIComponent(path15);
       } catch (err) {
         return -1;
       }
@@ -21753,10 +21753,10 @@ var require_utils2 = __commonJS({
     var querystring = require("querystring");
     exports2.etag = createETagGenerator({ weak: false });
     exports2.wetag = createETagGenerator({ weak: true });
-    exports2.isAbsolute = function(path10) {
-      if ("/" === path10[0]) return true;
-      if (":" === path10[1] && ("\\" === path10[2] || "/" === path10[2])) return true;
-      if ("\\\\" === path10.substring(0, 2)) return true;
+    exports2.isAbsolute = function(path14) {
+      if ("/" === path14[0]) return true;
+      if (":" === path14[1] && ("\\" === path14[2] || "/" === path14[2])) return true;
+      if ("\\\\" === path14.substring(0, 2)) return true;
     };
     exports2.flatten = deprecate.function(
       flatten,
@@ -21967,7 +21967,7 @@ var require_application = __commonJS({
     };
     app2.use = function use(fn) {
       var offset = 0;
-      var path10 = "/";
+      var path14 = "/";
       if (typeof fn !== "function") {
         var arg = fn;
         while (Array.isArray(arg) && arg.length !== 0) {
@@ -21975,7 +21975,7 @@ var require_application = __commonJS({
         }
         if (typeof arg !== "function") {
           offset = 1;
-          path10 = fn;
+          path14 = fn;
         }
       }
       var fns = flatten(slice.call(arguments, offset));
@@ -21986,12 +21986,12 @@ var require_application = __commonJS({
       var router = this._router;
       fns.forEach(function(fn2) {
         if (!fn2 || !fn2.handle || !fn2.set) {
-          return router.use(path10, fn2);
+          return router.use(path14, fn2);
         }
-        debug(".use app under %s", path10);
-        fn2.mountpath = path10;
+        debug(".use app under %s", path14);
+        fn2.mountpath = path14;
         fn2.parent = this;
-        router.use(path10, function mounted_app(req, res, next) {
+        router.use(path14, function mounted_app(req, res, next) {
           var orig = req.app;
           fn2.handle(req, res, function(err) {
             setPrototypeOf(req, orig.request);
@@ -22003,9 +22003,9 @@ var require_application = __commonJS({
       }, this);
       return this;
     };
-    app2.route = function route(path10) {
+    app2.route = function route(path14) {
       this.lazyrouter();
-      return this._router.route(path10);
+      return this._router.route(path14);
     };
     app2.engine = function engine(ext, fn) {
       if (typeof fn !== "function") {
@@ -22056,7 +22056,7 @@ var require_application = __commonJS({
       }
       return this;
     };
-    app2.path = function path10() {
+    app2.path = function path14() {
       return this.parent ? this.parent.path() + this.mountpath : "";
     };
     app2.enabled = function enabled(setting) {
@@ -22072,19 +22072,19 @@ var require_application = __commonJS({
       return this.set(setting, false);
     };
     methods.forEach(function(method) {
-      app2[method] = function(path10) {
+      app2[method] = function(path14) {
         if (method === "get" && arguments.length === 1) {
-          return this.set(path10);
+          return this.set(path14);
         }
         this.lazyrouter();
-        var route = this._router.route(path10);
+        var route = this._router.route(path14);
         route[method].apply(route, slice.call(arguments, 1));
         return this;
       };
     });
-    app2.all = function all(path10) {
+    app2.all = function all(path14) {
       this.lazyrouter();
-      var route = this._router.route(path10);
+      var route = this._router.route(path14);
       var args = slice.call(arguments, 1);
       for (var i = 0; i < methods.length; i++) {
         route[methods[i]].apply(route, args);
@@ -22843,7 +22843,7 @@ var require_request = __commonJS({
       var subdomains2 = !isIP(hostname) ? hostname.split(".").reverse() : [hostname];
       return subdomains2.slice(offset);
     });
-    defineGetter(req, "path", function path10() {
+    defineGetter(req, "path", function path14() {
       return parse(this).pathname;
     });
     defineGetter(req, "hostname", function hostname() {
@@ -23165,7 +23165,7 @@ var require_response = __commonJS({
     var http = require("http");
     var isAbsolute = require_utils2().isAbsolute;
     var onFinished = require_on_finished();
-    var path10 = require("path");
+    var path14 = require("path");
     var statuses = require_statuses();
     var merge = require_utils_merge();
     var sign = require_cookie_signature().sign;
@@ -23174,9 +23174,9 @@ var require_response = __commonJS({
     var setCharset = require_utils2().setCharset;
     var cookie = require_cookie();
     var send = require_send();
-    var extname = path10.extname;
+    var extname = path14.extname;
     var mime = send.mime;
-    var resolve = path10.resolve;
+    var resolve = path14.resolve;
     var vary = require_vary();
     var res = Object.create(http.ServerResponse.prototype);
     module2.exports = res;
@@ -23353,26 +23353,26 @@ var require_response = __commonJS({
       this.type("txt");
       return this.send(body);
     };
-    res.sendFile = function sendFile(path11, options, callback) {
+    res.sendFile = function sendFile(path15, options, callback) {
       var done = callback;
       var req = this.req;
       var res2 = this;
       var next = req.next;
       var opts = options || {};
-      if (!path11) {
+      if (!path15) {
         throw new TypeError("path argument is required to res.sendFile");
       }
-      if (typeof path11 !== "string") {
+      if (typeof path15 !== "string") {
         throw new TypeError("path must be a string to res.sendFile");
       }
       if (typeof options === "function") {
         done = options;
         opts = {};
       }
-      if (!opts.root && !isAbsolute(path11)) {
+      if (!opts.root && !isAbsolute(path15)) {
         throw new TypeError("path must be absolute or specify root to res.sendFile");
       }
-      var pathname = encodeURI(path11);
+      var pathname = encodeURI(path15);
       var file = send(req, pathname, opts);
       sendfile(res2, file, opts, function(err) {
         if (done) return done(err);
@@ -23382,7 +23382,7 @@ var require_response = __commonJS({
         }
       });
     };
-    res.sendfile = function(path11, options, callback) {
+    res.sendfile = function(path15, options, callback) {
       var done = callback;
       var req = this.req;
       var res2 = this;
@@ -23392,7 +23392,7 @@ var require_response = __commonJS({
         done = options;
         opts = {};
       }
-      var file = send(req, path11, opts);
+      var file = send(req, path15, opts);
       sendfile(res2, file, opts, function(err) {
         if (done) return done(err);
         if (err && err.code === "EISDIR") return next();
@@ -23405,7 +23405,7 @@ var require_response = __commonJS({
       res.sendfile,
       "res.sendfile: Use res.sendFile instead"
     );
-    res.download = function download(path11, filename, options, callback) {
+    res.download = function download(path15, filename, options, callback) {
       var done = callback;
       var name = filename;
       var opts = options || null;
@@ -23422,7 +23422,7 @@ var require_response = __commonJS({
         opts = filename;
       }
       var headers = {
-        "Content-Disposition": contentDisposition(name || path11)
+        "Content-Disposition": contentDisposition(name || path15)
       };
       if (opts && opts.headers) {
         var keys = Object.keys(opts.headers);
@@ -23435,7 +23435,7 @@ var require_response = __commonJS({
       }
       opts = Object.create(opts);
       opts.headers = headers;
-      var fullPath = !opts.root ? resolve(path11) : path11;
+      var fullPath = !opts.root ? resolve(path15) : path15;
       return this.sendFile(fullPath, opts, done);
     };
     res.contentType = res.type = function contentType(type) {
@@ -23736,11 +23736,11 @@ var require_serve_static = __commonJS({
         }
         var forwardError = !fallthrough;
         var originalUrl = parseUrl.original(req);
-        var path10 = parseUrl(req).pathname;
-        if (path10 === "/" && originalUrl.pathname.substr(-1) !== "/") {
-          path10 = "";
+        var path14 = parseUrl(req).pathname;
+        if (path14 === "/" && originalUrl.pathname.substr(-1) !== "/") {
+          path14 = "";
         }
-        var stream = send(req, path10, opts);
+        var stream = send(req, path14, opts);
         stream.on("directory", onDirectory);
         if (setHeaders) {
           stream.on("headers", setHeaders);
@@ -24157,8 +24157,8 @@ var require_lib3 = __commonJS({
 // apps/server/dist/index.js
 var import_express = __toESM(require_express2(), 1);
 var import_cors = __toESM(require_lib3(), 1);
-var import_node_path9 = __toESM(require("node:path"), 1);
-var import_node_fs9 = require("node:fs");
+var import_node_path13 = __toESM(require("node:path"), 1);
+var import_node_fs12 = require("node:fs");
 var import_node_child_process = require("node:child_process");
 
 // packages/engine/dist/utils/fs.js
@@ -24187,7 +24187,19 @@ async function scanProject(rootPath) {
   const notes = [];
   const androidPath = import_node_path.default.join(rootPath, "android");
   const iosPath = import_node_path.default.join(rootPath, "ios");
-  if (await pathExists(androidPath)) {
+  const nativeAndroidAppPath = import_node_path.default.join(rootPath, "app");
+  const nativeAndroidManifestPath = import_node_path.default.join(rootPath, "app", "src", "main", "AndroidManifest.xml");
+  const nativeAndroidBuildGradlePath = import_node_path.default.join(rootPath, "build.gradle");
+  const nativeAndroidBuildGradleKtsPath = import_node_path.default.join(rootPath, "build.gradle.kts");
+  const nativeAndroidSettingsGradlePath = import_node_path.default.join(rootPath, "settings.gradle");
+  const nativeAndroidSettingsGradleKtsPath = import_node_path.default.join(rootPath, "settings.gradle.kts");
+  const androidModuleManifestPath = import_node_path.default.join(rootPath, "src", "main", "AndroidManifest.xml");
+  const androidModuleBuildGradlePath = import_node_path.default.join(rootPath, "build.gradle");
+  const androidModuleBuildGradleKtsPath = import_node_path.default.join(rootPath, "build.gradle.kts");
+  const hasReactNativeAndroidRoot = await pathExists(androidPath);
+  const hasNativeAndroidRoot = await pathExists(nativeAndroidAppPath) && await pathExists(nativeAndroidManifestPath) && (await pathExists(nativeAndroidBuildGradlePath) || await pathExists(nativeAndroidBuildGradleKtsPath) || await pathExists(nativeAndroidSettingsGradlePath) || await pathExists(nativeAndroidSettingsGradleKtsPath));
+  const hasAndroidModuleRoot = await pathExists(androidModuleManifestPath) && (await pathExists(androidModuleBuildGradlePath) || await pathExists(androidModuleBuildGradleKtsPath));
+  if (hasReactNativeAndroidRoot || hasNativeAndroidRoot || hasAndroidModuleRoot) {
     platforms.push("android");
   }
   if (await pathExists(iosPath)) {
@@ -24195,11 +24207,11 @@ async function scanProject(rootPath) {
   }
   const packageJson = await readJsonIfExists(import_node_path.default.join(rootPath, "package.json"));
   const reactNativeVersion = packageJson?.dependencies?.["react-native"] ?? packageJson?.devDependencies?.["react-native"];
-  if (!reactNativeVersion) {
+  if (packageJson && !reactNativeVersion) {
     notes.push("react-native dependency not found in package.json");
   }
   if (platforms.length === 0) {
-    notes.push("No android or ios folders detected. Is this a React Native project?");
+    notes.push("No Android/iOS project structure detected. Ensure rootPath points to project root (React Native root or Native Android root).");
   }
   return {
     rootPath,
@@ -24318,11 +24330,11 @@ Diff.prototype = {
       }
     }
   },
-  addToPath: function addToPath(path10, added, removed, oldPosInc) {
-    var last = path10.lastComponent;
+  addToPath: function addToPath(path14, added, removed, oldPosInc) {
+    var last = path14.lastComponent;
     if (last && last.added === added && last.removed === removed) {
       return {
-        oldPos: path10.oldPos + oldPosInc,
+        oldPos: path14.oldPos + oldPosInc,
         lastComponent: {
           count: last.count + 1,
           added,
@@ -24332,7 +24344,7 @@ Diff.prototype = {
       };
     } else {
       return {
-        oldPos: path10.oldPos + oldPosInc,
+        oldPos: path14.oldPos + oldPosInc,
         lastComponent: {
           count: 1,
           added,
@@ -29378,6 +29390,1930 @@ function escapeRegex4(value) {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
+// packages/engine/dist/rules/nativeBase.js
+var import_node_path9 = __toESM(require("node:path"), 1);
+var import_node_fs8 = require("node:fs");
+
+// packages/engine/dist/utils/androidProject.js
+var import_node_path8 = __toESM(require("node:path"), 1);
+function buildLayout(rootPath, style) {
+  const rootDir = style === "react-native" ? import_node_path8.default.join(rootPath, "android") : rootPath;
+  const appDir = style === "react-native" ? import_node_path8.default.join(rootDir, "app") : import_node_path8.default.join(rootPath, "app");
+  const mainDir = import_node_path8.default.join(appDir, "src", "main");
+  return {
+    style,
+    rootDir,
+    appDir,
+    appBuildGradle: import_node_path8.default.join(appDir, "build.gradle"),
+    appBuildGradleKts: import_node_path8.default.join(appDir, "build.gradle.kts"),
+    rootBuildGradle: import_node_path8.default.join(rootDir, "build.gradle"),
+    rootBuildGradleKts: import_node_path8.default.join(rootDir, "build.gradle.kts"),
+    settingsGradle: import_node_path8.default.join(rootDir, "settings.gradle"),
+    settingsGradleKts: import_node_path8.default.join(rootDir, "settings.gradle.kts"),
+    manifestPath: import_node_path8.default.join(mainDir, "AndroidManifest.xml"),
+    mainDir,
+    resXmlDir: import_node_path8.default.join(mainDir, "res", "xml")
+  };
+}
+async function scoreLayout(layout) {
+  let score = 0;
+  if (await pathExists(layout.rootDir))
+    score += 1;
+  if (await pathExists(layout.appDir))
+    score += 1;
+  if (await pathExists(layout.manifestPath))
+    score += 4;
+  if (await pathExists(layout.appBuildGradle) || await pathExists(layout.appBuildGradleKts))
+    score += 3;
+  if (await pathExists(layout.settingsGradle) || await pathExists(layout.settingsGradleKts) || await pathExists(layout.rootBuildGradle) || await pathExists(layout.rootBuildGradleKts)) {
+    score += 2;
+  }
+  return score;
+}
+async function resolveAndroidProjectLayout(rootPath, preferredStyle = "native") {
+  const nativeLayout = buildLayout(rootPath, "native");
+  const reactNativeLayout = buildLayout(rootPath, "react-native");
+  const candidates = [
+    { ...nativeLayout, score: await scoreLayout(nativeLayout) },
+    { ...reactNativeLayout, score: await scoreLayout(reactNativeLayout) }
+  ];
+  candidates.sort((a, b) => b.score - a.score);
+  if (candidates[0].score > candidates[1].score) {
+    const { score: _score2, ...layout2 } = candidates[0];
+    return layout2;
+  }
+  const preferred = candidates.find((candidate) => candidate.style === preferredStyle) ?? candidates[0];
+  const { score: _score, ...layout } = preferred;
+  return layout;
+}
+
+// packages/engine/dist/rules/nativeBase.js
+var SMARTECH_MAVEN3 = "https://artifacts.netcore.co.in/artifactory/android";
+var DEFAULT_BASE_SDK_VERSION2 = "3.7.6";
+var JAVA_INIT_LINES = [
+  "Smartech.getInstance(new WeakReference<>(getApplicationContext())).initializeSdk(this);",
+  "Smartech.getInstance(new WeakReference<>(getApplicationContext())).setDebugLevel(9);",
+  "Smartech.getInstance(new WeakReference<>(getApplicationContext())).trackAppInstallUpdateBySmartech();"
+];
+var KOTLIN_INIT_LINES = [
+  "Smartech.getInstance(WeakReference(applicationContext)).initializeSdk(this)",
+  "Smartech.getInstance(WeakReference(applicationContext)).setDebugLevel(9)",
+  "Smartech.getInstance(WeakReference(applicationContext)).trackAppInstallUpdateBySmartech()"
+];
+var JAVA_DEEPLINK_LINES = [
+  "boolean isSmartechHandledDeeplink =",
+  "        Smartech.getInstance(new WeakReference<>(this))",
+  "                .isDeepLinkFromSmartech(getIntent());",
+  "",
+  "if (!isSmartechHandledDeeplink) {",
+  "    // Handle deeplink",
+  "}"
+];
+var KOTLIN_DEEPLINK_LINES = [
+  "val isSmartechHandledDeeplink =",
+  "    Smartech.getInstance(WeakReference(this))",
+  "        .isDeepLinkFromSmartech(intent)",
+  "",
+  "if (!isSmartechHandledDeeplink) {",
+  "    // Handle deeplink",
+  "}"
+];
+async function runNativeBaseRules(context) {
+  const changes = [];
+  const rootPath = context.rootPath;
+  const androidLayout = await resolveAndroidProjectLayout(rootPath, "native");
+  const manifestPath = androidLayout.manifestPath;
+  const inputs = context.inputs ?? {};
+  const appId = inputs.smartechAppId ?? "";
+  const scheme = inputs.deeplinkScheme ?? "";
+  const baseSdkVersion = inputs.baseSdkVersion ?? DEFAULT_BASE_SDK_VERSION2;
+  const applicationClassPathInput = inputs.applicationClassPath?.trim();
+  const mainActivityPathInput = inputs.mainActivityPath?.trim();
+  if (!applicationClassPathInput || !mainActivityPathInput) {
+    changes.push({
+      id: "native-input-paths-missing",
+      title: "Application/MainActivity paths missing",
+      filePath: rootPath,
+      kind: "insert",
+      patch: "",
+      summary: "Provide both Application class path and MainActivity path for Native Android Base integration.",
+      confidence: 0.2,
+      module: "base"
+    });
+    return changes;
+  }
+  const applicationClassPath = resolveInputPath(rootPath, applicationClassPathInput);
+  const mainActivityPath = resolveInputPath(rootPath, mainActivityPathInput);
+  const mavenChange = await ensureMavenRepo3(androidLayout);
+  if (mavenChange)
+    changes.push(mavenChange);
+  const dependencyChange = await ensureBaseDependency(androidLayout, baseSdkVersion);
+  if (dependencyChange)
+    changes.push(dependencyChange);
+  const appIdChange = await ensureManifestMetaData3(manifestPath, "SMT_APP_ID", appId);
+  if (appIdChange)
+    changes.push(appIdChange);
+  if (typeof inputs.autoFetchLocation === "boolean") {
+    const locationChange = await ensureManifestMetaData3(manifestPath, "SMT_IS_AUTO_FETCHED_LOCATION", inputs.autoFetchLocation ? "1" : "0");
+    if (locationChange)
+      changes.push(locationChange);
+  }
+  const backupChanges = await ensureBackupConfig3(androidLayout, manifestPath);
+  changes.push(...backupChanges);
+  const targetSdk = await detectTargetSdk(androidLayout);
+  const appClassChange = await ensureApplicationInitializationAndReceiver(applicationClassPath, targetSdk);
+  if (appClassChange)
+    changes.push(appClassChange);
+  const receiverChange = await ensureDeeplinkReceiver(applicationClassPath);
+  if (receiverChange)
+    changes.push(receiverChange);
+  const activityChange = await ensureMainActivityDeeplink3(mainActivityPath);
+  if (activityChange)
+    changes.push(activityChange);
+  const activityName = await inferManifestActivityName(manifestPath, mainActivityPath);
+  const intentChange = await ensureManifestIntentFilter(manifestPath, activityName, scheme);
+  if (intentChange)
+    changes.push(intentChange);
+  return changes;
+}
+function buildChange7(input) {
+  const patch = createUnifiedDiff(input.filePath, input.originalContent ?? "", input.newContent ?? "");
+  return { module: "base", ...input, patch };
+}
+function resolveInputPath(rootPath, inputPath) {
+  if (import_node_path9.default.isAbsolute(inputPath))
+    return inputPath;
+  return import_node_path9.default.join(rootPath, inputPath);
+}
+async function ensureMavenRepo3(androidLayout) {
+  const candidates = [
+    androidLayout.rootBuildGradle,
+    androidLayout.appBuildGradle,
+    androidLayout.settingsGradle,
+    androidLayout.rootBuildGradleKts,
+    androidLayout.appBuildGradleKts,
+    androidLayout.settingsGradleKts
+  ];
+  for (const filePath of candidates) {
+    if (!await pathExists(filePath))
+      continue;
+    const change = await ensureMavenRepoInFile(filePath);
+    return change;
+  }
+  return null;
+}
+async function ensureMavenRepoInFile(filePath) {
+  const originalContent = await import_node_fs8.promises.readFile(filePath, "utf-8");
+  if (originalContent.includes(SMARTECH_MAVEN3))
+    return null;
+  const isKotlin = filePath.endsWith(".kts");
+  const repoLine = isKotlin ? `maven { url = uri("${SMARTECH_MAVEN3}") }` : `maven { url '${SMARTECH_MAVEN3}' }`;
+  let newContent = originalContent;
+  if (/repositories\s*\{/.test(originalContent)) {
+    newContent = originalContent.replace(/repositories\s*\{/, (match) => `${match}
+    ${repoLine}`);
+  } else {
+    newContent = `${originalContent.trimEnd()}
+
+repositories {
+    ${repoLine}
+}
+`;
+  }
+  if (newContent === originalContent)
+    return null;
+  return buildChange7({
+    id: "native-maven-repo",
+    title: "Add Smartech Maven repository",
+    filePath,
+    kind: "insert",
+    originalContent,
+    newContent,
+    summary: "Add Smartech Maven repository for native Android Base integration.",
+    confidence: 0.4
+  });
+}
+async function ensureBaseDependency(androidLayout, version) {
+  const ktsPath = androidLayout.appBuildGradleKts;
+  const groovyPath = androidLayout.appBuildGradle;
+  const filePath = await pathExists(ktsPath) ? ktsPath : groovyPath;
+  if (!await pathExists(filePath))
+    return null;
+  const originalContent = await import_node_fs8.promises.readFile(filePath, "utf-8");
+  const isKotlin = filePath.endsWith(".kts");
+  const depLine = isKotlin ? `implementation("com.netcore.android:smartech-sdk:${version}")` : `implementation 'com.netcore.android:smartech-sdk:${version}'`;
+  let newContent = originalContent;
+  if (isKotlin) {
+    if (/implementation\s*\(\s*["']com\.netcore\.android:smartech-sdk:[^"']+["']\s*\)/.test(originalContent)) {
+      newContent = originalContent.replace(/implementation\s*\(\s*["']com\.netcore\.android:smartech-sdk:[^"']+["']\s*\)/, depLine);
+    } else if (/dependencies\s*\{/.test(originalContent)) {
+      newContent = originalContent.replace(/dependencies\s*\{/, (match) => `${match}
+    ${depLine}`);
+    } else {
+      newContent = `${originalContent.trimEnd()}
+
+dependencies {
+    ${depLine}
+}
+`;
+    }
+  } else {
+    if (/implementation\s+["']com\.netcore\.android:smartech-sdk:[^"']+["']/.test(originalContent)) {
+      newContent = originalContent.replace(/implementation\s+["']com\.netcore\.android:smartech-sdk:[^"']+["']/, depLine);
+    } else if (/dependencies\s*\{/.test(originalContent)) {
+      newContent = originalContent.replace(/dependencies\s*\{/, (match) => `${match}
+    ${depLine}`);
+    } else {
+      newContent = `${originalContent.trimEnd()}
+
+dependencies {
+    ${depLine}
+}
+`;
+    }
+  }
+  if (newContent === originalContent)
+    return null;
+  return buildChange7({
+    id: "native-base-dependency",
+    title: "Add Smartech Base SDK dependency",
+    filePath,
+    kind: "insert",
+    originalContent,
+    newContent,
+    summary: "Add or update Smartech Base dependency in app build.gradle(.kts).",
+    confidence: 0.45
+  });
+}
+async function ensureManifestMetaData3(manifestPath, name, value) {
+  if (!await pathExists(manifestPath) || !value)
+    return null;
+  const originalContent = await import_node_fs8.promises.readFile(manifestPath, "utf-8");
+  const line = `    <meta-data
+        android:name="${name}"
+        android:value="${value}" />`;
+  let newContent = originalContent;
+  if (originalContent.includes(`android:name="${name}"`)) {
+    newContent = originalContent.replace(new RegExp(`<meta-data[^>]*android:name=\\"${escapeRegex5(name)}\\"[^>]*android:value=\\"[^\\"]*\\"[^>]*\\/>`), line);
+  } else if (/<application[^>]*>/.test(originalContent)) {
+    newContent = originalContent.replace(/<application[^>]*>/, (match) => `${match}
+${line}`);
+  }
+  if (newContent === originalContent)
+    return null;
+  return buildChange7({
+    id: `native-manifest-meta-${name.toLowerCase()}`,
+    title: `Set ${name} meta-data`,
+    filePath: manifestPath,
+    kind: "insert",
+    originalContent,
+    newContent,
+    summary: `Add or update ${name} in AndroidManifest.xml.`,
+    confidence: 0.4
+  });
+}
+async function ensureApplicationInitializationAndReceiver(filePath, targetSdk) {
+  if (!await pathExists(filePath)) {
+    return {
+      id: "native-application-path-not-found",
+      title: "Application class not found",
+      filePath,
+      kind: "insert",
+      patch: "",
+      summary: "Provided Application class path does not exist.",
+      confidence: 0.2,
+      module: "base"
+    };
+  }
+  const originalContent = await import_node_fs8.promises.readFile(filePath, "utf-8");
+  const isKotlin = filePath.endsWith(".kt");
+  const mode = targetSdk !== null && targetSdk <= 33 ? "legacy" : "modern";
+  let updated = originalContent;
+  updated = isKotlin ? ensureKotlinImports4(updated, [
+    "java.lang.ref.WeakReference",
+    "android.content.Context",
+    "android.content.IntentFilter",
+    "android.os.Build",
+    "com.netcore.android.Smartech"
+  ]) : ensureJavaImports4(updated, [
+    "java.lang.ref.WeakReference",
+    "android.content.Context",
+    "android.content.IntentFilter",
+    "android.os.Build",
+    "com.netcore.android.Smartech"
+  ]);
+  const missingInit = isKotlin ? getMissingKotlinInitLines2(updated) : getMissingJavaInitLines2(updated);
+  const hasOnCreate = /onCreate\s*\(/.test(updated);
+  if (!hasOnCreate) {
+    const initLines = isKotlin ? KOTLIN_INIT_LINES : JAVA_INIT_LINES;
+    const receiverBlock = isKotlin ? buildKotlinReceiverBlock(mode) : buildJavaReceiverBlock(mode);
+    updated = addOnCreateMethod(updated, initLines, receiverBlock, isKotlin);
+  } else {
+    if (missingInit.length > 0) {
+      updated = insertAfterSuperOnCreate(updated, missingInit, isKotlin);
+    }
+    updated = normalizeReceiverRegistration(updated, isKotlin, mode);
+    if (!hasReceiverRegistration(updated)) {
+      const receiverBlock = isKotlin ? buildKotlinReceiverBlock(mode) : buildJavaReceiverBlock(mode);
+      updated = insertReceiverAfterSmartechInit(updated, receiverBlock, isKotlin);
+    }
+  }
+  if (updated === originalContent)
+    return null;
+  return buildChange7({
+    id: "native-application-init-receiver",
+    title: "Initialize Smartech and register deeplink receiver",
+    filePath,
+    kind: "insert",
+    originalContent,
+    newContent: updated,
+    summary: "Ensure SDK init calls and DeeplinkReceiver registration are present in Application.onCreate().",
+    confidence: 0.5
+  });
+}
+function getMissingJavaInitLines2(source) {
+  const missing = [];
+  if (!/initializeSdk\(/.test(source))
+    missing.push(JAVA_INIT_LINES[0]);
+  if (!/setDebugLevel\(/.test(source))
+    missing.push(JAVA_INIT_LINES[1]);
+  if (!/trackAppInstallUpdateBySmartech\(/.test(source))
+    missing.push(JAVA_INIT_LINES[2]);
+  return missing;
+}
+function getMissingKotlinInitLines2(source) {
+  const missing = [];
+  if (!/initializeSdk\(/.test(source))
+    missing.push(KOTLIN_INIT_LINES[0]);
+  if (!/setDebugLevel\(/.test(source))
+    missing.push(KOTLIN_INIT_LINES[1]);
+  if (!/trackAppInstallUpdateBySmartech\(/.test(source))
+    missing.push(KOTLIN_INIT_LINES[2]);
+  return missing;
+}
+function insertAfterSuperOnCreate(source, lines, isKotlin) {
+  if (lines.length === 0)
+    return source;
+  const regex = /super\.onCreate\s*\(\s*[^\)]*\)\s*;?/;
+  if (!regex.test(source))
+    return source;
+  const block = lines.map((line) => `        ${line}`).join("\n");
+  return source.replace(regex, (match) => `${match}
+${block}`);
+}
+function insertReceiverAfterSmartechInit(source, receiverBlock, isKotlin) {
+  const trackRegex = /Smartech\.getInstance\([^\n]+\)\.(trackAppInstallUpdateBySmartech\([^\n]*\))\s*;?/;
+  if (trackRegex.test(source)) {
+    return source.replace(trackRegex, (match) => `${match}
+${receiverBlock}`);
+  }
+  const initRegex = /Smartech\.getInstance\([^\n]+\)\.(initializeSdk\([^\n]*\))\s*;?/;
+  if (initRegex.test(source)) {
+    return source.replace(initRegex, (match) => `${match}
+${receiverBlock}`);
+  }
+  const superRegex = /super\.onCreate\s*\(\s*[^\)]*\)\s*;?/;
+  if (superRegex.test(source)) {
+    return source.replace(superRegex, (match) => `${match}
+${receiverBlock}`);
+  }
+  return source;
+}
+function normalizeReceiverRegistration(source, isKotlin, mode) {
+  let updated = source;
+  if (isKotlin) {
+    if (mode === "legacy") {
+      updated = updated.replace(/if\s*\(\s*Build\.VERSION\.SDK_INT\s*>=\s*Build\.VERSION_CODES\.UPSIDE_DOWN_CAKE\s*\)\s*\{[\s\S]*?\}\s*else\s*\{[\s\S]*?\}/, "registerReceiver(deeplinkReceiver, filter)");
+    } else if (/registerReceiver\(deeplinkReceiver,\s*filter\)/.test(updated) && !/RECEIVER_EXPORTED/.test(updated)) {
+      updated = updated.replace(/registerReceiver\(deeplinkReceiver,\s*filter\)/, "if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {\n            registerReceiver(deeplinkReceiver, filter, Context.RECEIVER_EXPORTED)\n        } else {\n            registerReceiver(deeplinkReceiver, filter)\n        }");
+    }
+  } else {
+    if (mode === "legacy") {
+      updated = updated.replace(/if\s*\(\s*Build\.VERSION\.SDK_INT\s*>=\s*Build\.VERSION_CODES\.UPSIDE_DOWN_CAKE\s*\)\s*\{[\s\S]*?\}\s*else\s*\{[\s\S]*?\}/, "registerReceiver(deeplinkReceiver, filter);");
+    } else if (/registerReceiver\(deeplinkReceiver,\s*filter\);/.test(updated) && !/RECEIVER_EXPORTED/.test(updated)) {
+      updated = updated.replace(/registerReceiver\(deeplinkReceiver,\s*filter\);/, "if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {\n            registerReceiver(deeplinkReceiver, filter, Context.RECEIVER_EXPORTED);\n        } else {\n            registerReceiver(deeplinkReceiver, filter);\n        }");
+    }
+  }
+  return updated;
+}
+function hasReceiverRegistration(source) {
+  return /EVENT_PN_INBOX_CLICK/.test(source) && /registerReceiver\s*\(\s*deeplinkReceiver\s*,\s*filter/.test(source);
+}
+function buildJavaReceiverBlock(mode) {
+  const lines = [
+    "        DeeplinkReceiver deeplinkReceiver = new DeeplinkReceiver();",
+    '        IntentFilter filter = new IntentFilter("com.smartech.EVENT_PN_INBOX_CLICK");'
+  ];
+  if (mode === "legacy") {
+    lines.push("        registerReceiver(deeplinkReceiver, filter);");
+    return lines.join("\n");
+  }
+  lines.push("        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {");
+  lines.push("            registerReceiver(deeplinkReceiver, filter, Context.RECEIVER_EXPORTED);");
+  lines.push("        } else {");
+  lines.push("            registerReceiver(deeplinkReceiver, filter);");
+  lines.push("        }");
+  return lines.join("\n");
+}
+function buildKotlinReceiverBlock(mode) {
+  const lines = [
+    "        val deeplinkReceiver = DeeplinkReceiver()",
+    '        val filter = IntentFilter("com.smartech.EVENT_PN_INBOX_CLICK")'
+  ];
+  if (mode === "legacy") {
+    lines.push("        registerReceiver(deeplinkReceiver, filter)");
+    return lines.join("\n");
+  }
+  lines.push("        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {");
+  lines.push("            registerReceiver(deeplinkReceiver, filter, Context.RECEIVER_EXPORTED)");
+  lines.push("        } else {");
+  lines.push("            registerReceiver(deeplinkReceiver, filter)");
+  lines.push("        }");
+  return lines.join("\n");
+}
+function addOnCreateMethod(source, initLines, receiverBlock, isKotlin) {
+  if (isKotlin) {
+    return source.replace(/class\s+\w+[^{]*\{/, (match) => `${match}
+
+    override fun onCreate() {
+        super.onCreate()
+        ${initLines.join("\n        ")}
+${receiverBlock}
+    }
+`);
+  }
+  return source.replace(/class\s+\w+[^{]*\{/, (match) => `${match}
+
+    @Override
+    public void onCreate() {
+        super.onCreate();
+        ${initLines.join("\n        ")}
+${receiverBlock}
+    }
+`);
+}
+function ensureJavaImports4(source, imports) {
+  let updated = source;
+  for (const imp of imports) {
+    if (!updated.includes(`import ${imp};`)) {
+      updated = updated.replace(/(package\s+[^;]+;\s*)/m, `$1
+import ${imp};
+`);
+    }
+  }
+  return updated;
+}
+function ensureKotlinImports4(source, imports) {
+  let updated = source;
+  for (const imp of imports) {
+    if (!updated.includes(`import ${imp}`)) {
+      updated = updated.replace(/(package\s+[^\n]+\n)/, `$1import ${imp}
+`);
+    }
+  }
+  return updated;
+}
+async function ensureDeeplinkReceiver(applicationClassPath) {
+  if (!await pathExists(applicationClassPath))
+    return null;
+  const isKotlinApp = applicationClassPath.endsWith(".kt");
+  const receiverPath = import_node_path9.default.join(import_node_path9.default.dirname(applicationClassPath), `DeeplinkReceiver.${isKotlinApp ? "kt" : "java"}`);
+  const appSource = await import_node_fs8.promises.readFile(applicationClassPath, "utf-8");
+  const packageName = readPackageName2(appSource) ?? "com.smartech.app";
+  const receiverContent = isKotlinApp ? buildKotlinReceiverClass(packageName) : buildJavaReceiverClass(packageName);
+  if (!await pathExists(receiverPath)) {
+    return buildChange7({
+      id: "native-deeplink-receiver-create",
+      title: "Create DeeplinkReceiver class",
+      filePath: receiverPath,
+      kind: "create",
+      originalContent: "",
+      newContent: receiverContent,
+      summary: "Create DeeplinkReceiver for Smartech deep link and payload callbacks.",
+      confidence: 0.45
+    });
+  }
+  const originalContent = await import_node_fs8.promises.readFile(receiverPath, "utf-8");
+  const hasRequired = /SMT_KEY_DEEPLINK/.test(originalContent) && /SMT_KEY_CUSTOM_PAYLOAD/.test(originalContent) && /onReceive/.test(originalContent);
+  if (hasRequired)
+    return null;
+  return buildChange7({
+    id: "native-deeplink-receiver-update",
+    title: "Update DeeplinkReceiver class",
+    filePath: receiverPath,
+    kind: "update",
+    originalContent,
+    newContent: receiverContent,
+    summary: "Ensure DeeplinkReceiver contains required Smartech bundle handling.",
+    confidence: 0.4
+  });
+}
+function buildJavaReceiverClass(packageName) {
+  return `package ${packageName};
+
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.os.Bundle;
+import android.util.Log;
+import com.netcore.android.SMTBundleKeys;
+
+public class DeeplinkReceiver extends BroadcastReceiver {
+
+    @Override
+    public void onReceive(Context context, Intent intent) {
+        try {
+            Bundle bundleExtra = intent.getExtras();
+            if (bundleExtra != null) {
+                String deepLinkSource = bundleExtra.getString(SMTBundleKeys.SMT_KEY_DEEPLINK_SOURCE);
+                String deepLink = bundleExtra.getString(SMTBundleKeys.SMT_KEY_DEEPLINK);
+                String customPayload = bundleExtra.getString(SMTBundleKeys.SMT_KEY_CUSTOM_PAYLOAD);
+
+                if (deepLink != null && !deepLink.isEmpty()) {
+                    // handle deepLink
+                }
+
+                if (customPayload != null && !customPayload.isEmpty()) {
+                    // handle custom payload
+                }
+            }
+        } catch (Throwable t) {
+            Log.e("DeeplinkReceiver", "Error occurred in deeplink:" + t.getLocalizedMessage());
+        }
+    }
+}
+`;
+}
+function buildKotlinReceiverClass(packageName) {
+  return `package ${packageName}
+
+import android.content.BroadcastReceiver
+import android.content.Context
+import android.content.Intent
+import android.util.Log
+import com.netcore.android.SMTBundleKeys
+
+class DeeplinkReceiver : BroadcastReceiver() {
+
+    override fun onReceive(context: Context, intent: Intent) {
+        try {
+            val bundleExtra = intent.extras
+            bundleExtra?.let {
+                val deepLinkSource =
+                    it.getString(SMTBundleKeys.SMT_KEY_DEEPLINK_SOURCE)
+                val deepLink =
+                    it.getString(SMTBundleKeys.SMT_KEY_DEEPLINK)
+                val customPayload =
+                    it.getString(SMTBundleKeys.SMT_KEY_CUSTOM_PAYLOAD)
+
+                if (!deepLink.isNullOrEmpty()) {
+                    // handle deepLink
+                }
+
+                if (!customPayload.isNullOrEmpty()) {
+                    // handle custom payload
+                }
+            }
+        } catch (t: Throwable) {
+            Log.e("DeeplinkReceiver", "Error occurred in deeplink:${"$"}{t.localizedMessage}")
+        }
+    }
+}
+`;
+}
+function readPackageName2(source) {
+  const match = source.match(/package\s+([^\s;]+)/);
+  return match ? match[1] : null;
+}
+async function ensureMainActivityDeeplink3(filePath) {
+  if (!await pathExists(filePath)) {
+    return {
+      id: "native-mainactivity-path-not-found",
+      title: "MainActivity not found",
+      filePath,
+      kind: "insert",
+      patch: "",
+      summary: "Provided MainActivity path does not exist.",
+      confidence: 0.2,
+      module: "base"
+    };
+  }
+  const originalContent = await import_node_fs8.promises.readFile(filePath, "utf-8");
+  const isKotlin = filePath.endsWith(".kt");
+  let updated = originalContent;
+  updated = isKotlin ? ensureKotlinImports4(updated, ["java.lang.ref.WeakReference", "com.netcore.android.Smartech"]) : ensureJavaImports4(updated, ["java.lang.ref.WeakReference", "com.netcore.android.Smartech"]);
+  const missing = isKotlin ? getMissingKotlinDeeplinkLines2(updated) : getMissingJavaDeeplinkLines2(updated);
+  if (missing.length > 0) {
+    if (/onCreate\s*\(/.test(updated)) {
+      updated = insertAfterSuperOnCreate(updated, missing, isKotlin);
+    } else {
+      updated = addActivityOnCreateMethod(updated, missing, isKotlin);
+    }
+  }
+  if (updated === originalContent)
+    return null;
+  return buildChange7({
+    id: "native-mainactivity-deeplink",
+    title: "Add Smartech deeplink handling in MainActivity",
+    filePath,
+    kind: "insert",
+    originalContent,
+    newContent: updated,
+    summary: "Ensure Smartech deeplink check is added under super.onCreate() in launcher activity.",
+    confidence: 0.45
+  });
+}
+function getMissingJavaDeeplinkLines2(source) {
+  const hasVar = /isDeepLinkFromSmartech\s*\(/.test(source);
+  const hasIf = /if\s*\(!isSmartechHandledDeeplink\)/.test(source);
+  const lines = [];
+  if (!hasVar)
+    lines.push(...JAVA_DEEPLINK_LINES.slice(0, 4));
+  if (!hasIf)
+    lines.push(...JAVA_DEEPLINK_LINES.slice(4));
+  return lines;
+}
+function getMissingKotlinDeeplinkLines2(source) {
+  const hasVar = /isDeepLinkFromSmartech\s*\(/.test(source);
+  const hasIf = /if\s*\(!isSmartechHandledDeeplink\)/.test(source);
+  const lines = [];
+  if (!hasVar)
+    lines.push(...KOTLIN_DEEPLINK_LINES.slice(0, 4));
+  if (!hasIf)
+    lines.push(...KOTLIN_DEEPLINK_LINES.slice(4));
+  return lines;
+}
+function addActivityOnCreateMethod(source, lines, isKotlin) {
+  if (isKotlin) {
+    return source.replace(/class\s+\w+[^{]*\{/, (match) => `${match}
+
+    override fun onCreate(savedInstanceState: android.os.Bundle?) {
+        super.onCreate(savedInstanceState)
+        ${lines.join("\n        ")}
+    }
+`);
+  }
+  return source.replace(/class\s+\w+[^{]*\{/, (match) => `${match}
+
+    @Override
+    protected void onCreate(android.os.Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        ${lines.join("\n        ")}
+    }
+`);
+}
+async function inferManifestActivityName(manifestPath, mainActivityPath) {
+  if (!await pathExists(manifestPath) || !await pathExists(mainActivityPath))
+    return null;
+  const manifest = await import_node_fs8.promises.readFile(manifestPath, "utf-8");
+  const classSource = await import_node_fs8.promises.readFile(mainActivityPath, "utf-8");
+  const manifestPackageMatch = manifest.match(/package\s*=\s*"([^"]+)"/);
+  const manifestPackage = manifestPackageMatch ? manifestPackageMatch[1] : null;
+  const className = import_node_path9.default.basename(mainActivityPath, import_node_path9.default.extname(mainActivityPath));
+  const classPackage = readPackageName2(classSource);
+  const candidates = [
+    className,
+    `.${className}`,
+    classPackage ? `${classPackage}.${className}` : null,
+    manifestPackage ? `${manifestPackage}.${className}` : null
+  ].filter(Boolean);
+  for (const candidate of candidates) {
+    const regex = new RegExp(`<activity[^>]*android:name=\\"${escapeRegex5(candidate)}\\"[^>]*>`);
+    if (regex.test(manifest))
+      return candidate;
+  }
+  const launcherBlocks = manifest.match(/<activity[\s\S]*?<\/activity>/g) ?? [];
+  for (const block of launcherBlocks) {
+    if (!block.includes("android.intent.action.MAIN") || !block.includes("android.intent.category.LAUNCHER")) {
+      continue;
+    }
+    const nameMatch = block.match(/android:name=\"([^\"]+)\"/);
+    if (nameMatch)
+      return nameMatch[1];
+  }
+  return candidates[1] ?? null;
+}
+async function ensureManifestIntentFilter(manifestPath, activityName, scheme) {
+  if (!await pathExists(manifestPath) || !scheme || !activityName)
+    return null;
+  const originalContent = await import_node_fs8.promises.readFile(manifestPath, "utf-8");
+  const activityBlock = findActivityBlockByName(originalContent, activityName);
+  if (!activityBlock)
+    return null;
+  const intentFilter = `        <intent-filter>
+            <action android:name="android.intent.action.VIEW" />
+            <category android:name="android.intent.category.DEFAULT" />
+            <category android:name="android.intent.category.BROWSABLE" />
+            <data
+                android:scheme="${scheme}"
+                android:host="smartech_sdk_td" />
+        </intent-filter>`;
+  let updatedActivityBlock = activityBlock;
+  if (/android:host=\"smartech_sdk_td\"/.test(activityBlock)) {
+    updatedActivityBlock = activityBlock.replace(/<data[\s\S]*?\/>/g, (dataTag) => {
+      if (!/android:host=\"smartech_sdk_td\"/.test(dataTag))
+        return dataTag;
+      if (/android:scheme=\"[^\"]*\"/.test(dataTag)) {
+        return dataTag.replace(/android:scheme=\"[^\"]*\"/, `android:scheme="${scheme}"`);
+      }
+      return dataTag.replace(/android:host=\"smartech_sdk_td\"/, `android:scheme="${scheme}" android:host="smartech_sdk_td"`);
+    });
+  } else {
+    updatedActivityBlock = activityBlock.replace(/<activity[^>]*>/, (match) => `${match}
+${intentFilter}`);
+  }
+  const newContent = originalContent.replace(activityBlock, updatedActivityBlock);
+  if (newContent === originalContent)
+    return null;
+  return buildChange7({
+    id: "native-manifest-deeplink-intent",
+    title: "Add Smartech deeplink intent filter",
+    filePath: manifestPath,
+    kind: "insert",
+    originalContent,
+    newContent,
+    summary: "Add or update Smartech deeplink intent filter on launcher activity.",
+    confidence: 0.4
+  });
+}
+function findActivityBlockByName(manifest, activityName) {
+  const activityBlocks = manifest.match(/<activity[\s\S]*?<\/activity>/g) ?? [];
+  for (const block of activityBlocks) {
+    const nameMatch = block.match(/android:name=\"([^\"]+)\"/);
+    if (nameMatch?.[1] === activityName)
+      return block;
+  }
+  return null;
+}
+async function ensureBackupConfig3(androidLayout, manifestPath) {
+  const changes = [];
+  const xmlDir = androidLayout.resXmlDir;
+  const backupFile = import_node_path9.default.join(xmlDir, "my_backup_file.xml");
+  const backupContent = `<?xml version="1.0" encoding="utf-8"?>
+<full-backup-content>
+    <include domain="sharedpref" path="smt_guid_preferences.xml"/>
+    <include domain="sharedpref" path="smt_preferences_guid.xml"/>
+</full-backup-content>
+`;
+  const backup31File = import_node_path9.default.join(xmlDir, "my_backup_file_31.xml");
+  const backup31Content = `<?xml version="1.0" encoding="utf-8"?>
+<data-extraction-rules>
+    <cloud-backup disableIfNoEncryptionCapabilities="false">
+        <include domain="sharedpref" path="smt_guid_preferences.xml" />
+        <include domain="sharedpref" path="smt_preferences_guid.xml" />
+    </cloud-backup>
+</data-extraction-rules>
+`;
+  if (!await pathExists(backupFile)) {
+    changes.push(buildChange7({
+      id: "native-backup-xml",
+      title: "Create my_backup_file.xml",
+      filePath: backupFile,
+      kind: "create",
+      originalContent: "",
+      newContent: backupContent,
+      summary: "Create backup file for Smartech GUID persistence.",
+      confidence: 0.4
+    }));
+  }
+  if (!await pathExists(backup31File)) {
+    changes.push(buildChange7({
+      id: "native-backup-xml-31",
+      title: "Create my_backup_file_31.xml",
+      filePath: backup31File,
+      kind: "create",
+      originalContent: "",
+      newContent: backup31Content,
+      summary: "Create Android 12+ backup extraction rules file.",
+      confidence: 0.4
+    }));
+  }
+  const manifestChange = await ensureManifestBackupAttributes3(manifestPath);
+  if (manifestChange)
+    changes.push(manifestChange);
+  return changes;
+}
+async function ensureManifestBackupAttributes3(manifestPath) {
+  if (!await pathExists(manifestPath))
+    return null;
+  const originalContent = await import_node_fs8.promises.readFile(manifestPath, "utf-8");
+  let newContent = originalContent;
+  if (!/android:allowBackup=/.test(newContent)) {
+    newContent = newContent.replace(/<application/, `<application
+        android:allowBackup="true"`);
+  } else {
+    newContent = newContent.replace(/android:allowBackup=\"[^\"]*\"/, `android:allowBackup="true"`);
+  }
+  if (!/android:fullBackupContent=/.test(newContent)) {
+    newContent = newContent.replace(/<application/, `<application
+        android:fullBackupContent="@xml/my_backup_file"`);
+  } else {
+    newContent = newContent.replace(/android:fullBackupContent=\"[^\"]*\"/, `android:fullBackupContent="@xml/my_backup_file"`);
+  }
+  if (!/android:dataExtractionRules=/.test(newContent)) {
+    newContent = newContent.replace(/<application/, `<application
+        android:dataExtractionRules="@xml/my_backup_file_31"`);
+  } else {
+    newContent = newContent.replace(/android:dataExtractionRules=\"[^\"]*\"/, `android:dataExtractionRules="@xml/my_backup_file_31"`);
+  }
+  if (newContent === originalContent)
+    return null;
+  return buildChange7({
+    id: "native-manifest-backup-attrs",
+    title: "Configure backup attributes in manifest",
+    filePath: manifestPath,
+    kind: "update",
+    originalContent,
+    newContent,
+    summary: "Ensure allowBackup, fullBackupContent and dataExtractionRules are configured.",
+    confidence: 0.4
+  });
+}
+async function detectTargetSdk(androidLayout) {
+  const candidates = [androidLayout.appBuildGradleKts, androidLayout.appBuildGradle];
+  for (const filePath of candidates) {
+    if (!await pathExists(filePath))
+      continue;
+    const content = await import_node_fs8.promises.readFile(filePath, "utf-8");
+    const matches = [
+      content.match(/targetSdkVersion\s+([0-9]+)/),
+      content.match(/targetSdkVersion\s*=\s*([0-9]+)/),
+      content.match(/targetSdk\s*=\s*([0-9]+)/)
+    ];
+    for (const match of matches) {
+      if (match?.[1])
+        return Number(match[1]);
+    }
+  }
+  return null;
+}
+function escapeRegex5(value) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+// packages/engine/dist/rules/nativePush.js
+var import_node_path10 = __toESM(require("node:path"), 1);
+var import_node_fs9 = require("node:fs");
+var DEFAULT_PUSH_SDK_VERSION2 = "3.5.13";
+async function runNativePushRules(context) {
+  const changes = [];
+  const rootPath = context.rootPath;
+  const androidLayout = await resolveAndroidProjectLayout(rootPath, "native");
+  const manifestPath = androidLayout.manifestPath;
+  const inputs = context.inputs ?? {};
+  const pushSdkVersion = inputs.pushSdkVersion ?? DEFAULT_PUSH_SDK_VERSION2;
+  const dependencyChange = await ensurePushDependency3(androidLayout, pushSdkVersion);
+  if (dependencyChange)
+    changes.push(dependencyChange);
+  const servicePathInput = inputs.firebaseMessagingServicePath?.trim() ?? "";
+  const servicePath = servicePathInput ? resolveInputPath2(rootPath, servicePathInput) : "";
+  if (!servicePathInput || !await pathExists(servicePath)) {
+    changes.push({
+      id: "native-push-firebase-service-missing",
+      title: "Firebase Messaging service class not found",
+      filePath: servicePath || androidLayout.mainDir,
+      kind: "insert",
+      patch: "",
+      summary: "Provide a valid Firebase Messaging Service class path to inject onNewToken/onMessageReceived logic.",
+      confidence: 0.2,
+      module: "push"
+    });
+    return changes;
+  }
+  const serviceChange = await ensureFirebaseServiceLogic(servicePath);
+  if (serviceChange)
+    changes.push(serviceChange);
+  const serviceRegisterChange = await ensureManifestFirebaseService(manifestPath, servicePath);
+  if (serviceRegisterChange)
+    changes.push(serviceRegisterChange);
+  const conflictWarning = await detectMessagingServiceConflict(manifestPath);
+  if (conflictWarning)
+    changes.push(conflictWarning);
+  const autoAsk = inputs.autoAskNotificationPermission;
+  if (typeof autoAsk === "boolean") {
+    const metaChange = await ensureManifestMetaData4(manifestPath, "SMT_IS_AUTO_ASK_NOTIFICATION_PERMISSION", autoAsk ? "1" : "0");
+    if (metaChange)
+      changes.push(metaChange);
+  }
+  return changes;
+}
+function buildChange8(input) {
+  const patch = createUnifiedDiff(input.filePath, input.originalContent ?? "", input.newContent ?? "");
+  return { module: "push", ...input, patch };
+}
+function resolveInputPath2(rootPath, inputPath) {
+  if (import_node_path10.default.isAbsolute(inputPath))
+    return inputPath;
+  return import_node_path10.default.join(rootPath, inputPath);
+}
+async function ensurePushDependency3(androidLayout, version) {
+  const ktsPath = androidLayout.appBuildGradleKts;
+  const groovyPath = androidLayout.appBuildGradle;
+  const filePath = await pathExists(ktsPath) ? ktsPath : groovyPath;
+  if (!await pathExists(filePath))
+    return null;
+  const originalContent = await import_node_fs9.promises.readFile(filePath, "utf-8");
+  const isKotlin = filePath.endsWith(".kts");
+  const depLine = isKotlin ? `implementation("com.netcore.android:smartech-push:${version}")` : `implementation 'com.netcore.android:smartech-push:${version}'`;
+  let newContent = originalContent;
+  if (isKotlin) {
+    if (/implementation\s*\(\s*["']com\.netcore\.android:smartech-push:[^"']+["']\s*\)/.test(originalContent)) {
+      newContent = originalContent.replace(/implementation\s*\(\s*["']com\.netcore\.android:smartech-push:[^"']+["']\s*\)/, depLine);
+    } else if (/dependencies\s*\{/.test(originalContent)) {
+      newContent = originalContent.replace(/dependencies\s*\{/, (match) => `${match}
+    ${depLine}`);
+    } else {
+      newContent = `${originalContent.trimEnd()}
+
+dependencies {
+    ${depLine}
+}
+`;
+    }
+  } else {
+    if (/implementation\s+["']com\.netcore\.android:smartech-push:[^"']+["']/.test(originalContent)) {
+      newContent = originalContent.replace(/implementation\s+["']com\.netcore\.android:smartech-push:[^"']+["']/, depLine);
+    } else if (/dependencies\s*\{/.test(originalContent)) {
+      newContent = originalContent.replace(/dependencies\s*\{/, (match) => `${match}
+    ${depLine}`);
+    } else {
+      newContent = `${originalContent.trimEnd()}
+
+dependencies {
+    ${depLine}
+}
+`;
+    }
+  }
+  if (newContent === originalContent)
+    return null;
+  return buildChange8({
+    id: "native-push-dependency",
+    title: "Add Smartech Push dependency",
+    filePath,
+    kind: "insert",
+    originalContent,
+    newContent,
+    summary: "Add or update Smartech Push dependency version in app Gradle file.",
+    confidence: 0.45
+  });
+}
+async function ensureFirebaseServiceLogic(filePath) {
+  const originalContent = await import_node_fs9.promises.readFile(filePath, "utf-8");
+  const isKotlin = filePath.endsWith(".kt");
+  let updated = originalContent;
+  updated = isKotlin ? ensureKotlinImports5(updated, [
+    "java.lang.ref.WeakReference",
+    "android.content.Context",
+    "com.netcore.android.smartechpush.SmartPush",
+    "com.google.firebase.messaging.RemoteMessage"
+  ]) : ensureJavaImports5(updated, [
+    "java.lang.ref.WeakReference",
+    "android.content.Context",
+    "com.netcore.android.smartechpush.SmartPush",
+    "com.google.firebase.messaging.RemoteMessage"
+  ]);
+  if (isKotlin) {
+    updated = ensureKotlinOnNewToken(updated);
+    updated = ensureKotlinOnMessageReceived(updated);
+  } else {
+    updated = ensureJavaOnNewToken(updated);
+    updated = ensureJavaOnMessageReceived(updated);
+  }
+  if (updated === originalContent)
+    return null;
+  return buildChange8({
+    id: "native-push-firebase-service",
+    title: "Inject Smartech push handling in Firebase service",
+    filePath,
+    kind: "update",
+    originalContent,
+    newContent: updated,
+    summary: "Ensure onNewToken and onMessageReceived forward events to SmartPush without duplication.",
+    confidence: 0.5
+  });
+}
+function ensureJavaOnNewToken(source) {
+  const method = findMethodBlock(source, /onNewToken\s*\(([^)]*)\)\s*\{/g);
+  if (!method) {
+    const add = [
+      "    @Override",
+      "    public void onNewToken(String token) {",
+      "        super.onNewToken(token);",
+      "",
+      "        SmartPush.getInstance(new WeakReference<Context>(this))",
+      "                .setDevicePushToken(token);",
+      "    }",
+      ""
+    ].join("\n");
+    return insertBeforeClassEnd(source, add);
+  }
+  const methodText = source.slice(method.signatureStart, method.closeBraceIndex + 1);
+  if (/setDevicePushToken\s*\(/.test(methodText))
+    return source;
+  const paramName = extractParamName(method.params, "token");
+  const body = source.slice(method.openBraceIndex + 1, method.closeBraceIndex);
+  const snippet = [
+    `SmartPush.getInstance(new WeakReference<Context>(this))`,
+    `        .setDevicePushToken(${paramName});`
+  ].join("\n");
+  let newBody = body;
+  if (/super\.onNewToken\s*\(\s*[^)]*\s*\)\s*;?/.test(body)) {
+    newBody = body.replace(/super\.onNewToken\s*\(\s*[^)]*\s*\)\s*;?/, (match) => `${match}
+
+        ${snippet}`);
+  } else {
+    newBody = `
+        ${snippet}
+${body}`;
+  }
+  return replaceMethodBody(source, method, newBody);
+}
+function ensureJavaOnMessageReceived(source) {
+  const method = findMethodBlock(source, /onMessageReceived\s*\(([^)]*)\)\s*\{/g);
+  if (!method) {
+    const add = [
+      "    @Override",
+      "    public void onMessageReceived(RemoteMessage remoteMessage) {",
+      "        super.onMessageReceived(remoteMessage);",
+      "",
+      "        boolean isPnHandledBySmartech =",
+      "                SmartPush.getInstance(new WeakReference<Context>(this))",
+      "                        .handleRemotePushNotification(remoteMessage);",
+      "",
+      "        if (!isPnHandledBySmartech) {",
+      "            // Notification from other sources, handle yourself",
+      "        }",
+      "    }",
+      ""
+    ].join("\n");
+    return insertBeforeClassEnd(source, add);
+  }
+  const methodText = source.slice(method.signatureStart, method.closeBraceIndex + 1);
+  if (/handleRemotePushNotification\s*\(/.test(methodText))
+    return source;
+  const paramName = extractParamName(method.params, "remoteMessage");
+  const body = source.slice(method.openBraceIndex + 1, method.closeBraceIndex);
+  const superRegex = /super\.onMessageReceived\s*\(\s*[^)]*\s*\)\s*;?/;
+  const notificationBlock = [
+    "boolean isPnHandledBySmartech =",
+    "        SmartPush.getInstance(new WeakReference<Context>(this))",
+    `                .handleRemotePushNotification(${paramName});`,
+    "",
+    "if (!isPnHandledBySmartech) {"
+  ];
+  let newBody = body;
+  if (superRegex.test(body)) {
+    const superMatch = body.match(superRegex);
+    if (!superMatch)
+      return source;
+    const idx = body.indexOf(superMatch[0]) + superMatch[0].length;
+    const prefix = body.slice(0, idx);
+    const suffix = body.slice(idx).trim();
+    const wrapped = suffix ? `
+${normalizeInnerCode(suffix, "            ")}
+` : "\n            // Notification from other sources, handle yourself\n";
+    newBody = `${prefix}
+
+        ${notificationBlock.join("\n        ")}
+${wrapped}        }`;
+  } else {
+    const existing = body.trim();
+    const wrapped = existing ? `
+${normalizeInnerCode(existing, "            ")}
+` : "\n            // Notification from other sources, handle yourself\n";
+    newBody = `
+        ${notificationBlock.join("\n        ")}
+${wrapped}        }`;
+  }
+  return replaceMethodBody(source, method, newBody);
+}
+function ensureKotlinOnNewToken(source) {
+  const method = findMethodBlock(source, /onNewToken\s*\(([^)]*)\)\s*\{/g);
+  if (!method) {
+    const add = [
+      "    override fun onNewToken(token: String) {",
+      "        super.onNewToken(token)",
+      "",
+      "        SmartPush.getInstance(WeakReference<Context>(this))",
+      "            .setDevicePushToken(token)",
+      "    }",
+      ""
+    ].join("\n");
+    return insertBeforeClassEnd(source, add);
+  }
+  const methodText = source.slice(method.signatureStart, method.closeBraceIndex + 1);
+  if (/setDevicePushToken\s*\(/.test(methodText))
+    return source;
+  const paramName = extractParamName(method.params, "token");
+  const body = source.slice(method.openBraceIndex + 1, method.closeBraceIndex);
+  const snippet = [
+    "SmartPush.getInstance(WeakReference<Context>(this))",
+    `    .setDevicePushToken(${paramName})`
+  ].join("\n");
+  let newBody = body;
+  if (/super\.onNewToken\s*\(\s*[^)]*\s*\)\s*/.test(body)) {
+    newBody = body.replace(/super\.onNewToken\s*\(\s*[^)]*\s*\)\s*/, (match) => `${match}
+
+        ${snippet}
+`);
+  } else {
+    newBody = `
+        ${snippet}
+${body}`;
+  }
+  return replaceMethodBody(source, method, newBody);
+}
+function ensureKotlinOnMessageReceived(source) {
+  const method = findMethodBlock(source, /onMessageReceived\s*\(([^)]*)\)\s*\{/g);
+  if (!method) {
+    const add = [
+      "    override fun onMessageReceived(remoteMessage: RemoteMessage) {",
+      "        super.onMessageReceived(remoteMessage)",
+      "",
+      "        val isPnHandledBySmartech =",
+      "            SmartPush.getInstance(WeakReference<Context>(this))",
+      "                .handleRemotePushNotification(remoteMessage)",
+      "",
+      "        if (!isPnHandledBySmartech) {",
+      "            // Notification from other sources, handle yourself",
+      "        }",
+      "    }",
+      ""
+    ].join("\n");
+    return insertBeforeClassEnd(source, add);
+  }
+  const methodText = source.slice(method.signatureStart, method.closeBraceIndex + 1);
+  if (/handleRemotePushNotification\s*\(/.test(methodText))
+    return source;
+  const paramName = extractParamName(method.params, "remoteMessage");
+  const body = source.slice(method.openBraceIndex + 1, method.closeBraceIndex);
+  const superRegex = /super\.onMessageReceived\s*\(\s*[^)]*\s*\)\s*/;
+  const notificationBlock = [
+    "val isPnHandledBySmartech =",
+    "    SmartPush.getInstance(WeakReference<Context>(this))",
+    `        .handleRemotePushNotification(${paramName})`,
+    "",
+    "if (!isPnHandledBySmartech) {"
+  ];
+  let newBody = body;
+  if (superRegex.test(body)) {
+    const superMatch = body.match(superRegex);
+    if (!superMatch)
+      return source;
+    const idx = body.indexOf(superMatch[0]) + superMatch[0].length;
+    const prefix = body.slice(0, idx);
+    const suffix = body.slice(idx).trim();
+    const wrapped = suffix ? `
+${normalizeInnerCode(suffix, "            ")}
+` : "\n            // Notification from other sources, handle yourself\n";
+    newBody = `${prefix}
+        ${notificationBlock.join("\n        ")}
+${wrapped}        }`;
+  } else {
+    const existing = body.trim();
+    const wrapped = existing ? `
+${normalizeInnerCode(existing, "            ")}
+` : "\n            // Notification from other sources, handle yourself\n";
+    newBody = `
+        ${notificationBlock.join("\n        ")}
+${wrapped}        }`;
+  }
+  return replaceMethodBody(source, method, newBody);
+}
+function normalizeInnerCode(code, indent) {
+  const lines = code.split("\n");
+  let minIndent = Number.MAX_SAFE_INTEGER;
+  for (const line of lines) {
+    if (!line.trim())
+      continue;
+    const count = line.match(/^\s*/)?.[0].length ?? 0;
+    minIndent = Math.min(minIndent, count);
+  }
+  if (!Number.isFinite(minIndent) || minIndent === Number.MAX_SAFE_INTEGER) {
+    minIndent = 0;
+  }
+  return lines.map((line) => {
+    if (!line.trim())
+      return "";
+    return indent + line.slice(minIndent);
+  }).join("\n");
+}
+function insertBeforeClassEnd(source, snippet) {
+  const idx = source.lastIndexOf("}");
+  if (idx < 0)
+    return source;
+  return `${source.slice(0, idx)}
+${snippet}${source.slice(idx)}`;
+}
+function replaceMethodBody(source, method, newBody) {
+  return source.slice(0, method.openBraceIndex + 1) + newBody + source.slice(method.closeBraceIndex);
+}
+function findMethodBlock(source, pattern) {
+  const regex = new RegExp(pattern.source, pattern.flags);
+  let match;
+  while ((match = regex.exec(source)) !== null) {
+    const signatureStart = match.index;
+    const openBraceIndex = source.indexOf("{", regex.lastIndex - 1);
+    if (openBraceIndex < 0)
+      continue;
+    let depth = 0;
+    let closeBraceIndex = -1;
+    for (let i = openBraceIndex; i < source.length; i += 1) {
+      const char = source[i];
+      if (char === "{")
+        depth += 1;
+      if (char === "}") {
+        depth -= 1;
+        if (depth === 0) {
+          closeBraceIndex = i;
+          break;
+        }
+      }
+    }
+    if (closeBraceIndex < 0)
+      continue;
+    return {
+      signatureStart,
+      openBraceIndex,
+      closeBraceIndex,
+      params: match[1] ?? ""
+    };
+  }
+  return null;
+}
+function extractParamName(params, fallback) {
+  const match = params.trim().match(/([A-Za-z_][A-Za-z0-9_]*)\s*$/);
+  return match ? match[1] : fallback;
+}
+function ensureJavaImports5(source, imports) {
+  let updated = source;
+  for (const imp of imports) {
+    if (!updated.includes(`import ${imp};`)) {
+      updated = updated.replace(/(package\s+[^;]+;\s*)/m, `$1
+import ${imp};
+`);
+    }
+  }
+  return updated;
+}
+function ensureKotlinImports5(source, imports) {
+  let updated = source;
+  for (const imp of imports) {
+    if (!updated.includes(`import ${imp}`)) {
+      updated = updated.replace(/(package\s+[^\n]+\n)/, `$1import ${imp}
+`);
+    }
+  }
+  return updated;
+}
+async function ensureManifestFirebaseService(manifestPath, serviceFilePath) {
+  if (!await pathExists(manifestPath) || !await pathExists(serviceFilePath))
+    return null;
+  const originalContent = await import_node_fs9.promises.readFile(manifestPath, "utf-8");
+  const serviceSource = await import_node_fs9.promises.readFile(serviceFilePath, "utf-8");
+  const manifestPackage = readManifestPackage4(originalContent);
+  const servicePackage = readPackageName3(serviceSource);
+  const serviceClassName = import_node_path10.default.basename(serviceFilePath, import_node_path10.default.extname(serviceFilePath));
+  const fqcn = servicePackage ? `${servicePackage}.${serviceClassName}` : serviceClassName;
+  const dotName = manifestPackage && servicePackage === manifestPackage ? `.${serviceClassName}` : fqcn;
+  const possibleNames = [dotName, fqcn].filter(Boolean);
+  let newContent = originalContent;
+  const existingServiceRegex = new RegExp(`<service[^>]*android:name=\\"(?:${possibleNames.map(escapeRegex6).join("|")})\\"[^>]*>[\\s\\S]*?<\\/service>`);
+  const selfClosingServiceRegex = new RegExp(`<service[^>]*android:name=\\"(?:${possibleNames.map(escapeRegex6).join("|")})\\"[^>]*/>`);
+  if (existingServiceRegex.test(newContent)) {
+    newContent = newContent.replace(existingServiceRegex, (block) => {
+      if (/com\.google\.firebase\.MESSAGING_EVENT/.test(block))
+        return block;
+      return block.replace(/<\/service>/, `    <intent-filter>
+        <action android:name="com.google.firebase.MESSAGING_EVENT" />
+    </intent-filter>
+</service>`);
+    });
+  } else if (selfClosingServiceRegex.test(newContent)) {
+    newContent = newContent.replace(selfClosingServiceRegex, (tag) => {
+      const openTag = tag.replace(/\/>$/, ">");
+      return `${openTag}
+        <intent-filter>
+            <action android:name="com.google.firebase.MESSAGING_EVENT" />
+        </intent-filter>
+    </service>`;
+    });
+  } else if (/<application[^>]*>/.test(newContent)) {
+    const serviceBlock = `    <service
+        android:exported="false"
+        android:name="${dotName}">
+        <intent-filter>
+            <action android:name="com.google.firebase.MESSAGING_EVENT" />
+        </intent-filter>
+    </service>`;
+    newContent = newContent.replace(/<application[^>]*>/, (match) => `${match}
+${serviceBlock}`);
+  }
+  if (newContent === originalContent)
+    return null;
+  return buildChange8({
+    id: "native-push-manifest-service",
+    title: "Register Firebase Messaging service",
+    filePath: manifestPath,
+    kind: "insert",
+    originalContent,
+    newContent,
+    summary: "Ensure Firebase Messaging service is registered with MESSAGING_EVENT intent-filter.",
+    confidence: 0.45
+  });
+}
+async function detectMessagingServiceConflict(manifestPath) {
+  if (!await pathExists(manifestPath))
+    return null;
+  const content = await import_node_fs9.promises.readFile(manifestPath, "utf-8");
+  const count = (content.match(/com\.google\.firebase\.MESSAGING_EVENT/g) ?? []).length;
+  if (count <= 1)
+    return null;
+  return {
+    id: "native-push-messaging-service-warning",
+    title: "Multiple Firebase messaging services detected",
+    filePath: manifestPath,
+    kind: "insert",
+    patch: "",
+    summary: "More than one MESSAGING_EVENT service exists. Only one Firebase messaging service is recommended to avoid push conflicts.",
+    confidence: 0.25,
+    module: "push"
+  };
+}
+async function ensureManifestMetaData4(manifestPath, name, value) {
+  if (!await pathExists(manifestPath))
+    return null;
+  const originalContent = await import_node_fs9.promises.readFile(manifestPath, "utf-8");
+  const line = `    <meta-data
+        android:name="${name}"
+        android:value="${value}" />`;
+  let newContent = originalContent;
+  if (originalContent.includes(`android:name="${name}"`)) {
+    newContent = originalContent.replace(new RegExp(`<meta-data[^>]*android:name=\\"${escapeRegex6(name)}\\"[^>]*android:value=\\"[^\\"]*\\"[^>]*\\/>`), line);
+  } else if (/<application[^>]*>/.test(originalContent)) {
+    newContent = originalContent.replace(/<application[^>]*>/, (match) => `${match}
+${line}`);
+  }
+  if (newContent === originalContent)
+    return null;
+  return buildChange8({
+    id: `native-push-meta-${name.toLowerCase()}`,
+    title: `Set ${name} meta-data`,
+    filePath: manifestPath,
+    kind: "insert",
+    originalContent,
+    newContent,
+    summary: `Add or update ${name} in AndroidManifest.xml.`,
+    confidence: 0.4
+  });
+}
+function readManifestPackage4(manifest) {
+  const match = manifest.match(/package\s*=\s*"([^"]+)"/);
+  return match ? match[1] : null;
+}
+function readPackageName3(source) {
+  const match = source.match(/package\s+([^\s;]+)/);
+  return match ? match[1] : null;
+}
+function escapeRegex6(value) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+// packages/engine/dist/rules/nativePx.js
+var import_node_path11 = __toESM(require("node:path"), 1);
+var import_node_fs10 = require("node:fs");
+var DEFAULT_PX_SDK_VERSION2 = "10.2.17";
+async function runNativePxRules(context) {
+  const changes = [];
+  const inputs = context.inputs ?? {};
+  const androidLayout = await resolveAndroidProjectLayout(context.rootPath, "native");
+  const uiType = normalizeUiType(inputs.nativePxUiType);
+  const pxSdkVersion = inputs.pxSdkVersion?.trim() || DEFAULT_PX_SDK_VERSION2;
+  const pxScheme = inputs.pxScheme?.trim() ?? "";
+  const hanselAppId = inputs.hanselAppId?.trim() ?? "";
+  const hanselAppKey = inputs.hanselAppKey?.trim() ?? "";
+  const useSdkEncryption = inputs.useSdkEncryption ?? false;
+  const applicationClassPathInput = inputs.applicationClassPath?.trim();
+  const mainActivityPathInput = inputs.mainActivityPath?.trim();
+  const applicationClassPath = applicationClassPathInput ? resolveInputPath3(context.rootPath, applicationClassPathInput) : "";
+  const mainActivityPath = mainActivityPathInput ? resolveInputPath3(context.rootPath, mainActivityPathInput) : "";
+  const dependencyChange = await ensureNativePxDependency(androidLayout, pxSdkVersion, uiType);
+  if (dependencyChange)
+    changes.push(dependencyChange);
+  const manifestPath = androidLayout.manifestPath;
+  if (hanselAppId) {
+    const appIdChange = await ensureManifestMetaData5(manifestPath, "HANSEL_APP_ID", hanselAppId);
+    if (appIdChange)
+      changes.push(appIdChange);
+  }
+  if (hanselAppKey) {
+    const appKeyChange = await ensureManifestMetaData5(manifestPath, "HANSEL_APP_KEY", hanselAppKey);
+    if (appKeyChange)
+      changes.push(appKeyChange);
+  }
+  const encryptionChange = await ensureManifestMetaData5(manifestPath, "SMT_USE_ENCRYPTION", useSdkEncryption ? "true" : "false");
+  if (encryptionChange)
+    changes.push(encryptionChange);
+  const activityName = await inferManifestActivityName2(manifestPath, mainActivityPath || null);
+  const intentFilterChange = await ensurePxIntentFilter3(manifestPath, activityName, pxScheme);
+  if (intentFilterChange) {
+    changes.push(intentFilterChange);
+  } else if (pxScheme && !activityName) {
+    changes.push({
+      id: "native-px-intent-filter-manual",
+      title: "PX intent-filter not injected",
+      filePath: manifestPath,
+      kind: "insert",
+      patch: "",
+      summary: "Could not locate launcher/MainActivity in AndroidManifest.xml to add PX scheme intent-filter.",
+      confidence: 0.2,
+      manualSnippet: `<intent-filter>
+    <action android:name="android.intent.action.VIEW" />
+    <category android:name="android.intent.category.DEFAULT" />
+    <category android:name="android.intent.category.BROWSABLE" />
+    <data android:scheme="YOUR_CUSTOM_SCHEME" />
+</intent-filter>`,
+      module: "px"
+    });
+  }
+  if (!mainActivityPath) {
+    changes.push({
+      id: "native-px-mainactivity-path-missing",
+      title: "MainActivity path missing for PX pairing",
+      filePath: context.rootPath,
+      kind: "insert",
+      patch: "",
+      summary: "Provide MainActivity path to inject Hansel.pairTestDevice.",
+      confidence: 0.2,
+      module: "px"
+    });
+  } else {
+    const mainActivityChange = await ensureMainActivityPairing(mainActivityPath);
+    if (mainActivityChange)
+      changes.push(mainActivityChange);
+  }
+  if (!applicationClassPath) {
+    changes.push({
+      id: "native-px-application-path-missing",
+      title: "Application class path missing for PX listeners",
+      filePath: context.rootPath,
+      kind: "insert",
+      patch: "",
+      summary: "Provide Application class path to inject Hansel listener and debug hooks.",
+      confidence: 0.2,
+      module: "px"
+    });
+  } else {
+    const appHooksChange = await ensureApplicationPxHooks(applicationClassPath);
+    if (appHooksChange)
+      changes.push(appHooksChange);
+  }
+  return changes;
+}
+function buildChange9(input) {
+  const patch = createUnifiedDiff(input.filePath, input.originalContent ?? "", input.newContent ?? "");
+  return { module: "px", ...input, patch };
+}
+function normalizeUiType(value) {
+  if (value === "compose" || value === "mixed")
+    return value;
+  return "xml";
+}
+function resolveInputPath3(rootPath, inputPath) {
+  if (import_node_path11.default.isAbsolute(inputPath))
+    return inputPath;
+  return import_node_path11.default.join(rootPath, inputPath);
+}
+async function ensureNativePxDependency(androidLayout, version, uiType) {
+  const filePath = await pathExists(androidLayout.appBuildGradleKts) ? androidLayout.appBuildGradleKts : androidLayout.appBuildGradle;
+  if (!await pathExists(filePath))
+    return null;
+  const isKotlin = filePath.endsWith(".kts");
+  const artifact = uiType === "xml" ? "smartech-nudges" : "smartech-nudges-compose";
+  const depLine = isKotlin ? `implementation("com.netcore.android:${artifact}:${version}")` : `implementation 'com.netcore.android:${artifact}:${version}'`;
+  const originalContent = await import_node_fs10.promises.readFile(filePath, "utf-8");
+  const dependencyRegex = isKotlin ? /implementation\s*\(\s*["']com\.netcore\.android:smartech-nudges(?:-compose)?:[^"']+["']\s*\)/g : /implementation\s+["']com\.netcore\.android:smartech-nudges(?:-compose)?:[^"']+["']/g;
+  let newContent = originalContent;
+  const matches = [...originalContent.matchAll(dependencyRegex)];
+  if (matches.length > 0) {
+    let replaced = false;
+    newContent = originalContent.replace(dependencyRegex, () => {
+      if (!replaced) {
+        replaced = true;
+        return depLine;
+      }
+      return "";
+    });
+    newContent = newContent.replace(/\n{3,}/g, "\n\n");
+  } else if (/dependencies\s*\{/.test(originalContent)) {
+    newContent = originalContent.replace(/dependencies\s*\{/, (match) => `${match}
+    ${depLine}`);
+  } else {
+    newContent = `${originalContent.trimEnd()}
+
+dependencies {
+    ${depLine}
+}
+`;
+  }
+  if (newContent === originalContent)
+    return null;
+  return buildChange9({
+    id: "native-px-dependency",
+    title: "Add Smartech PX native dependency",
+    filePath,
+    kind: "insert",
+    originalContent,
+    newContent,
+    summary: "Add/update Smartech nudges dependency based on selected UI type (XML or Compose).",
+    confidence: 0.45
+  });
+}
+async function ensureManifestMetaData5(manifestPath, name, value) {
+  if (!await pathExists(manifestPath))
+    return null;
+  const originalContent = await import_node_fs10.promises.readFile(manifestPath, "utf-8");
+  const line = `    <meta-data
+        android:name="${name}"
+        android:value="${value}" />`;
+  let newContent = originalContent;
+  const metaRegex = new RegExp(`<meta-data[^>]*android:name\\s*=\\s*"${escapeRegex7(name)}"[^>]*\\/?>`, "m");
+  if (metaRegex.test(originalContent)) {
+    newContent = originalContent.replace(metaRegex, line);
+  } else if (/<application[^>]*>/.test(originalContent)) {
+    newContent = originalContent.replace(/<application[^>]*>/, (match) => `${match}
+${line}`);
+  }
+  if (newContent === originalContent)
+    return null;
+  return buildChange9({
+    id: `native-px-meta-${name.toLowerCase()}`,
+    title: `Set ${name} meta-data`,
+    filePath: manifestPath,
+    kind: "insert",
+    originalContent,
+    newContent,
+    summary: `Add or update ${name} in AndroidManifest.xml.`,
+    confidence: 0.4
+  });
+}
+async function ensurePxIntentFilter3(manifestPath, activityName, scheme) {
+  if (!await pathExists(manifestPath) || !activityName || !scheme)
+    return null;
+  const originalContent = await import_node_fs10.promises.readFile(manifestPath, "utf-8");
+  const activityBlock = findActivityBlockByName2(originalContent, activityName);
+  if (!activityBlock)
+    return null;
+  const pxFilterRegex = /<intent-filter[\s\S]*?<\/intent-filter>/g;
+  const filters = activityBlock.match(pxFilterRegex) ?? [];
+  let pxFilter = null;
+  for (const filter of filters) {
+    const hasView = /android\.intent\.action\.VIEW/.test(filter);
+    const hasDefault = /android\.intent\.category\.DEFAULT/.test(filter);
+    const hasBrowsable = /android\.intent\.category\.BROWSABLE/.test(filter);
+    const hasHost = /android:host\s*=/.test(filter);
+    const hasDataTag = /<data[^>]*>/.test(filter) || /<data[^>]*\/>/.test(filter);
+    if (hasView && hasDefault && hasBrowsable && hasDataTag && !hasHost) {
+      pxFilter = filter;
+      break;
+    }
+  }
+  let updatedActivityBlock = activityBlock;
+  if (pxFilter) {
+    let updatedFilter = pxFilter;
+    if (/android:scheme\s*=/.test(updatedFilter)) {
+      updatedFilter = updatedFilter.replace(/android:scheme=\"[^\"]*\"/, `android:scheme="${scheme}"`);
+    } else if (/<data[^>]*\/>/.test(updatedFilter)) {
+      updatedFilter = updatedFilter.replace(/<data([^>]*)\/>/, `<data$1 android:scheme="${scheme}" />`);
+    } else {
+      updatedFilter = updatedFilter.replace(/<\/intent-filter>/, `    <data android:scheme="${scheme}" />
+</intent-filter>`);
+    }
+    updatedActivityBlock = activityBlock.replace(pxFilter, updatedFilter);
+  } else {
+    const pxIntentFilter = `        <intent-filter>
+            <action android:name="android.intent.action.VIEW" />
+            <category android:name="android.intent.category.DEFAULT" />
+            <category android:name="android.intent.category.BROWSABLE" />
+            <data android:scheme="${scheme}" />
+        </intent-filter>`;
+    updatedActivityBlock = activityBlock.replace(/<activity[^>]*>/, (match) => `${match}
+${pxIntentFilter}`);
+  }
+  const newContent = originalContent.replace(activityBlock, updatedActivityBlock);
+  if (newContent === originalContent)
+    return null;
+  return buildChange9({
+    id: "native-px-manifest-intent-filter",
+    title: "Add Hansel deeplink intent filter",
+    filePath: manifestPath,
+    kind: "insert",
+    originalContent,
+    newContent,
+    summary: "Add/update PX intent-filter with scheme in launcher/MainActivity.",
+    confidence: 0.45
+  });
+}
+async function ensureMainActivityPairing(filePath) {
+  if (!await pathExists(filePath)) {
+    return {
+      id: "native-px-mainactivity-not-found",
+      title: "MainActivity not found for PX pairing",
+      filePath,
+      kind: "insert",
+      patch: "",
+      summary: "Provided MainActivity path does not exist.",
+      confidence: 0.2,
+      module: "px"
+    };
+  }
+  const isKotlin = filePath.endsWith(".kt");
+  const pairLine = isKotlin ? "Hansel.pairTestDevice(intent?.dataString)" : "Hansel.pairTestDevice(getIntent().getDataString());";
+  const importLine = "io.hansel.hanselsdk.Hansel";
+  const originalContent = await import_node_fs10.promises.readFile(filePath, "utf-8");
+  let updated = isKotlin ? ensureKotlinImports6(originalContent, [importLine]) : ensureJavaImports6(originalContent, [importLine]);
+  if (!/Hansel\.pairTestDevice\s*\(/.test(updated)) {
+    if (/onCreate\s*\(/.test(updated)) {
+      updated = insertAfterSuperOnCreate2(updated, [pairLine]);
+    } else {
+      updated = addActivityOnCreateMethod2(updated, pairLine, isKotlin);
+    }
+  }
+  if (updated === originalContent)
+    return null;
+  return buildChange9({
+    id: "native-px-mainactivity-pairing",
+    title: "Add Hansel pairTestDevice in MainActivity",
+    filePath,
+    kind: "insert",
+    originalContent,
+    newContent: updated,
+    summary: "Ensure Hansel.pairTestDevice is added under super.onCreate() in MainActivity.",
+    confidence: 0.5
+  });
+}
+async function ensureApplicationPxHooks(filePath) {
+  if (!await pathExists(filePath)) {
+    return {
+      id: "native-px-application-not-found",
+      title: "Application class not found for PX hooks",
+      filePath,
+      kind: "insert",
+      patch: "",
+      summary: "Provided Application class path does not exist.",
+      confidence: 0.2,
+      module: "px"
+    };
+  }
+  const originalContent = await import_node_fs10.promises.readFile(filePath, "utf-8");
+  const isKotlin = filePath.endsWith(".kt");
+  let updated = originalContent;
+  updated = isKotlin ? ensureKotlinImports6(updated, [
+    "java.lang.ref.WeakReference",
+    "java.util.HashMap",
+    "com.netcore.android.Smartech",
+    "io.hansel.core.logger.HSLLogLevel",
+    "io.hansel.hanselsdk.Hansel",
+    "io.hansel.hanselsdk.HanselDeepLinkListener",
+    "io.hansel.ujmtracker.HanselInternalEventsListener",
+    "io.hansel.ujmtracker.HanselTracker"
+  ]) : ensureJavaImports6(updated, [
+    "java.lang.ref.WeakReference",
+    "java.util.HashMap",
+    "com.netcore.android.Smartech",
+    "io.hansel.core.logger.HSLLogLevel",
+    "io.hansel.hanselsdk.Hansel",
+    "io.hansel.hanselsdk.HanselDeepLinkListener",
+    "io.hansel.ujmtracker.HanselInternalEventsListener",
+    "io.hansel.ujmtracker.HanselTracker"
+  ]);
+  const hasInternalListener = /HanselTracker\.registerListener\s*\(/.test(updated);
+  const hasDeepLinkListener = /registerHanselDeeplinkListener\s*\(/.test(updated);
+  const hasDebugLogs = /Hansel\.enableDebugLogs\s*\(\s*\)/.test(updated);
+  const blocks = [];
+  if (!hasInternalListener)
+    blocks.push(isKotlin ? kotlinInternalEventBlock() : javaInternalEventBlock());
+  if (!hasDeepLinkListener)
+    blocks.push(isKotlin ? kotlinDeepLinkBlock() : javaDeepLinkBlock());
+  if (!hasDebugLogs)
+    blocks.push(isKotlin ? kotlinDebugBlock() : javaDebugBlock());
+  if (blocks.length > 0) {
+    updated = insertApplicationBlocks(updated, blocks.join("\n\n"), isKotlin);
+  }
+  if (updated === originalContent)
+    return null;
+  return buildChange9({
+    id: "native-px-application-hooks",
+    title: "Add Hansel listeners and debug hooks in Application",
+    filePath,
+    kind: "insert",
+    originalContent,
+    newContent: updated,
+    summary: "Ensure Hansel internal event listener, deeplink listener, and debug logging are registered after SDK init.",
+    confidence: 0.5
+  });
+}
+function javaInternalEventBlock() {
+  return [
+    "        HanselInternalEventsListener hanselInternalEventsListener =",
+    "                (eventName, dataFromHansel) -> {",
+    "                    Smartech.getInstance(new WeakReference<>(getApplicationContext()))",
+    "                            .trackEvent(eventName, (HashMap<String, Object>) dataFromHansel);",
+    "                    // Add other analytics platform if needed",
+    "                };",
+    "",
+    "        HanselTracker.registerListener(hanselInternalEventsListener);"
+  ].join("\n");
+}
+function kotlinInternalEventBlock() {
+  return [
+    "        val hanselInternalEventsListener =",
+    "            HanselInternalEventsListener { eventName, dataFromHansel ->",
+    "                Smartech.getInstance(WeakReference(applicationContext))",
+    "                    .trackEvent(eventName, dataFromHansel as HashMap<String, Any>)",
+    "                // Add other analytics platform",
+    "            }",
+    "",
+    "        HanselTracker.registerListener(hanselInternalEventsListener)"
+  ].join("\n");
+}
+function javaDeepLinkBlock() {
+  return [
+    "        HanselDeepLinkListener hanselDeepLinkListener = (url) -> {",
+    "            // deeplink redirection for hansel",
+    "        };",
+    "",
+    "        Hansel.registerHanselDeeplinkListener(hanselDeepLinkListener);"
+  ].join("\n");
+}
+function kotlinDeepLinkBlock() {
+  return [
+    "        val hanselDeepLinkListener = HanselDeepLinkListener { url ->",
+    "            // deeplink redirection for hansel",
+    "        }",
+    "",
+    "        Hansel.registerHanselDeeplinkListener(hanselDeepLinkListener)"
+  ].join("\n");
+}
+function javaDebugBlock() {
+  return [
+    "        HSLLogLevel.all.setEnabled(true);",
+    "        HSLLogLevel.mid.setEnabled(true);",
+    "        HSLLogLevel.debug.setEnabled(true);",
+    "        Hansel.enableDebugLogs();"
+  ].join("\n");
+}
+function kotlinDebugBlock() {
+  return [
+    "        HSLLogLevel.all.setEnabled(true)",
+    "        HSLLogLevel.mid.setEnabled(true)",
+    "        HSLLogLevel.debug.setEnabled(true)",
+    "        Hansel.enableDebugLogs()"
+  ].join("\n");
+}
+function insertApplicationBlocks(source, block, isKotlin) {
+  if (!block.trim())
+    return source;
+  const anchors = [
+    /Smartech\.getInstance\([^\n]+\)\.(trackAppInstallUpdateBySmartech\([^\n]*\))\s*;?/,
+    /Smartech\.getInstance\([^\n]+\)\.(initializeSdk\([^\n]*\))\s*;?/,
+    /super\.onCreate\s*\(\s*[^\)]*\)\s*;?/
+  ];
+  for (const anchor of anchors) {
+    if (anchor.test(source)) {
+      return source.replace(anchor, (match) => `${match}
+
+${block}`);
+    }
+  }
+  if (/onCreate\s*\(/.test(source))
+    return source;
+  return addApplicationOnCreateMethod(source, block, isKotlin);
+}
+function addApplicationOnCreateMethod(source, block, isKotlin) {
+  if (isKotlin) {
+    return source.replace(/class\s+\w+[^{]*\{/, (match) => `${match}
+
+    override fun onCreate() {
+        super.onCreate()
+
+${block}
+    }
+`);
+  }
+  return source.replace(/class\s+\w+[^{]*\{/, (match) => `${match}
+
+    @Override
+    public void onCreate() {
+        super.onCreate();
+
+${block}
+    }
+`);
+}
+function insertAfterSuperOnCreate2(source, lines) {
+  if (lines.length === 0)
+    return source;
+  const regex = /super\.onCreate\s*\(\s*[^\)]*\)\s*;?/;
+  if (!regex.test(source))
+    return source;
+  const block = lines.map((line) => `        ${line}`).join("\n");
+  return source.replace(regex, (match) => `${match}
+${block}`);
+}
+function addActivityOnCreateMethod2(source, pairLine, isKotlin) {
+  if (isKotlin) {
+    return source.replace(/class\s+\w+[^{]*\{/, (match) => `${match}
+
+    override fun onCreate(savedInstanceState: android.os.Bundle?) {
+        super.onCreate(savedInstanceState)
+        ${pairLine}
+    }
+`);
+  }
+  return source.replace(/class\s+\w+[^{]*\{/, (match) => `${match}
+
+    @Override
+    protected void onCreate(android.os.Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        ${pairLine}
+    }
+`);
+}
+function ensureJavaImports6(source, imports) {
+  let updated = source;
+  for (const imp of imports) {
+    if (!updated.includes(`import ${imp};`)) {
+      updated = updated.replace(/(package\s+[^;]+;\s*)/m, `$1
+import ${imp};
+`);
+    }
+  }
+  return updated;
+}
+function ensureKotlinImports6(source, imports) {
+  let updated = source;
+  for (const imp of imports) {
+    if (!updated.includes(`import ${imp}`)) {
+      updated = updated.replace(/(package\s+[^\n]+\n)/, `$1import ${imp}
+`);
+    }
+  }
+  return updated;
+}
+async function inferManifestActivityName2(manifestPath, mainActivityPath) {
+  if (!await pathExists(manifestPath))
+    return null;
+  const manifest = await import_node_fs10.promises.readFile(manifestPath, "utf-8");
+  if (mainActivityPath && await pathExists(mainActivityPath)) {
+    const source = await import_node_fs10.promises.readFile(mainActivityPath, "utf-8");
+    const manifestPackage = readManifestPackage5(manifest);
+    const classPackage = readPackageName4(source);
+    const className = import_node_path11.default.basename(mainActivityPath, import_node_path11.default.extname(mainActivityPath));
+    const candidates = [
+      className,
+      `.${className}`,
+      classPackage ? `${classPackage}.${className}` : null,
+      manifestPackage ? `${manifestPackage}.${className}` : null
+    ].filter(Boolean);
+    for (const candidate of candidates) {
+      if (findActivityBlockByName2(manifest, candidate))
+        return candidate;
+    }
+  }
+  const launcherBlocks = manifest.match(/<activity[\s\S]*?<\/activity>/g) ?? [];
+  for (const block of launcherBlocks) {
+    if (!block.includes("android.intent.action.MAIN") || !block.includes("android.intent.category.LAUNCHER")) {
+      continue;
+    }
+    const nameMatch = block.match(/android:name=\"([^\"]+)\"/);
+    if (nameMatch?.[1])
+      return nameMatch[1];
+  }
+  return null;
+}
+function findActivityBlockByName2(manifest, activityName) {
+  const blocks = manifest.match(/<activity[\s\S]*?<\/activity>/g) ?? [];
+  for (const block of blocks) {
+    const nameMatch = block.match(/android:name=\"([^\"]+)\"/);
+    if (nameMatch?.[1] === activityName)
+      return block;
+  }
+  return null;
+}
+function readManifestPackage5(manifest) {
+  const match = manifest.match(/package\s*=\s*"([^"]+)"/);
+  return match ? match[1] : null;
+}
+function readPackageName4(source) {
+  const match = source.match(/package\s+([^\s;]+)/);
+  return match ? match[1] : null;
+}
+function escapeRegex7(value) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
 // packages/engine/dist/planner.js
 async function planIntegration(options) {
   const scan = await scanProject(options.rootPath);
@@ -29390,6 +31326,13 @@ async function planIntegration(options) {
         inputs: options.inputs
       });
       changes.push(...flutterChanges);
+    } else if (options.appPlatform === "android-native") {
+      const nativeChanges = await runNativeBaseRules({
+        scan,
+        rootPath: options.rootPath,
+        inputs: options.inputs
+      });
+      changes.push(...nativeChanges);
     } else {
       const baseChanges = await runBaseRules({
         scan,
@@ -29407,6 +31350,13 @@ async function planIntegration(options) {
         inputs: options.inputs
       });
       changes.push(...flutterPushChanges);
+    } else if (options.appPlatform === "android-native") {
+      const nativePushChanges = await runNativePushRules({
+        scan,
+        rootPath: options.rootPath,
+        inputs: options.inputs
+      });
+      changes.push(...nativePushChanges);
     } else {
       const pushChanges = await runPushRules({
         scan,
@@ -29424,6 +31374,13 @@ async function planIntegration(options) {
         inputs: options.inputs
       });
       changes.push(...flutterPxChanges);
+    } else if (options.appPlatform === "android-native") {
+      const nativePxChanges = await runNativePxRules({
+        scan,
+        rootPath: options.rootPath,
+        inputs: options.inputs
+      });
+      changes.push(...nativePxChanges);
     } else {
       const pxChanges = await runPxRules({
         scan,
@@ -29441,8 +31398,8 @@ async function planIntegration(options) {
 }
 
 // packages/engine/dist/patcher.js
-var import_node_fs8 = require("node:fs");
-var import_node_path8 = __toESM(require("node:path"), 1);
+var import_node_fs11 = require("node:fs");
+var import_node_path12 = __toESM(require("node:path"), 1);
 async function applyChanges(changes, dryRun = true) {
   const results = [];
   const fileCache = /* @__PURE__ */ new Map();
@@ -29492,17 +31449,17 @@ async function applyChanges(changes, dryRun = true) {
     });
   }
   for (const [filePath, payload] of fileCache.entries()) {
-    const dir = import_node_path8.default.dirname(filePath);
+    const dir = import_node_path12.default.dirname(filePath);
     if (!await pathExists(dir)) {
-      await import_node_fs8.promises.mkdir(dir, { recursive: true });
+      await import_node_fs11.promises.mkdir(dir, { recursive: true });
     }
-    await import_node_fs8.promises.writeFile(filePath, payload.current, "utf-8");
+    await import_node_fs11.promises.writeFile(filePath, payload.current, "utf-8");
   }
   return results;
 }
 async function loadFileOrEmpty(filePath) {
   try {
-    return await import_node_fs8.promises.readFile(filePath, "utf-8");
+    return await import_node_fs11.promises.readFile(filePath, "utf-8");
   } catch {
     return "";
   }
@@ -29512,30 +31469,30 @@ async function loadFileOrEmpty(filePath) {
 var app = (0, import_express.default)();
 var port = 8787;
 var pkgEntry = process.pkg?.entrypoint;
-var runtimeRoot = pkgEntry ? import_node_path9.default.dirname(pkgEntry) : process.cwd();
+var runtimeRoot = pkgEntry ? import_node_path13.default.dirname(pkgEntry) : process.cwd();
 var isPackaged = Boolean(pkgEntry);
-var execRoot = import_node_path9.default.dirname(process.execPath);
+var execRoot = import_node_path13.default.dirname(process.execPath);
 app.use((0, import_cors.default)());
 app.use(import_express.default.json({ limit: "1mb" }));
 var publicCandidates = [
   process.env.SMARTECH_WEB_DIST,
-  import_node_path9.default.join(runtimeRoot, "public"),
-  isPackaged ? import_node_path9.default.join(execRoot, "public") : null,
-  !isPackaged ? import_node_path9.default.join(process.cwd(), "public") : null,
-  import_node_path9.default.join(process.cwd(), "apps", "server", "dist", "public"),
-  import_node_path9.default.join(process.cwd(), "apps", "web", "dist")
+  import_node_path13.default.join(runtimeRoot, "public"),
+  isPackaged ? import_node_path13.default.join(execRoot, "public") : null,
+  !isPackaged ? import_node_path13.default.join(process.cwd(), "public") : null,
+  import_node_path13.default.join(process.cwd(), "apps", "server", "dist", "public"),
+  import_node_path13.default.join(process.cwd(), "apps", "web", "dist")
 ].filter(Boolean);
 var publicDir = publicCandidates.find((dir) => {
-  if (!(0, import_node_fs9.existsSync)(dir))
+  if (!(0, import_node_fs12.existsSync)(dir))
     return false;
-  return (0, import_node_fs9.existsSync)(import_node_path9.default.join(dir, "index.html"));
+  return (0, import_node_fs12.existsSync)(import_node_path13.default.join(dir, "index.html"));
 });
 if (publicDir) {
   app.use(import_express.default.static(publicDir));
 }
 app.get("/", (_req, res) => {
   if (publicDir) {
-    res.sendFile(import_node_path9.default.join(publicDir, "index.html"));
+    res.sendFile(import_node_path13.default.join(publicDir, "index.html"));
     return;
   }
   res.status(500).send("UI assets not found. Ensure the executable is built with bundled web assets.");
@@ -29545,8 +31502,8 @@ app.get("/api/health", (_req, res) => {
 });
 async function detectFlutterProject(rootPath) {
   try {
-    const pubspecPath = import_node_path9.default.join(rootPath, "pubspec.yaml");
-    const contents = await import_node_fs9.promises.readFile(pubspecPath, "utf-8");
+    const pubspecPath = import_node_path13.default.join(rootPath, "pubspec.yaml");
+    const contents = await import_node_fs12.promises.readFile(pubspecPath, "utf-8");
     return /(^|\n)flutter:\s*$/m.test(contents);
   } catch {
     return false;
@@ -29571,12 +31528,49 @@ app.post("/api/plan", async (req, res) => {
       if (options.parts.includes("px"))
         flutterParts.push("px");
       options.parts = flutterParts;
+    } else if (options.appPlatform === "android-native") {
+      const nativeParts = ["base"];
+      if (options.parts.includes("push"))
+        nativeParts.push("push");
+      if (options.parts.includes("px"))
+        nativeParts.push("px");
+      options.parts = nativeParts;
     }
     if (!options.inputs?.smartechAppId) {
       return res.status(400).json({ error: "smartechAppId is required" });
     }
     if (!options.inputs?.deeplinkScheme) {
       return res.status(400).json({ error: "deeplinkScheme is required" });
+    }
+    if (options.appPlatform === "android-native") {
+      if (!options.inputs?.applicationClassPath) {
+        return res.status(400).json({ error: "applicationClassPath is required for Native Android" });
+      }
+      if (!options.inputs?.mainActivityPath) {
+        return res.status(400).json({ error: "mainActivityPath is required for Native Android" });
+      }
+      if (!options.inputs?.baseSdkVersion) {
+        return res.status(400).json({ error: "baseSdkVersion is required for Native Android" });
+      }
+      if (options.parts.includes("push") && !options.inputs?.firebaseMessagingServicePath) {
+        return res.status(400).json({
+          error: "firebaseMessagingServicePath is required for Native Android Push"
+        });
+      }
+      if (options.parts.includes("px")) {
+        if (!options.inputs?.pxSdkVersion) {
+          return res.status(400).json({ error: "pxSdkVersion is required for Native Android PX" });
+        }
+        if (!options.inputs?.hanselAppId) {
+          return res.status(400).json({ error: "hanselAppId is required for Native Android PX" });
+        }
+        if (!options.inputs?.hanselAppKey) {
+          return res.status(400).json({ error: "hanselAppKey is required for Native Android PX" });
+        }
+        if (!options.inputs?.pxScheme) {
+          return res.status(400).json({ error: "pxScheme is required for Native Android PX" });
+        }
+      }
     }
     if (options.appPlatform === "flutter") {
       if (!options.inputs?.flutterBaseSdkVersion) {
@@ -29629,7 +31623,7 @@ app.post("/api/plan", async (req, res) => {
       }
     }
     const pxInputPresent = Boolean(options.inputs?.hanselAppId) || Boolean(options.inputs?.hanselAppKey) || Boolean(options.inputs?.pxScheme);
-    if (pxInputPresent && !options.parts.includes("px") && options.appPlatform !== "flutter") {
+    if (pxInputPresent && !options.parts.includes("px") && options.appPlatform === "react-native") {
       options.parts = [...options.parts, "px"];
     }
     const plan = await planIntegration(options);
@@ -29660,6 +31654,13 @@ app.post("/api/apply", async (req, res) => {
         if (options.parts.includes("px"))
           flutterParts.push("px");
         options.parts = flutterParts;
+      } else if (options.appPlatform === "android-native") {
+        const nativeParts = ["base"];
+        if (options.parts.includes("push"))
+          nativeParts.push("push");
+        if (options.parts.includes("px"))
+          nativeParts.push("px");
+        options.parts = nativeParts;
       }
       const maxAttempts = 2;
       for (let attempt = 0; attempt < maxAttempts; attempt += 1) {

@@ -20,8 +20,13 @@ const DEFAULT_ANDROID_SDK_VERSION = "3.7.6";
 const DEFAULT_FLUTTER_SDK_VERSION = "^3.5.0";
 
 const SMARTECH_IMPORT = "com.netcore.android.Smartech";
-const SMARTECH_FLUTTER_IMPORT = "com.netcore.android.smartech_base.SmartechBasePlugin";
+const SMARTECH_FLUTTER_IMPORT = "com.netcore.smartech_base.SmartechBasePlugin";
+const SMARTECH_PUSH_IMPORT = "com.netcore.smartech_push.SmartechPushPlugin";
 const WEAKREF_IMPORT = "java.lang.ref.WeakReference";
+const JAVA_BASE_PLUGIN_INIT = "SmartechBasePlugin.Companion.initializePlugin(this);";
+const KOTLIN_BASE_PLUGIN_INIT = "SmartechBasePlugin.initializePlugin(this)";
+const JAVA_PUSH_PLUGIN_INIT = "SmartechPushPlugin.Companion.initializePlugin(this);";
+const KOTLIN_PUSH_PLUGIN_INIT = "SmartechPushPlugin.initializePlugin(this)";
 
 const FLUTTER_PUBSPEC_DEP = "smartech_base";
 
@@ -31,7 +36,7 @@ const INIT_LINES_JAVA = [
   "Smartech.getInstance(new WeakReference<>(getApplicationContext())).setDebugLevel(9);",
   "// Track install/update",
   "Smartech.getInstance(new WeakReference<>(getApplicationContext())).trackAppInstallUpdateBySmartech();",
-  "SmartechBasePlugin.initializePlugin(this);"
+  JAVA_BASE_PLUGIN_INIT
 ];
 
 const INIT_LINES_KOTLIN = [
@@ -40,7 +45,7 @@ const INIT_LINES_KOTLIN = [
   "Smartech.getInstance(WeakReference(applicationContext)).setDebugLevel(9)",
   "// Track install/update",
   "Smartech.getInstance(WeakReference(applicationContext)).trackAppInstallUpdateBySmartech()",
-  "SmartechBasePlugin.initializePlugin(this)"
+  KOTLIN_BASE_PLUGIN_INIT
 ];
 
 const DEEPLINK_LINES_JAVA = [
@@ -61,6 +66,7 @@ type FlutterBaseContext = {
   scan: ProjectScan;
   rootPath: string;
   inputs?: IntegrationOptions["inputs"];
+  includePush?: boolean;
 };
 
 export async function runFlutterBaseRules(context: FlutterBaseContext): Promise<Change[]> {
@@ -122,8 +128,8 @@ export async function runFlutterBaseRules(context: FlutterBaseContext): Promise<
     );
     const absolutePath = path.join(rootPath, relativePath);
     const newContent = useKotlin
-      ? buildKotlinApplicationClass(fallbackPackage, className)
-      : buildJavaApplicationClass(fallbackPackage, className);
+      ? buildKotlinApplicationClass(fallbackPackage, className, Boolean(context.includePush))
+      : buildJavaApplicationClass(fallbackPackage, className, Boolean(context.includePush));
 
     changes.push(
       buildChange({
@@ -300,15 +306,17 @@ async function ensureAndroidDependency(rootPath: string): Promise<Change | null>
   const originalContent = await fs.readFile(filePath, "utf-8");
   const isKotlin = filePath.endsWith(".kts");
   const depLine = isKotlin
-    ? "api(\"com.netcore.android:smartech-sdk:${SMARTECH_BASE_SDK_VERSION}\")"
+    ? "api(\"com.netcore.android:smartech-sdk:\" + project.property(\"SMARTECH_BASE_SDK_VERSION\"))"
     : "api \"com.netcore.android:smartech-sdk:${SMARTECH_BASE_SDK_VERSION}\"";
 
   let newContent = originalContent;
   if (originalContent.includes("com.netcore.android:smartech-sdk")) {
-    newContent = originalContent.replace(
-      /(api|implementation)\s*(\(|\s+)['\"]com\.netcore\.android:smartech-sdk:[^'\")]+['\"]\)?/,
-      depLine
-    );
+    newContent = originalContent
+      .replace(/[A-Za-z_]+\s*\([^\n]*com\.netcore\.android:smartech-sdk[^\n]*\)/, depLine)
+      .replace(
+        /(api|implementation)\s*(\(|\s+)['\"]com\.netcore\.android:smartech-sdk:[^'\")]+['\"]\)?/,
+        depLine
+      );
   } else if (/dependencies\s*\{/.test(originalContent)) {
     newContent = originalContent.replace(/dependencies\s*\{/, (match) => `${match}\n    ${depLine}`);
   } else {
@@ -417,6 +425,7 @@ function injectJavaInit(source: string): string {
   let updated = source;
 
   updated = ensureJavaImports(updated, [WEAKREF_IMPORT, SMARTECH_IMPORT, SMARTECH_FLUTTER_IMPORT]);
+  updated = normalizeJavaPluginInitCalls(updated);
 
   const missing = getMissingJavaInitLines(updated);
   if (missing.length === 0) return updated;
@@ -465,7 +474,7 @@ function getMissingJavaInitLines(source: string): string[] {
   const hasInit = /initializeSdk\(/.test(source);
   const hasDebug = /setDebugLevel\(/.test(source);
   const hasTrack = /trackAppInstallUpdateBySmartech\(/.test(source);
-  const hasPlugin = /SmartechBasePlugin\.initializePlugin\(/.test(source);
+  const hasPlugin = /SmartechBasePlugin(?:\.Companion)?\.initializePlugin\(/.test(source);
 
   const lines: string[] = [];
   if (!hasInit) lines.push(INIT_LINES_JAVA[0]);
@@ -499,6 +508,19 @@ function dedupeLines(lines: string[]): string[] {
   });
 }
 
+function normalizeJavaPluginInitCalls(source: string): string {
+  let updated = source;
+  updated = updated.replace(
+    /SmartechBasePlugin\s*\.\s*initializePlugin\s*\(\s*this\s*\)\s*;?/g,
+    JAVA_BASE_PLUGIN_INIT
+  );
+  updated = updated.replace(
+    /SmartechPushPlugin\s*\.\s*initializePlugin\s*\(\s*this\s*\)\s*;?/g,
+    JAVA_PUSH_PLUGIN_INIT
+  );
+  return updated;
+}
+
 function ensureJavaImports(source: string, imports: string[]): string {
   let updated = source;
   for (const imp of imports) {
@@ -519,12 +541,44 @@ function ensureKotlinImports(source: string, imports: string[]): string {
   return updated;
 }
 
-function buildJavaApplicationClass(packageName: string, className: string): string {
-  return `package ${packageName};\n\nimport android.app.Application;\nimport ${SMARTECH_IMPORT};\nimport ${SMARTECH_FLUTTER_IMPORT};\nimport ${WEAKREF_IMPORT};\n\npublic class ${className} extends Application {\n    @Override\n    public void onCreate() {\n        super.onCreate();\n        ${INIT_LINES_JAVA.join("\n        ")}\n    }\n}\n`;
+function buildJavaApplicationClass(
+  packageName: string,
+  className: string,
+  includePush: boolean
+): string {
+  const imports = [
+    "import android.app.Application;",
+    `import ${SMARTECH_IMPORT};`,
+    `import ${SMARTECH_FLUTTER_IMPORT};`,
+    includePush ? `import ${SMARTECH_PUSH_IMPORT};` : "",
+    `import ${WEAKREF_IMPORT};`
+  ]
+    .filter(Boolean)
+    .join("\n");
+  const initLines = includePush
+    ? [...INIT_LINES_JAVA, JAVA_PUSH_PLUGIN_INIT]
+    : INIT_LINES_JAVA;
+  return `package ${packageName};\n\n${imports}\n\npublic class ${className} extends Application {\n    @Override\n    public void onCreate() {\n        super.onCreate();\n        ${initLines.join("\n        ")}\n    }\n}\n`;
 }
 
-function buildKotlinApplicationClass(packageName: string, className: string): string {
-  return `package ${packageName}\n\nimport android.app.Application\nimport ${SMARTECH_IMPORT}\nimport ${SMARTECH_FLUTTER_IMPORT}\nimport ${WEAKREF_IMPORT}\n\nclass ${className} : Application() {\n    override fun onCreate() {\n        super.onCreate()\n        ${INIT_LINES_KOTLIN.join("\n        ")}\n    }\n}\n`;
+function buildKotlinApplicationClass(
+  packageName: string,
+  className: string,
+  includePush: boolean
+): string {
+  const imports = [
+    "import android.app.Application",
+    `import ${SMARTECH_IMPORT}`,
+    `import ${SMARTECH_FLUTTER_IMPORT}`,
+    includePush ? `import ${SMARTECH_PUSH_IMPORT}` : "",
+    `import ${WEAKREF_IMPORT}`
+  ]
+    .filter(Boolean)
+    .join("\n");
+  const initLines = includePush
+    ? [...INIT_LINES_KOTLIN, KOTLIN_PUSH_PLUGIN_INIT]
+    : INIT_LINES_KOTLIN;
+  return `package ${packageName}\n\n${imports}\n\nclass ${className} : Application() {\n    override fun onCreate() {\n        super.onCreate()\n        ${initLines.join("\n        ")}\n    }\n}\n`;
 }
 
 async function ensureManifestApplicationName(
@@ -786,13 +840,29 @@ function injectKotlinDeeplink(source: string): string {
     );
   }
 
-  return updated.replace(
-    /class\s+\w+\s*:\s*\w+\s*\(\s*\)\s*\{/,
-    (match) =>
-      `${match}\n\n    override fun onCreate(savedInstanceState: android.os.Bundle?) {\n        super.onCreate(savedInstanceState)\n        ${missing.join(
-        "\n        "
-      )}\n    }\n`
-  );
+  const classWithBodyPattern = /class\s+\w+\s*:\s*[^{\n]+\{/;
+  if (classWithBodyPattern.test(updated)) {
+    return updated.replace(
+      classWithBodyPattern,
+      (match) =>
+        `${match}\n\n    override fun onCreate(savedInstanceState: android.os.Bundle?) {\n        super.onCreate(savedInstanceState)\n        ${missing.join(
+          "\n        "
+        )}\n    }\n`
+    );
+  }
+
+  const classNoBodyPattern = /class\s+\w+\s*:\s*[^\n{]+/;
+  if (classNoBodyPattern.test(updated)) {
+    return updated.replace(
+      classNoBodyPattern,
+      (match) =>
+        `${match} {\n\n    override fun onCreate(savedInstanceState: android.os.Bundle?) {\n        super.onCreate(savedInstanceState)\n        ${missing.join(
+          "\n        "
+        )}\n    }\n}`
+    );
+  }
+
+  return updated;
 }
 
 function getMissingJavaDeeplinkLines(source: string): string[] {

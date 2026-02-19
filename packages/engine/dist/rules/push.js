@@ -13,7 +13,7 @@ const RN_BASE_LIB = "smartech-base-react-native";
 const FIREBASE_APP = "@react-native-firebase/app";
 const FIREBASE_MESSAGING = "@react-native-firebase/messaging";
 const PUSH_DEP_GROOVY = "implementation 'com.netcore.android:smartech-push:${SMARTECH_PUSH_SDK_VERSION}'";
-const PUSH_DEP_KTS = "implemntation(\"com.netcore.android:smartech-push:${SMARTECH_PUSH_SDK_VERSION}\")";
+const PUSH_DEP_KTS = "implementation(\"com.netcore.android:smartech-push:\" + project.property(\"SMARTECH_PUSH_SDK_VERSION\"))";
 const PUSH_IMPORTS = [
     "import messaging from '@react-native-firebase/messaging';",
     "import SmartechPushReact from 'smartech-push-react-native';",
@@ -177,7 +177,9 @@ async function ensurePushDependency(rootPath) {
     const depLine = isKotlin ? PUSH_DEP_KTS : PUSH_DEP_GROOVY;
     let newContent = originalContent;
     if (originalContent.includes("com.netcore.android:smartech-push")) {
-        newContent = originalContent.replace(/implementation\s*(\(|\s+)['\"]com\.netcore\.android:smartech-push:[^'\")]+['\"]\)?/, depLine);
+        newContent = originalContent
+            .replace(/[A-Za-z_]+\s*\([^\n]*com\.netcore\.android:smartech-push[^\n]*\)/, depLine)
+            .replace(/implementation\s*(\(|\s+)['\"]com\.netcore\.android:smartech-push:[^'\")]+['\"]\)?/, depLine);
     }
     else if (/dependencies\s*\{/.test(originalContent)) {
         newContent = originalContent.replace(/dependencies\s*\{/, (match) => `${match}\n    ${depLine}`);
