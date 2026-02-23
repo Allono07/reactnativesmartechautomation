@@ -25776,10 +25776,10 @@ async function ensureAppDependency(rootPath) {
   }
   const originalContent = await import_node_fs2.promises.readFile(filePath, "utf-8");
   const isKotlin = filePath.endsWith(".kts");
-  const depLine = isKotlin ? 'implementation("com.netcore.android:smartech-sdk:${SMARTECH_BASE_SDK_VERSION}")' : 'implementation "com.netcore.android:smartech-sdk:${SMARTECH_BASE_SDK_VERSION}"';
+  const depLine = isKotlin ? 'implementation("com.netcore.android:smartech-sdk:" + project.property("SMARTECH_BASE_SDK_VERSION"))' : 'implementation "com.netcore.android:smartech-sdk:${SMARTECH_BASE_SDK_VERSION}"';
   let newContent = originalContent;
   if (originalContent.includes("com.netcore.android:smartech-sdk")) {
-    newContent = originalContent.replace(/implementation\s*(\(|\s+)['"]com\.netcore\.android:smartech-sdk:[^'")]+['"]\)?/, depLine);
+    newContent = originalContent.replace(/[A-Za-z_]+\s*\([^\n]*com\.netcore\.android:smartech-sdk[^\n]*\)/, depLine).replace(/implementation\s*(\(|\s+)['"]com\.netcore\.android:smartech-sdk:[^'")]+['"]\)?/, depLine);
   } else if (/dependencies\s*\{/.test(originalContent)) {
     newContent = originalContent.replace(/dependencies\s*\{/, (match) => `${match}
     ${depLine}`);
@@ -25920,7 +25920,7 @@ var RN_BASE_LIB = "smartech-base-react-native";
 var FIREBASE_APP = "@react-native-firebase/app";
 var FIREBASE_MESSAGING = "@react-native-firebase/messaging";
 var PUSH_DEP_GROOVY = "implementation 'com.netcore.android:smartech-push:${SMARTECH_PUSH_SDK_VERSION}'";
-var PUSH_DEP_KTS = 'implemntation("com.netcore.android:smartech-push:${SMARTECH_PUSH_SDK_VERSION}")';
+var PUSH_DEP_KTS = 'implementation("com.netcore.android:smartech-push:" + project.property("SMARTECH_PUSH_SDK_VERSION"))';
 var PUSH_IMPORTS = [
   "import messaging from '@react-native-firebase/messaging';",
   "import SmartechPushReact from 'smartech-push-react-native';",
@@ -26108,7 +26108,7 @@ async function ensurePushDependency(rootPath) {
   const depLine = isKotlin ? PUSH_DEP_KTS : PUSH_DEP_GROOVY;
   let newContent = originalContent;
   if (originalContent.includes("com.netcore.android:smartech-push")) {
-    newContent = originalContent.replace(/implementation\s*(\(|\s+)['\"]com\.netcore\.android:smartech-push:[^'\")]+['\"]\)?/, depLine);
+    newContent = originalContent.replace(/[A-Za-z_]+\s*\([^\n]*com\.netcore\.android:smartech-push[^\n]*\)/, depLine).replace(/implementation\s*(\(|\s+)['\"]com\.netcore\.android:smartech-push:[^'\")]+['\"]\)?/, depLine);
   } else if (/dependencies\s*\{/.test(originalContent)) {
     newContent = originalContent.replace(/dependencies\s*\{/, (match) => `${match}
     ${depLine}`);
@@ -26350,7 +26350,7 @@ var ANDROID_SRC2 = import_node_path4.default.join("android", "app", "src", "main
 var DEFAULT_PX_SDK_VERSION = "10.2.12";
 var DEFAULT_RN_PX_VERSION = "^3.7.0";
 var PX_DEP_GROOVY = 'implementation "com.netcore.android:smartech-nudges:${SMARTECH_PX_SDK_VERSION}"';
-var PX_DEP_KTS = 'implementation("com.netcore.android:smartech-nudges:${SMARTECH_PX_SDK_VERSION}")';
+var PX_DEP_KTS = 'implementation("com.netcore.android:smartech-nudges:" + project.property("SMARTECH_PX_SDK_VERSION"))';
 var PX_IMPORT = "import { HanselTrackerRn } from 'smartech-reactnative-nudges';";
 var BASE_REACT_IMPORT = "import SmartechBaseReact from 'smartech-base-react-native';";
 var RN_PX_MANUAL_SNIPPET = `import { HanselTrackerRn } from 'smartech-reactnative-nudges';
@@ -26582,7 +26582,7 @@ async function ensurePxDependency(rootPath) {
   const depLine = isKotlin ? PX_DEP_KTS : PX_DEP_GROOVY;
   let newContent = originalContent;
   if (originalContent.includes("com.netcore.android:smartech-nudges")) {
-    newContent = originalContent.replace(/implementation\s*(\(|\s+)['\"]com\.netcore\.android:smartech-nudges:[^'\")]+['\"]\)?/, depLine);
+    newContent = originalContent.replace(/[A-Za-z_]+\s*\([^\n]*com\.netcore\.android:smartech-nudges[^\n]*\)/, depLine).replace(/implementation\s*(\(|\s+)['\"]com\.netcore\.android:smartech-nudges:[^'\")]+['\"]\)?/, depLine);
   } else if (/dependencies\s*\{/.test(originalContent)) {
     newContent = originalContent.replace(/dependencies\s*\{/, (match) => `${match}
     ${depLine}`);
@@ -27357,8 +27357,13 @@ var SMARTECH_MAVEN2 = "https://artifacts.netcore.co.in/artifactory/android";
 var DEFAULT_ANDROID_SDK_VERSION = "3.7.6";
 var DEFAULT_FLUTTER_SDK_VERSION = "^3.5.0";
 var SMARTECH_IMPORT2 = "com.netcore.android.Smartech";
-var SMARTECH_FLUTTER_IMPORT = "com.netcore.android.smartech_base.SmartechBasePlugin";
+var SMARTECH_FLUTTER_IMPORT = "com.netcore.smartech_base.SmartechBasePlugin";
+var SMARTECH_PUSH_IMPORT = "com.netcore.smartech_push.SmartechPushPlugin";
 var WEAKREF_IMPORT = "java.lang.ref.WeakReference";
+var JAVA_BASE_PLUGIN_INIT = "SmartechBasePlugin.Companion.initializePlugin(this);";
+var KOTLIN_BASE_PLUGIN_INIT = "SmartechBasePlugin.initializePlugin(this)";
+var JAVA_PUSH_PLUGIN_INIT = "SmartechPushPlugin.Companion.initializePlugin(this);";
+var KOTLIN_PUSH_PLUGIN_INIT = "SmartechPushPlugin.initializePlugin(this)";
 var FLUTTER_PUBSPEC_DEP = "smartech_base";
 var INIT_LINES_JAVA = [
   "Smartech.getInstance(new WeakReference<>(getApplicationContext())).initializeSdk(this);",
@@ -27366,7 +27371,7 @@ var INIT_LINES_JAVA = [
   "Smartech.getInstance(new WeakReference<>(getApplicationContext())).setDebugLevel(9);",
   "// Track install/update",
   "Smartech.getInstance(new WeakReference<>(getApplicationContext())).trackAppInstallUpdateBySmartech();",
-  "SmartechBasePlugin.initializePlugin(this);"
+  JAVA_BASE_PLUGIN_INIT
 ];
 var INIT_LINES_KOTLIN = [
   "Smartech.getInstance(WeakReference(applicationContext)).initializeSdk(this)",
@@ -27374,7 +27379,7 @@ var INIT_LINES_KOTLIN = [
   "Smartech.getInstance(WeakReference(applicationContext)).setDebugLevel(9)",
   "// Track install/update",
   "Smartech.getInstance(WeakReference(applicationContext)).trackAppInstallUpdateBySmartech()",
-  "SmartechBasePlugin.initializePlugin(this)"
+  KOTLIN_BASE_PLUGIN_INIT
 ];
 var DEEPLINK_LINES_JAVA = [
   "boolean isSmartechHandledDeeplink = Smartech.getInstance(new WeakReference<>(this)).isDeepLinkFromSmartech(getIntent());",
@@ -27439,7 +27444,7 @@ async function runFlutterBaseRules(context) {
     const extension = useKotlin ? "kt" : "java";
     const relativePath = import_node_path5.default.join(sourceDir, ...fallbackPackage.split("."), `${className}.${extension}`);
     const absolutePath = import_node_path5.default.join(rootPath, relativePath);
-    const newContent = useKotlin ? buildKotlinApplicationClass(fallbackPackage, className) : buildJavaApplicationClass2(fallbackPackage, className);
+    const newContent = useKotlin ? buildKotlinApplicationClass(fallbackPackage, className, Boolean(context.includePush)) : buildJavaApplicationClass2(fallbackPackage, className, Boolean(context.includePush));
     changes.push(buildChange4({
       id: "flutter-create-application",
       title: "Create Application class with Smartech init",
@@ -27593,10 +27598,10 @@ async function ensureAndroidDependency(rootPath) {
     return null;
   const originalContent = await import_node_fs5.promises.readFile(filePath, "utf-8");
   const isKotlin = filePath.endsWith(".kts");
-  const depLine = isKotlin ? 'api("com.netcore.android:smartech-sdk:${SMARTECH_BASE_SDK_VERSION}")' : 'api "com.netcore.android:smartech-sdk:${SMARTECH_BASE_SDK_VERSION}"';
+  const depLine = isKotlin ? 'api("com.netcore.android:smartech-sdk:" + project.property("SMARTECH_BASE_SDK_VERSION"))' : 'api "com.netcore.android:smartech-sdk:${SMARTECH_BASE_SDK_VERSION}"';
   let newContent = originalContent;
   if (originalContent.includes("com.netcore.android:smartech-sdk")) {
-    newContent = originalContent.replace(/(api|implementation)\s*(\(|\s+)['\"]com\.netcore\.android:smartech-sdk:[^'\")]+['\"]\)?/, depLine);
+    newContent = originalContent.replace(/[A-Za-z_]+\s*\([^\n]*com\.netcore\.android:smartech-sdk[^\n]*\)/, depLine).replace(/(api|implementation)\s*(\(|\s+)['\"]com\.netcore\.android:smartech-sdk:[^'\")]+['\"]\)?/, depLine);
   } else if (/dependencies\s*\{/.test(originalContent)) {
     newContent = originalContent.replace(/dependencies\s*\{/, (match) => `${match}
     ${depLine}`);
@@ -27700,6 +27705,7 @@ async function ensureApplicationInit2(filePath) {
 function injectJavaInit2(source) {
   let updated = source;
   updated = ensureJavaImports3(updated, [WEAKREF_IMPORT, SMARTECH_IMPORT2, SMARTECH_FLUTTER_IMPORT]);
+  updated = normalizeJavaPluginInitCalls(updated);
   const missing = getMissingJavaInitLines(updated);
   if (missing.length === 0)
     return updated;
@@ -27738,7 +27744,7 @@ function getMissingJavaInitLines(source) {
   const hasInit = /initializeSdk\(/.test(source);
   const hasDebug = /setDebugLevel\(/.test(source);
   const hasTrack = /trackAppInstallUpdateBySmartech\(/.test(source);
-  const hasPlugin = /SmartechBasePlugin\.initializePlugin\(/.test(source);
+  const hasPlugin = /SmartechBasePlugin(?:\.Companion)?\.initializePlugin\(/.test(source);
   const lines = [];
   if (!hasInit)
     lines.push(INIT_LINES_JAVA[0]);
@@ -27776,6 +27782,12 @@ function dedupeLines2(lines) {
     return true;
   });
 }
+function normalizeJavaPluginInitCalls(source) {
+  let updated = source;
+  updated = updated.replace(/SmartechBasePlugin\s*\.\s*initializePlugin\s*\(\s*this\s*\)\s*;?/g, JAVA_BASE_PLUGIN_INIT);
+  updated = updated.replace(/SmartechPushPlugin\s*\.\s*initializePlugin\s*\(\s*this\s*\)\s*;?/g, JAVA_PUSH_PLUGIN_INIT);
+  return updated;
+}
 function ensureJavaImports3(source, imports) {
   let updated = source;
   for (const imp of imports) {
@@ -27797,35 +27809,45 @@ function ensureKotlinImports3(source, imports) {
   }
   return updated;
 }
-function buildJavaApplicationClass2(packageName, className) {
+function buildJavaApplicationClass2(packageName, className, includePush) {
+  const imports = [
+    "import android.app.Application;",
+    `import ${SMARTECH_IMPORT2};`,
+    `import ${SMARTECH_FLUTTER_IMPORT};`,
+    includePush ? `import ${SMARTECH_PUSH_IMPORT};` : "",
+    `import ${WEAKREF_IMPORT};`
+  ].filter(Boolean).join("\n");
+  const initLines = includePush ? [...INIT_LINES_JAVA, JAVA_PUSH_PLUGIN_INIT] : INIT_LINES_JAVA;
   return `package ${packageName};
 
-import android.app.Application;
-import ${SMARTECH_IMPORT2};
-import ${SMARTECH_FLUTTER_IMPORT};
-import ${WEAKREF_IMPORT};
+${imports}
 
 public class ${className} extends Application {
     @Override
     public void onCreate() {
         super.onCreate();
-        ${INIT_LINES_JAVA.join("\n        ")}
+        ${initLines.join("\n        ")}
     }
 }
 `;
 }
-function buildKotlinApplicationClass(packageName, className) {
+function buildKotlinApplicationClass(packageName, className, includePush) {
+  const imports = [
+    "import android.app.Application",
+    `import ${SMARTECH_IMPORT2}`,
+    `import ${SMARTECH_FLUTTER_IMPORT}`,
+    includePush ? `import ${SMARTECH_PUSH_IMPORT}` : "",
+    `import ${WEAKREF_IMPORT}`
+  ].filter(Boolean).join("\n");
+  const initLines = includePush ? [...INIT_LINES_KOTLIN, KOTLIN_PUSH_PLUGIN_INIT] : INIT_LINES_KOTLIN;
   return `package ${packageName}
 
-import android.app.Application
-import ${SMARTECH_IMPORT2}
-import ${SMARTECH_FLUTTER_IMPORT}
-import ${WEAKREF_IMPORT}
+${imports}
 
 class ${className} : Application() {
     override fun onCreate() {
         super.onCreate()
-        ${INIT_LINES_KOTLIN.join("\n        ")}
+        ${initLines.join("\n        ")}
     }
 }
 `;
@@ -28040,13 +28062,27 @@ function injectKotlinDeeplink2(source) {
     return updated.replace(/super\.onCreate\s*\(\s*[^\)]*\)/, (match) => `${match}
         ${missing.join("\n        ")}`);
   }
-  return updated.replace(/class\s+\w+\s*:\s*\w+\s*\(\s*\)\s*\{/, (match) => `${match}
+  const classWithBodyPattern = /class\s+\w+\s*:\s*[^{\n]+\{/;
+  if (classWithBodyPattern.test(updated)) {
+    return updated.replace(classWithBodyPattern, (match) => `${match}
 
     override fun onCreate(savedInstanceState: android.os.Bundle?) {
         super.onCreate(savedInstanceState)
         ${missing.join("\n        ")}
     }
 `);
+  }
+  const classNoBodyPattern = /class\s+\w+\s*:\s*[^\n{]+/;
+  if (classNoBodyPattern.test(updated)) {
+    return updated.replace(classNoBodyPattern, (match) => `${match} {
+
+    override fun onCreate(savedInstanceState: android.os.Bundle?) {
+        super.onCreate(savedInstanceState)
+        ${missing.join("\n        ")}
+    }
+}`);
+  }
+  return updated;
 }
 function getMissingJavaDeeplinkLines(source) {
   const hasVar = /isDeepLinkFromSmartech\s*\(/.test(source);
@@ -28225,8 +28261,11 @@ var APP_BUILD_GRADLE_KTS5 = import_node_path6.default.join("android", "app", "bu
 var DEFAULT_FLUTTER_PUSH_VERSION = "^3.5.0";
 var DEFAULT_ANDROID_PUSH_VERSION = "3.5.13";
 var PUSH_DEP_GROOVY2 = 'api "com.netcore.android:smartech-push:${SMARTECH_PUSH_SDK_VERSION}"';
-var PUSH_DEP_KTS2 = 'api("com.netcore.android:smartech-push:${SMARTECH_PUSH_SDK_VERSION}")';
-var SMARTECH_PUSH_IMPORT = "com.netcore.android.smartech_push.SmartechPushPlugin";
+var PUSH_DEP_KTS2 = 'api("com.netcore.android:smartech-push:" + project.property("SMARTECH_PUSH_SDK_VERSION"))';
+var SMARTECH_PUSH_IMPORT2 = "com.netcore.android.smartech_push.SmartechPushPlugin";
+var JAVA_BASE_PLUGIN_INIT2 = "SmartechBasePlugin.Companion.initializePlugin(this);";
+var JAVA_PUSH_PLUGIN_INIT2 = "SmartechPushPlugin.Companion.initializePlugin(this);";
+var KOTLIN_PUSH_PLUGIN_INIT2 = "SmartechPushPlugin.initializePlugin(this)";
 var FLUTTER_PUSH_MANUAL_SNIPPET = `// In your State<T> class:
 @override
 void initState() {
@@ -28290,7 +28329,8 @@ async function runFlutterPushRules(context) {
   }
   const flutterPushVersion = context.inputs?.flutterPushSdkVersion ?? DEFAULT_FLUTTER_PUSH_VERSION;
   const androidPushVersion = context.inputs?.pushSdkVersion ?? DEFAULT_ANDROID_PUSH_VERSION;
-  const mainDartPath = context.inputs?.mainDartPath ?? import_node_path6.default.join(rootPath, "lib", "main.dart");
+  const mainDartInput = context.inputs?.mainDartPath ?? import_node_path6.default.join("lib", "main.dart");
+  const mainDartPath = import_node_path6.default.isAbsolute(mainDartInput) ? mainDartInput : import_node_path6.default.join(rootPath, mainDartInput);
   const gradlePropChange = await ensureGradleProperty5(rootPath, androidPushVersion);
   if (gradlePropChange)
     changes.push(gradlePropChange);
@@ -28305,17 +28345,6 @@ async function runFlutterPushRules(context) {
     const initChange = await ensurePushPluginInit(appClass.filePath);
     if (initChange)
       changes.push(initChange);
-  } else {
-    changes.push({
-      id: "flutter-push-app-missing",
-      title: "Application class not found",
-      filePath: androidMain,
-      kind: "insert",
-      patch: "",
-      summary: "Push plugin init requires an Application/FlutterApplication class. Integrate Base SDK first.",
-      confidence: 0.2,
-      module: "push"
-    });
   }
   const autoAskPermission = context.inputs?.autoAskNotificationPermission;
   if (typeof autoAskPermission === "boolean") {
@@ -28369,7 +28398,7 @@ async function ensurePushDependency2(rootPath) {
   const depLine = isKotlin ? PUSH_DEP_KTS2 : PUSH_DEP_GROOVY2;
   let newContent = originalContent;
   if (originalContent.includes("com.netcore.android:smartech-push")) {
-    newContent = originalContent.replace(/(api|implementation)\s*(\(|\s+)['\"]com\.netcore\.android:smartech-push:[^'\")]+['\"]\)?/, depLine);
+    newContent = originalContent.replace(/[A-Za-z_]+\s*\([^\n]*com\.netcore\.android:smartech-push[^\n]*\)/, depLine).replace(/(api|implementation)\s*(\(|\s+)['\"]com\.netcore\.android:smartech-push:[^'\")]+['\"]\)?/, depLine);
   } else if (/dependencies\s*\{/.test(originalContent)) {
     newContent = originalContent.replace(/dependencies\s*\{/, (match) => `${match}
     ${depLine}`);
@@ -28449,18 +28478,18 @@ async function findFlutterApplicationClass2(sourceRoots) {
 async function ensurePushPluginInit(filePath) {
   const originalContent = await import_node_fs6.promises.readFile(filePath, "utf-8");
   const isKotlin = filePath.endsWith(".kt");
-  const baseLine = isKotlin ? "SmartechBasePlugin.initializePlugin(this)" : "SmartechBasePlugin.initializePlugin(this);";
-  const pushLine = isKotlin ? "SmartechPushPlugin.initializePlugin(this)" : "SmartechPushPlugin.initializePlugin(this);";
-  const importLine = isKotlin ? `import ${SMARTECH_PUSH_IMPORT}` : `import ${SMARTECH_PUSH_IMPORT};`;
+  const pushLine = isKotlin ? KOTLIN_PUSH_PLUGIN_INIT2 : JAVA_PUSH_PLUGIN_INIT2;
+  const importLine = isKotlin ? `import ${SMARTECH_PUSH_IMPORT2}` : `import ${SMARTECH_PUSH_IMPORT2};`;
   let newContent = originalContent;
   if (!newContent.includes(importLine)) {
     newContent = newContent.replace(/(package\s+[^\n]+\n)/, `$1${importLine}
 `);
   }
-  if (newContent.includes(pushLine)) {
-    return null;
+  if (!isKotlin) {
+    newContent = normalizeJavaPluginInitCalls2(newContent);
   }
-  if (!newContent.includes(baseLine)) {
+  const hasBaseInit = /SmartechBasePlugin(?:\.Companion)?\.initializePlugin\s*\(\s*this\s*\)\s*;?/.test(newContent);
+  if (!hasBaseInit) {
     return buildChange5({
       id: "flutter-push-app-base-missing",
       title: "Base SDK init not found",
@@ -28472,8 +28501,10 @@ async function ensurePushPluginInit(filePath) {
       confidence: 0.2
     });
   }
-  newContent = newContent.replace(baseLine, `${baseLine}
+  if (!/SmartechPushPlugin(?:\.Companion)?\.initializePlugin\s*\(\s*this\s*\)\s*;?/.test(newContent)) {
+    newContent = newContent.replace(/(SmartechBasePlugin(?:\.Companion)?\.initializePlugin\s*\(\s*this\s*\)\s*;?)/, `$1
         ${pushLine}`);
+  }
   if (newContent === originalContent)
     return null;
   return buildChange5({
@@ -28486,6 +28517,12 @@ async function ensurePushPluginInit(filePath) {
     summary: "Add SmartechPushPlugin initialization after Base plugin init.",
     confidence: 0.4
   });
+}
+function normalizeJavaPluginInitCalls2(source) {
+  let updated = source;
+  updated = updated.replace(/SmartechBasePlugin\s*\.\s*initializePlugin\s*\(\s*this\s*\)\s*;?/g, JAVA_BASE_PLUGIN_INIT2);
+  updated = updated.replace(/SmartechPushPlugin\s*\.\s*initializePlugin\s*\(\s*this\s*\)\s*;?/g, JAVA_PUSH_PLUGIN_INIT2);
+  return updated;
 }
 async function ensureManifestFlagMeta4(manifestPath, name, value) {
   if (!await pathExists(manifestPath))
@@ -28673,13 +28710,13 @@ function ensureStatefulPushSetup(source) {
   const body = source.slice(bodyStart + 1, bodyEnd);
   const after = source.slice(bodyEnd);
   let updatedBody = body;
-  const hasRegisterMethod = /_registerPushToken\s*\(/.test(body);
+  const hasRegisterMethodDef = /Future<\s*void\s*>\s+_registerPushToken\s*\(/.test(body) || /void\s+_registerPushToken\s*\(/.test(body);
+  const hasRegisterCall = /_registerPushToken\s*\(\s*\)\s*;/.test(body);
   const hasInitState = /initState\s*\(\s*\)/.test(body);
   const hasOnMessage = /FirebaseMessaging\.onMessage/.test(body);
   const hasDeeplink = /onHandleDeeplink/.test(body);
-  const hasSmartechPush = /SmartechPush/.test(body);
   const initLines = [];
-  if (!hasRegisterMethod) {
+  if (!hasRegisterCall) {
     initLines.push("    _registerPushToken();");
   }
   if (!hasOnMessage) {
@@ -28689,28 +28726,22 @@ function ensureStatefulPushSetup(source) {
     initLines.push("    Smartech().onHandleDeeplink((", "      String? smtDeeplinkSource,", "      String? smtDeeplink,", "      Map<dynamic, dynamic>? smtPayload,", "      Map<dynamic, dynamic>? smtCustomPayload,", "    ) async {", "      // Perform action on notification click", "    });");
   }
   if (hasInitState) {
-    if (initLines.length > 0 && hasSmartechPush) {
-      updatedBody = updatedBody.replace(/super\.initState\s*\(\s*\);\s*/g, (match) => `${match}
+    if (initLines.length > 0) {
+      updatedBody = updatedBody.replace(/super\.initState\s*\(\s*\);\s*/, (match) => `${match}
 ${initLines.join("\n")}
 `);
-    } else if (initLines.length > 0) {
-      return { updated: false, content: source };
     }
-  } else {
-    if (initLines.length > 0 && hasSmartechPush) {
-      const initBlock = `
+  } else if (initLines.length > 0) {
+    const initBlock = `
   @override
   void initState() {
     super.initState();
 ${initLines.join("\n")}
   }
 `;
-      updatedBody = `${initBlock}${updatedBody}`;
-    } else if (initLines.length > 0) {
-      return { updated: false, content: source };
-    }
+    updatedBody = `${initBlock}${updatedBody}`;
   }
-  if (!hasRegisterMethod) {
+  if (!hasRegisterMethodDef) {
     const methodBlock = `
   Future<void> _registerPushToken() async {
     final androidToken = await FirebaseMessaging.instance.getToken();
@@ -31323,7 +31354,8 @@ async function planIntegration(options) {
       const flutterChanges = await runFlutterBaseRules({
         scan,
         rootPath: options.rootPath,
-        inputs: options.inputs
+        inputs: options.inputs,
+        includePush: options.parts.includes("push")
       });
       changes.push(...flutterChanges);
     } else if (options.appPlatform === "android-native") {
