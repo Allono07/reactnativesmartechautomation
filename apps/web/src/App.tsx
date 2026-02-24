@@ -95,6 +95,84 @@ export default function App() {
     };
   }, [plan]);
 
+  const requestPlan = async (payload: {
+    rootPath: string;
+    parts: IntegrationPart[];
+    appPlatform: "react-native" | "flutter" | "android-native";
+    inputs: Record<string, any>;
+  }): Promise<IntegrationPlan> => {
+    if (window.smartech?.planIntegration) {
+      return window.smartech.planIntegration(payload);
+    }
+
+    const response = await fetch("http://localhost:8787/api/plan", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(payload)
+    });
+
+    if (!response.ok) {
+      throw new Error("Failed to generate plan.");
+    }
+
+    return (await response.json()) as IntegrationPlan;
+  };
+
+  const requestApply = async (payload: {
+    changes: IntegrationPlan["changes"];
+    selectedChangeIds: string[];
+    options: {
+      rootPath: string;
+      parts: IntegrationPart[];
+      appPlatform: "react-native" | "flutter" | "android-native";
+      inputs: Record<string, any>;
+    };
+  }): Promise<{
+    results: { changeId: string; applied: boolean; message: string }[];
+    retryResults: { changeId: string; applied: boolean; message: string }[];
+    remaining: string[];
+    remainingChanges: {
+      id: string;
+      title: string;
+      summary: string;
+      filePath: string;
+      manualSnippet?: string;
+      module?: string;
+    }[];
+  }> => {
+    if (window.smartech?.applyIntegration) {
+      return window.smartech.applyIntegration(payload);
+    }
+
+    const response = await fetch("http://localhost:8787/api/apply", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(payload)
+    });
+
+    if (!response.ok) {
+      throw new Error("Failed to apply changes.");
+    }
+
+    return (await response.json()) as {
+      results: { changeId: string; applied: boolean; message: string }[];
+      retryResults: { changeId: string; applied: boolean; message: string }[];
+      remaining: string[];
+      remainingChanges: {
+        id: string;
+        title: string;
+        summary: string;
+        filePath: string;
+        manualSnippet?: string;
+        module?: string;
+      }[];
+    };
+  };
+
   const togglePart = (part: IntegrationPart) => {
     if (part === "base") {
       return;
@@ -130,7 +208,7 @@ export default function App() {
                 ...(parts.includes("push") ? ["push"] : []),
                 ...(parts.includes("px") ? ["px"] : [])
               ] as IntegrationPart[])
-            : ["base", ...parts.filter((part) => part !== "base")];
+            : (["base", ...parts.filter((part) => part !== "base")] as IntegrationPart[]);
       const inputs: Record<string, any> = {
         nativePxUiType,
         useSdkEncryption,
@@ -159,24 +237,12 @@ export default function App() {
         inputs.pxScheme = pxScheme;
       }
 
-      const response = await fetch("http://localhost:8787/api/plan", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          rootPath,
-          parts: activeParts,
-          appPlatform,
-          inputs
-        })
+      const nextPlan = await requestPlan({
+        rootPath,
+        parts: activeParts,
+        appPlatform,
+        inputs
       });
-
-      if (!response.ok) {
-        throw new Error("Failed to generate plan.");
-      }
-
-      const nextPlan = (await response.json()) as IntegrationPlan;
       setPlan(nextPlan);
       const initialSelection: Record<string, boolean> = {};
       nextPlan.changes.forEach((change) => {
@@ -218,56 +284,45 @@ export default function App() {
                 ...(parts.includes("push") ? ["push"] : []),
                 ...(parts.includes("px") ? ["px"] : [])
               ] as IntegrationPart[])
-            : ["base", ...parts.filter((part) => part !== "base")];
-      const response = await fetch("http://localhost:8787/api/apply", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          changes: selectedList,
-          selectedChangeIds: selectedList.map((change) => change.id),
-          options: {
-            rootPath,
-            parts: activeParts,
-            appPlatform,
-            inputs: {
-              nativePxUiType,
-              useSdkEncryption,
-              applicationClassPath,
-              mainActivityPath,
-              firebaseMessagingServicePath,
-              smartechAppId,
-              deeplinkScheme,
-              baseSdkVersion,
-              flutterBaseSdkVersion,
-              flutterPushSdkVersion,
-              flutterPxSdkVersion,
-              mainDartPath,
-              pushSdkVersion,
-              rnPushVersion,
-              firebaseVersion,
-              autoAskNotificationPermission: autoAskPermission,
-              autoFetchLocation,
-              ...(parts.includes("px")
-                ? {
-                    pxSdkVersion,
-                    rnPxVersion,
-                    hanselAppId,
-                    hanselAppKey,
-                    pxScheme
-                  }
-                : {})
-            }
+            : (["base", ...parts.filter((part) => part !== "base")] as IntegrationPart[]);
+      const payload = await requestApply({
+        changes: selectedList,
+        selectedChangeIds: selectedList.map((change) => change.id),
+        options: {
+          rootPath,
+          parts: activeParts,
+          appPlatform,
+          inputs: {
+            nativePxUiType,
+            useSdkEncryption,
+            applicationClassPath,
+            mainActivityPath,
+            firebaseMessagingServicePath,
+            smartechAppId,
+            deeplinkScheme,
+            baseSdkVersion,
+            flutterBaseSdkVersion,
+            flutterPushSdkVersion,
+            flutterPxSdkVersion,
+            mainDartPath,
+            pushSdkVersion,
+            rnPushVersion,
+            firebaseVersion,
+            autoAskNotificationPermission: autoAskPermission,
+            autoFetchLocation,
+            ...(parts.includes("px")
+              ? {
+                  pxSdkVersion,
+                  rnPxVersion,
+                  hanselAppId,
+                  hanselAppKey,
+                  pxScheme
+                }
+              : {})
           }
-        })
+        }
       });
-
-      if (!response.ok) {
-        throw new Error("Failed to apply changes.");
-      }
-
-      const payload = (await response.json()) as {
+      const typedPayload = payload as {
         results: { changeId: string; applied: boolean; message: string }[];
         retryResults: { changeId: string; applied: boolean; message: string }[];
         remaining: string[];
@@ -280,7 +335,7 @@ export default function App() {
           module?: string;
         }[];
       };
-      const appliedIds = payload.results
+      const appliedIds = typedPayload.results
         .filter((result) => result.applied)
         .map((result) => result.changeId);
       const appliedChanges = selectedList.filter((change) => appliedIds.includes(change.id));
@@ -290,21 +345,21 @@ export default function App() {
         byModule[key] = (byModule[key] ?? 0) + 1;
       });
       setSummary({ appliedCount: appliedChanges.length, byModule });
-      const summaryText = payload.results
+      const summaryText = typedPayload.results
         .map((result) => `${result.changeId}: ${result.applied ? "applied" : "skipped"} (${result.message})`)
         .join("\n");
-      const retryText = payload.retryResults?.length
-        ? `\nRetry pass:\n${payload.retryResults
+      const retryText = typedPayload.retryResults?.length
+        ? `\nRetry pass:\n${typedPayload.retryResults
             .map((result) => `${result.changeId}: ${result.applied ? "applied" : "skipped"} (${result.message})`)
             .join("\n")}`
         : "";
-      if (payload.remaining.length > 0) {
-        const remainingText = payload.remaining.map((id) => `remaining: ${id}`).join("\n");
+      if (typedPayload.remaining.length > 0) {
+        const remainingText = typedPayload.remaining.map((id) => `remaining: ${id}`).join("\n");
         setApplyResult(`${summaryText}${retryText}\n${remainingText}`);
         setVerificationMessage(
-          `Verification incomplete: ${payload.remaining.length} change(s) still pending.`
+          `Verification incomplete: ${typedPayload.remaining.length} change(s) still pending.`
         );
-        setManualSteps(payload.remainingChanges ?? []);
+        setManualSteps(typedPayload.remainingChanges ?? []);
       } else {
         setApplyResult(`${summaryText}${retryText}\nAll suggested changes were verified.`);
         setVerificationMessage("Verification successful: all selected changes are applied.");

@@ -1,0 +1,81 @@
+{
+  "name": "smartech-desktop",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "main.mjs",
+  "scripts": {
+    "dev": "node dev.mjs",
+    "start": "electron .",
+    "pack": "electron-builder --dir",
+    "dist": "electron-builder",
+    "dist:mac": "electron-builder --mac --arm64",
+    "dist:mac:dmg": "electron-builder --mac --arm64 --config.mac.target=dmg",
+    "dist:mac:x64": "electron-builder --mac --x64",
+    "dist:github": "node publish-github.mjs --publish never",
+    "publish:github": "node publish-github.mjs --publish always",
+    "dist:win": "electron-builder --win",
+    "dist:linux": "electron-builder --linux"
+  },
+  "dependencies": {
+    "@smartech/engine": "0.1.0",
+    "@smartech/shared": "0.1.0",
+    "electron-updater": "^6.3.9"
+  },
+  "devDependencies": {
+    "electron": "31.7.7",
+    "electron-builder": "^24.13.3"
+  },
+  "build": {
+    "appId": "com.netcore.smartech.integrator",
+    "productName": "Smartech SDK Integrator",
+    "electronVersion": "31.7.7",
+    "electronDist": "../../node_modules/electron/dist",
+    "directories": {
+      "app": "../..",
+      "output": "release"
+    },
+    "files": [
+      "apps/desktop/**/*",
+      "apps/web/dist/**/*",
+      "packages/engine/dist/**/*",
+      "packages/shared/dist/**/*",
+      "package.json",
+      "package-lock.json",
+      "node_modules/**/*"
+    ],
+    "extraMetadata": {
+      "main": "apps/desktop/main.mjs"
+    },
+    "mac": {
+      "target": [
+        {
+          "target": "zip",
+          "arch": [
+            "arm64"
+          ]
+        }
+      ]
+    },
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    },
+    "linux": {
+      "target": [
+        {
+          "target": "AppImage",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    }
+  }
+}

@@ -2,15 +2,24 @@
   "name": "smartech-rn-integrator",
   "private": true,
   "version": "0.1.0",
+  "description": "Smartech SDK Integrator desktop and web app",
+  "author": "Netcore",
   "workspaces": [
     "apps/web",
     "apps/server",
+    "apps/desktop",
     "packages/*"
   ],
   "scripts": {
     "dev": "concurrently -k \"npm run dev:server\" \"npm run dev:web\"",
+    "dev:desktop": "npm --workspace @smartech/shared run build && npm --workspace @smartech/engine run build && concurrently -k \"npm run dev:web\" \"npm --workspace apps/desktop run dev\"",
     "dev:web": "npm --workspace apps/web run dev",
     "dev:server": "npm --workspace apps/server run dev",
+    "start:desktop": "npm --workspace @smartech/shared run build && npm --workspace @smartech/engine run build && npm --workspace apps/web run build && npm --workspace apps/desktop run start",
+    "pack:desktop": "npm --workspace @smartech/shared run build && npm --workspace @smartech/engine run build && npm --workspace apps/web run build && npm --workspace apps/desktop run pack",
+    "build:desktop": "npm --workspace @smartech/shared run build && npm --workspace @smartech/engine run build && npm --workspace apps/web run build && npm --workspace apps/desktop run dist",
+    "build:desktop:github": "npm --workspace @smartech/shared run build && npm --workspace @smartech/engine run build && npm --workspace apps/web run build && npm --workspace apps/desktop run dist:github",
+    "publish:desktop:github": "npm --workspace @smartech/shared run build && npm --workspace @smartech/engine run build && npm --workspace apps/web run build && npm --workspace apps/desktop run publish:github",
     "build": "npm --workspace apps/web run build && npm --workspace apps/server run build",
     "typecheck": "npm --workspace apps/web run typecheck && npm --workspace packages/engine run typecheck",
     "build:exe": "node scripts/build-exe.mjs"
