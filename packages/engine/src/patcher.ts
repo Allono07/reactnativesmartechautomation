@@ -37,7 +37,9 @@ export async function applyChanges(changes: Change[], dryRun = true): Promise<Ap
     const original = cached?.original ?? (await loadFileOrEmpty(change.filePath));
     const current = cached?.current ?? original;
 
-    const patched = applyPatch(current, change.patch, { fuzzFactor: 5 });
+    // Keep patching strict to avoid fuzzy hunk matches corrupting structured files
+    // like AndroidManifest.xml when multiple changes target the same file.
+    const patched = applyPatch(current, change.patch, { fuzzFactor: 0 });
     if (patched === false) {
       if (change.newContent && current === original) {
         fileCache.set(change.filePath, { original, current: change.newContent });

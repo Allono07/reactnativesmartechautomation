@@ -31455,7 +31455,7 @@ async function applyChanges(changes, dryRun = true) {
     const cached = fileCache.get(change.filePath);
     const original = cached?.original ?? await loadFileOrEmpty(change.filePath);
     const current = cached?.current ?? original;
-    const patched = applyPatch(current, change.patch, { fuzzFactor: 5 });
+    const patched = applyPatch(current, change.patch, { fuzzFactor: 0 });
     if (patched === false) {
       if (change.newContent && current === original) {
         fileCache.set(change.filePath, { original, current: change.newContent });
